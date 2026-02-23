@@ -47,41 +47,52 @@
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             transition: all 0.3s ease;
         }
 
-        /* Animação para Toast */
+        /* Toast agora no TOPO para não atrapalhar os botões */
         #toast {
-            transform: translateY(150%);
+            position: fixed;
+            top: calc(4.5rem + var(--sat)); /* Logo abaixo do header */
+            left: 50%;
+            transform: translate(-50%, -200%);
+            z-index: 100;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: fit-content;
         }
-        #toast.show { transform: translateY(0); }
+        #toast.show { transform: translate(-50%, 0); }
     </style>
 </head>
 <body class="overflow-hidden">
 
     <div class="app-container">
-        <!-- Notificação Toast -->
-        <div id="toast" class="fixed bottom-24 left-4 right-4 z-[100] flex justify-center pointer-events-none">
-            <div class="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2">
-                <i data-lucide="cloud-upload" size="14"></i>
+        <!-- Notificação Toast (Posição Corrigida no Topo) -->
+        <div id="toast" class="pointer-events-none">
+            <div class="bg-slate-900/95 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-sm">
+                <i data-lucide="cloud-check" size="14" class="text-green-400"></i>
                 <span id="toast-msg">Sincronizando...</span>
             </div>
         </div>
 
-        <!-- Header -->
-        <header class="bg-blue-700 text-white px-6 pb-4 shadow-lg flex-none">
-            <div class="max-w-md mx-auto flex justify-between items-center">
-                <div>
-                    <h1 class="text-xl font-black tracking-tighter flex items-center gap-2">
-                        <i data-lucide="shield-alert" size="20"></i> SENTINELA STP
+        <!-- Header Compactado -->
+        <header class="bg-blue-700 text-white px-4 pb-3 shadow-lg flex-none relative z-50">
+            <div class="max-w-md mx-auto flex justify-between items-center gap-2">
+                <div class="flex flex-col">
+                    <h1 class="text-base font-black tracking-tighter flex items-center gap-1">
+                        <i data-lucide="shield-alert" size="16"></i> SENTINELA STP
                     </h1>
-                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Saúde é Direito • Florianópolis</p>
                 </div>
-                <div id="status-badge" class="bg-blue-900/40 text-[9px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-widest">Inativo</div>
+
+                <!-- Indicador de Nuvem Compacto -->
+                <div id="cloud-indicator" class="flex items-center gap-1.5 bg-blue-800/40 px-2 py-1 rounded-md border border-blue-400/20">
+                    <span id="cloud-dot" class="status-dot bg-slate-400"></span>
+                    <span class="text-[8px] font-black uppercase tracking-tighter opacity-70">Nuvem</span>
+                </div>
+
+                <div id="status-badge" class="bg-blue-900/50 text-[8px] px-2 py-1 rounded-full border border-blue-400/50 font-bold uppercase tracking-widest shrink-0">Inativo</div>
             </div>
         </header>
 
@@ -89,18 +100,15 @@
         <main class="flex-1 overflow-y-auto no-scrollbar bg-slate-50">
             <div class="max-w-md mx-auto p-4 space-y-4">
                 
-                <!-- Status da Nuvem e Sensores -->
+                <!-- Status de Sensores -->
                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex justify-around">
-                    <div class="flex items-center gap-2 text-[9px] font-bold uppercase text-slate-400">
-                        <span id="cloud-dot" class="status-dot bg-slate-200"></span> Nuvem
-                    </div>
                     <div class="flex items-center gap-2 text-[9px] font-bold uppercase text-slate-400">
                         <span id="mic-dot" class="status-dot bg-slate-200"></span> Áudio
                     </div>
                     <div class="flex items-center gap-2 text-[9px] font-bold uppercase text-slate-400">
                         <span id="geo-dot" class="status-dot bg-slate-200"></span> GPS
                     </div>
-                    <button onclick="requestPermissions()" class="text-[9px] font-black text-blue-600 uppercase underline">Autorizar</button>
+                    <button onclick="requestPermissions()" class="text-[9px] font-black text-blue-600 uppercase underline">Autorizar Sensores</button>
                 </div>
 
                 <!-- Veículo -->
@@ -121,9 +129,9 @@
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Sua Posição</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <button onclick="setZone('Frente')" id="zone-Frente" class="zone-btn py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase">Frente</button>
-                            <button onclick="setZone('Meio')" id="zone-Meio" class="zone-btn active-zone py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase">Meio</button>
-                            <button onclick="setZone('Fundo')" id="zone-Fundo" class="zone-btn py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase">Fundo</button>
+                            <button onclick="setZone('Frente')" id="zone-Frente" class="zone-btn py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase transition-all active:scale-95">Frente</button>
+                            <button onclick="setZone('Meio')" id="zone-Meio" class="zone-btn active-zone py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase transition-all active:scale-95">Meio</button>
+                            <button onclick="setZone('Fundo')" id="zone-Fundo" class="zone-btn py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase transition-all active:scale-95">Fundo</button>
                         </div>
                     </div>
                 </section>
@@ -136,7 +144,7 @@
                     <div class="relative z-10">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pressão Sonora</p>
                         <div class="flex justify-center items-baseline">
-                            <span id="db-display" class="text-8xl font-black tracking-tighter tabular-nums">0</span>
+                            <span id="db-display" class="text-8xl font-black tracking-tighter tabular-nums text-slate-800">0</span>
                             <span class="text-2xl font-bold text-slate-300 ml-1">dB</span>
                         </div>
                         <div id="db-status" class="inline-block mt-3 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-400 italic">Sensores Off</div>
@@ -174,19 +182,19 @@
             </div>
         </main>
 
-        <!-- Rodapé -->
-        <footer class="bg-white border-t border-slate-200 p-4 flex-none shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <!-- Rodapé (Botão Iniciar) -->
+        <footer class="bg-white border-t border-slate-200 p-4 flex-none shadow-[0_-4px_20px_rgba(0,0,0,0.05)] relative z-50">
             <div class="max-w-md mx-auto grid grid-cols-5 gap-4 items-center">
                 <div class="col-span-1 flex flex-col items-center justify-center opacity-30 text-slate-600">
                     <i data-lucide="map-pin" size="20"></i>
                     <span id="gps-label" class="text-[8px] font-black mt-1 uppercase">OFF</span>
                 </div>
                 
-                <button id="main-btn" class="col-span-4 bg-blue-600 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                <button id="main-btn" class="col-span-4 bg-blue-600 active:bg-blue-800 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
                     <i data-lucide="play" size="20"></i> Iniciar Fiscalização
                 </button>
                 
-                <button id="stop-btn" class="hidden col-span-4 bg-red-600 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                <button id="stop-btn" class="hidden col-span-4 bg-red-600 active:bg-red-800 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
                     <i data-lucide="square" size="20"></i> Parar
                 </button>
             </div>
@@ -219,7 +227,7 @@
         const toast = document.getElementById('toast');
         const toastMsg = document.getElementById('toast-msg');
 
-        const showToast = (msg, duration = 3000) => {
+        const showToast = (msg, duration = 2500) => {
             toastMsg.innerText = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), duration);
@@ -235,14 +243,37 @@
             cloudDot.className = user ? "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "status-dot bg-red-500";
         });
 
+        // Auditoria
+        const getAuditInfo = () => {
+            if (!localStorage.getItem('stp_device_id')) {
+                localStorage.setItem('stp_device_id', crypto.randomUUID());
+            }
+            return {
+                deviceId: localStorage.getItem('stp_device_id'),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                cores: navigator.hardwareConcurrency || 'n/a',
+                memory: navigator.deviceMemory || 'n/a',
+                language: navigator.language,
+                screen: `${window.screen.width}x${window.screen.height}`,
+                appVersion: '1.2.5-audit'
+            };
+        };
+
         window.saveLogToCloud = async (rec) => {
             if (!user) return;
             try {
                 const logsCol = collection(db, 'artifacts', appId, 'public', 'data', 'evidencias');
-                await addDoc(logsCol, { ...rec, userId: user.uid, timestamp: serverTimestamp() });
-                showToast("Denúncia salva na nuvem ✓");
+                const enrichedData = {
+                    ...rec,
+                    audit: getAuditInfo(),
+                    userId: user.uid,
+                    timestamp: serverTimestamp()
+                };
+                await addDoc(logsCol, enrichedData);
+                showToast("Sincronizado com sucesso ✓");
             } catch (err) {
-                showToast("Erro ao sincronizar. Salvo localmente.");
+                showToast("Erro ao enviar dados.");
                 console.error(err);
             }
         };
@@ -278,18 +309,18 @@
 
         window.onload = () => {
             requestPermissions();
-            renderRecords(); // Carregar logs salvos anteriormente
+            renderRecords();
         };
 
         async function requestPermissions() {
             try {
-                userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                userStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
                 micDot.className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
                 
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((p) => {
                         geoDot.className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
-                        gpsText.innerText = `${p.coords.latitude.toFixed(2)}, ${p.coords.longitude.toFixed(2)}`;
+                        gpsText.innerText = `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
                         gpsText.parentElement.classList.remove('opacity-30');
                         gpsText.parentElement.classList.add('text-blue-600');
                     }, null, {enableHighAccuracy: true});
@@ -335,7 +366,7 @@
                 stopBtn.classList.remove('hidden');
                 csvBtn.classList.remove('hidden');
                 document.getElementById('status-badge').innerText = "Monitorando";
-                document.getElementById('status-badge').className = "bg-red-600 text-[9px] px-2 py-1 rounded-full border border-red-400 font-black animate-pulse uppercase tracking-widest";
+                document.getElementById('status-badge').className = "bg-red-600 text-[8px] px-2 py-1 rounded-full border border-red-400 font-black animate-pulse uppercase tracking-widest";
                 loop();
             } catch (err) { alert("Erro ao iniciar sensores."); }
         }
@@ -351,7 +382,7 @@
             dangerLayer.style.opacity = "0";
             dbStatus.innerText = "Inativo";
             document.getElementById('status-badge').innerText = "Inativo";
-            document.getElementById('status-badge').className = "bg-blue-900/40 text-[9px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-widest";
+            document.getElementById('status-badge').className = "bg-blue-900/40 text-[8px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-widest";
         }
 
         function loop() {
@@ -393,14 +424,14 @@
 
             if(db >= DB_LIMIT) {
                 dbStatus.innerText = "⚠️ EXCESSO DE RUÍDO";
-                dbStatus.className = "inline-block mt-3 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-600 animate-bounce";
+                dbStatus.className = "inline-block mt-3 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-red-100 text-red-600 animate-bounce";
                 dbBar.className = "h-full bg-red-600";
                 dangerLayer.style.opacity = "1";
                 addRecord(db);
             } else {
                 dbStatus.innerText = "Nível Seguro";
                 dbStatus.className = "inline-block mt-3 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-500";
-                dbBar.className = "h-full bg-blue-600";
+                dbBar.className = "h-full bg-blue-600 transition-all";
                 dangerLayer.style.opacity = "0";
             }
             animId = requestAnimationFrame(loop);
@@ -423,7 +454,7 @@
             };
 
             logs.unshift(rec);
-            if(logs.length > 50) logs.pop(); // Manter apenas as últimas 50 localmente
+            if(logs.length > 50) logs.pop();
             localStorage.setItem('sentinela_logs', JSON.stringify(logs));
             
             renderRecords();
@@ -460,9 +491,9 @@
             let c = "Hora,Ruido_dB,Temperatura,Linha,Onibus,Zona,Localizacao\n";
             logs.forEach(l => c += `${l.hora},${l.ruido_db},${l.temp_interna},${l.linha},${l.prefixo},${l.zona_interna},${l.coordenadas}\n`);
             const b = new Blob([c], {type:'text/csv'});
-            const u = window.URL.createObjectURL(b);
+            const url = window.URL.createObjectURL(b);
             const a = document.createElement('a');
-            a.href = u; a.download = `STP_EVIDENCIA_${Date.now()}.csv`; a.click();
+            a.href = url; a.download = `STP_EVIDENCIA_${Date.now()}.csv`; a.click();
         }
 
         mainBtn.onclick = start;
