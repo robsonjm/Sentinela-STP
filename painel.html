@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Sentinela STP - Mapa do Adoecimento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        #map { height: 500px; width: 100%; border-radius: 1.5rem; z-index: 1; }
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 1rem;
+            padding: 0.5rem;
+        }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-700 text-white p-6 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2 rounded-lg text-blue-700">
+                    <i data-lucide="layout-dashboard"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter">SENTINELA STP</h1>
+                    <p class="text-[10px] font-bold opacity-75 uppercase tracking-widest">Painel de Monitoramento de Saúde Pública</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-center">
+                <div id="sync-status" class="flex items-center gap-2 bg-blue-800 px-4 py-2 rounded-full border border-blue-400 text-[10px] font-bold uppercase tracking-widest">
+                    <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> Sincronizando Dados
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+
+        <!-- Resumo de Estatísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="stat-card bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Denúncias</p>
+                <h3 id="stat-total" class="text-4xl font-black text-slate-800">0</h3>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Média de Ruído</p>
+                <h3 id="stat-avg-db" class="text-4xl font-black text-orange-600">0 <span class="text-sm font-bold text-slate-300">dB</span></h3>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Temp. Média</p>
+                <h3 id="stat-avg-temp" class="text-4xl font-black text-blue-600">0 <span class="text-sm font-bold text-slate-300">°C</span></h3>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Agressões Críticas</p>
+                <h3 id="stat-critical" class="text-4xl font-black text-red-600">0</h3>
+            </div>
+        </div>
+
+        <!-- Área do Mapa -->
+        <div class="bg-white p-4 md:p-6 rounded-[2.5rem] shadow-sm border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                    <i data-lucide="map" class="text-blue-600"></i> Mapa do Adoecimento
+                </h2>
+                <div class="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> Aceitável</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Elevado</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-600"></span> Crítico</span>
+                </div>
+            </div>
+            <div id="map" class="border border-slate-100"></div>
+        </div>
+
+        <!-- Tabela de Ocorrências Recentes -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 class="text-lg font-black text-slate-800 uppercase tracking-tight">Fluxo de Dados em Tempo Real</h2>
+                <button onclick="window.print()" class="text-[10px] font-bold bg-slate-900 text-white px-4 py-2 rounded-xl flex items-center gap-2">
+                    <i data-lucide="printer" size="14"></i> GERAR RELATÓRIO
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
+                        <tr>
+                            <th class="px-6 py-4">Data/Hora</th>
+                            <th class="px-6 py-4">Linha</th>
+                            <th class="px-6 py-4">Posição</th>
+                            <th class="px-6 py-4 text-center">Ruído</th>
+                            <th class="px-6 py-4 text-center">Temp.</th>
+                            <th class="px-6 py-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100 font-medium">
+                        <!-- Conteúdo carregado via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="max-w-7xl mx-auto p-8 text-center text-slate-400 text-xs font-medium space-y-2">
+        <p>SENTINELA STP - Vigilância Popular da Mobilidade Urbana</p>
+        <p class="uppercase tracking-widest text-[10px]">Base Legal: CF Art. 196 e Lei Federal 8.080/1990</p>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuração do seu projeto
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+            authDomain: "sentinela-stp.firebaseapp.com",
+            projectId: "sentinela-stp",
+            storageBucket: "sentinela-stp.firebasestorage.app",
+            messagingSenderId: "845865605498",
+            appId: "1:845865605498:web:f4823825b7114d08dcdec3",
+            measurementId: "G-6DT4QG0RVT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'sentinela-stp';
+
+        // Inicialização do Mapa
+        const map = L.map('map').setView([-27.5945, -48.5477], 13); // Coordenadas de Florianópolis
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const markersGroup = L.layerGroup().addTo(map);
+
+        // Autenticação e Sincronização
+        signInAnonymously(auth).then(() => {
+            const syncStatus = document.getElementById('sync-status');
+            syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Conectado à Base STP';
+            
+            // Query: Buscar últimas 100 evidências
+            const q = query(
+                collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'),
+                limit(100)
+            );
+
+            onSnapshot(q, (snapshot) => {
+                const data = [];
+                snapshot.forEach(doc => data.push(doc.data()));
+                updateDashboard(data);
+            }, (error) => {
+                console.error("Erro na sincronização:", error);
+                syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Erro de Conexão';
+            });
+        });
+
+        function updateDashboard(data) {
+            markersGroup.clearLayers();
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+
+            let totalDb = 0;
+            let totalTemp = 0;
+            let criticalCount = 0;
+
+            // Ordenar por data (em memória para respeitar Regra 2)
+            const sortedData = [...data].sort((a, b) => {
+                const dateA = new Date(a.data.split('/').reverse().join('-') + ' ' + a.hora);
+                const dateB = new Date(b.data.split('/').reverse().join('-') + ' ' + b.hora);
+                return dateB - dateA;
+            });
+
+            sortedData.forEach(item => {
+                const db = parseInt(item.ruido_db);
+                const temp = parseInt(item.temp_interna);
+                totalDb += db;
+                totalTemp += temp;
+                if (db >= 85) criticalCount++;
+
+                // Processar Coordenadas (Ex: "-27.59, -48.54")
+                const coordsArr = item.coordenadas.split(',');
+                if (coordsArr.length === 2) {
+                    const lat = parseFloat(coordsArr[0].trim());
+                    const lng = parseFloat(coordsArr[1].trim());
+
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const color = db >= 85 ? '#dc2626' : (db >= 75 ? '#f97316' : '#22c55e');
+                        
+                        const circle = L.circleMarker([lat, lng], {
+                            radius: 8,
+                            fillColor: color,
+                            color: "#fff",
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).addTo(markersGroup);
+
+                        circle.bindPopup(`
+                            <div class="custom-popup space-y-1">
+                                <p class="text-[10px] font-black uppercase text-slate-400">Evidência Registrada</p>
+                                <p class="text-sm font-black text-slate-800">${item.linha}</p>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">🔊 ${db}dB</span>
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">🌡️ ${temp}°C</span>
+                                </div>
+                                <p class="text-[9px] text-slate-400 mt-1">${item.data} às ${item.hora}</p>
+                            </div>
+                        `);
+                    }
+                }
+
+                // Adicionar na Tabela
+                const row = document.createElement('tr');
+                const dbClass = db >= 85 ? 'text-red-600 font-black' : (db >= 75 ? 'text-orange-600' : 'text-slate-600');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-slate-400 text-[11px]">${item.data} <br> ${item.hora}</td>
+                    <td class="px-6 py-4 font-black text-slate-800">${item.linha} <span class="text-[9px] text-slate-300 ml-1">#${item.prefixo}</span></td>
+                    <td class="px-6 py-4 text-xs uppercase font-bold text-slate-500">${item.zona_interna}</td>
+                    <td class="px-6 py-4 text-center ${dbClass}">${db} dB</td>
+                    <td class="px-6 py-4 text-center font-bold text-blue-600">${temp}°C</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter ${db >= 85 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
+                            ${db >= 85 ? 'Agressão' : 'Normal'}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Atualizar Estatísticas
+            const count = data.length || 1;
+            document.getElementById('stat-total').innerText = data.length;
+            document.getElementById('stat-avg-db').innerHTML = `${Math.round(totalDb / count)} <span class="text-sm font-bold text-slate-300 uppercase">dB</span>`;
+            document.getElementById('stat-avg-temp').innerHTML = `${Math.round(totalTemp / count)} <span class="text-sm font-bold text-slate-300 uppercase">°C</span>`;
+            document.getElementById('stat-critical').innerText = criticalCount;
+
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
