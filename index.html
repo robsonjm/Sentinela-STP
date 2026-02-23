@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Sentinela STP - Transporte é Saúde</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -10,7 +12,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         
         :root {
-            /* Fallbacks para navegadores que não suportam env() */
             --sat: env(safe-area-inset-top, 0px);
             --sab: env(safe-area-inset-bottom, 0px);
             --sal: env(safe-area-inset-left, 0px);
@@ -22,26 +23,19 @@
             touch-action: manipulation;
             overscroll-behavior: none;
             -webkit-tap-highlight-color: transparent;
-            /* Garante que o fundo preencha tudo, inclusive as safe areas */
             background-color: #f8fafc; 
         }
 
-        /* Estrutura para fixar elementos e rolar apenas o centro */
         .app-container {
-            height: 100dvh; /* Dynamic Viewport Height */
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             padding-left: var(--sal);
             padding-right: var(--sar);
         }
 
-        header {
-            padding-top: calc(0.5rem + var(--sat));
-        }
-
-        footer {
-            padding-bottom: calc(1rem + var(--sab));
-        }
+        header { padding-top: calc(0.5rem + var(--sat)); }
+        footer { padding-bottom: calc(1rem + var(--sab)); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -52,44 +46,32 @@
             border-color: #1d4ed8 !important;
         }
 
-        canvas {
-            image-rendering: pixelated;
-        }
-
-        /* Estilização Customizada do Slider de Temperatura */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: #1d4ed8;
-            cursor: pointer;
-            border: 3px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            margin-top: -8px;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-        }
-
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
+            transition: all 0.3s ease;
         }
+
+        /* Animação para Toast */
+        #toast {
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toast.show { transform: translateY(0); }
     </style>
 </head>
 <body class="overflow-hidden">
 
     <div class="app-container">
+        <!-- Notificação Toast -->
+        <div id="toast" class="fixed bottom-24 left-4 right-4 z-[100] flex justify-center pointer-events-none">
+            <div class="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2">
+                <i data-lucide="cloud-upload" size="14"></i>
+                <span id="toast-msg">Sincronizando...</span>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="bg-blue-700 text-white px-6 pb-4 shadow-lg flex-none">
             <div class="max-w-md mx-auto flex justify-between items-center">
@@ -99,26 +81,29 @@
                     </h1>
                     <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Saúde é Direito • Florianópolis</p>
                 </div>
-                <div id="status-badge" class="bg-blue-900/40 text-[9px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-tighter">Standby</div>
+                <div id="status-badge" class="bg-blue-900/40 text-[9px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-widest">Inativo</div>
             </div>
         </header>
 
-        <!-- Main Content (Scrollable) -->
+        <!-- Conteúdo Principal -->
         <main class="flex-1 overflow-y-auto no-scrollbar bg-slate-50">
             <div class="max-w-md mx-auto p-4 space-y-4">
                 
-                <!-- Permissões Rapid Check -->
+                <!-- Status da Nuvem e Sensores -->
                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex justify-around">
-                    <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400">
+                    <div class="flex items-center gap-2 text-[9px] font-bold uppercase text-slate-400">
+                        <span id="cloud-dot" class="status-dot bg-slate-200"></span> Nuvem
+                    </div>
+                    <div class="flex items-center gap-2 text-[9px] font-bold uppercase text-slate-400">
                         <span id="mic-dot" class="status-dot bg-slate-200"></span> Áudio
                     </div>
-                    <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400">
+                    <div class="flex items-center gap-2 text-[9px] font-bold uppercase text-slate-400">
                         <span id="geo-dot" class="status-dot bg-slate-200"></span> GPS
                     </div>
-                    <button onclick="requestPermissions()" class="text-[10px] font-black text-blue-600 uppercase underline">Autorizar</button>
+                    <button onclick="requestPermissions()" class="text-[9px] font-black text-blue-600 uppercase underline">Autorizar</button>
                 </div>
 
-                <!-- Identificação do Veículo -->
+                <!-- Veículo -->
                 <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -170,26 +155,26 @@
                         </span>
                         <span id="temp-val" class="text-2xl font-black text-blue-700">25°C</span>
                     </div>
-                    <input type="range" id="temp-input" min="15" max="45" value="25">
+                    <input type="range" id="temp-input" min="15" max="45" value="25" class="w-full">
                 </section>
 
                 <!-- Evidências -->
                 <section class="space-y-3 pb-8">
                     <div class="flex justify-between items-center px-1">
-                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-tight">Logs de Evidência</h2>
-                        <button onclick="downloadCSV()" id="btn-csv" class="hidden text-[10px] font-black bg-slate-900 text-white px-4 py-2 rounded-xl uppercase shadow-md">Exportar CSV</button>
+                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-widest">Denúncias Registadas</h2>
+                        <button onclick="downloadCSV()" id="btn-csv" class="hidden text-[10px] font-black bg-slate-900 text-white px-3 py-1.5 rounded-xl uppercase">Exportar</button>
                     </div>
                     <div id="log-list" class="space-y-3">
                         <div id="empty-state" class="py-12 bg-white/40 rounded-3xl border-2 border-dashed border-slate-200 text-center">
                             <i data-lucide="database" class="mx-auto mb-2 text-slate-200" size="40"></i>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nenhuma infração capturada</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aguardando ocorrências</p>
                         </div>
                     </div>
                 </section>
             </div>
         </main>
 
-        <!-- Tab Bar / Footer -->
+        <!-- Rodapé -->
         <footer class="bg-white border-t border-slate-200 p-4 flex-none shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
             <div class="max-w-md mx-auto grid grid-cols-5 gap-4 items-center">
                 <div class="col-span-1 flex flex-col items-center justify-center opacity-30 text-slate-600">
@@ -202,11 +187,66 @@
                 </button>
                 
                 <button id="stop-btn" class="hidden col-span-4 bg-red-600 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
-                    <i data-lucide="square" size="20"></i> Parar Sensores
+                    <i data-lucide="square" size="20"></i> Parar
                 </button>
             </div>
         </footer>
     </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+          authDomain: "sentinela-stp.firebaseapp.com",
+          projectId: "sentinela-stp",
+          storageBucket: "sentinela-stp.firebasestorage.app",
+          messagingSenderId: "845865605498",
+          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
+          measurementId: "G-6DT4QG0RVT"
+        };
+
+        const appId = 'sentinela-stp';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let user = null;
+        const cloudDot = document.getElementById('cloud-dot');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+
+        const showToast = (msg, duration = 3000) => {
+            toastMsg.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        };
+
+        const initAuth = async () => {
+            try { await signInAnonymously(auth); } catch (err) { console.error(err); }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            cloudDot.className = user ? "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "status-dot bg-red-500";
+        });
+
+        window.saveLogToCloud = async (rec) => {
+            if (!user) return;
+            try {
+                const logsCol = collection(db, 'artifacts', appId, 'public', 'data', 'evidencias');
+                await addDoc(logsCol, { ...rec, userId: user.uid, timestamp: serverTimestamp() });
+                showToast("Denúncia salva na nuvem ✓");
+            } catch (err) {
+                showToast("Erro ao sincronizar. Salvo localmente.");
+                console.error(err);
+            }
+        };
+    </script>
 
     <script>
         lucide.createIcons();
@@ -214,15 +254,13 @@
         let audioCtx, analyser, mic, dataArr, animId;
         let isActive = false;
         let currentZone = "Meio";
-        let logs = [];
+        let logs = JSON.parse(localStorage.getItem('sentinela_logs')) || [];
         let lastLog = 0;
         let userStream = null;
 
-        // Configs
         const DB_LIMIT = 85;
         const LOG_WAIT = 10000; 
 
-        // UI Refs
         const dbDisplay = document.getElementById('db-display');
         const dbStatus = document.getElementById('db-status');
         const dbBar = document.getElementById('db-progress');
@@ -238,8 +276,10 @@
         const micDot = document.getElementById('mic-dot');
         const geoDot = document.getElementById('geo-dot');
 
-        // Permissões iniciais
-        window.onload = () => requestPermissions();
+        window.onload = () => {
+            requestPermissions();
+            renderRecords(); // Carregar logs salvos anteriormente
+        };
 
         async function requestPermissions() {
             try {
@@ -252,9 +292,7 @@
                         gpsText.innerText = `${p.coords.latitude.toFixed(2)}, ${p.coords.longitude.toFixed(2)}`;
                         gpsText.parentElement.classList.remove('opacity-30');
                         gpsText.parentElement.classList.add('text-blue-600');
-                    }, () => {
-                        geoDot.className = "status-dot bg-red-500";
-                    }, {enableHighAccuracy: true});
+                    }, null, {enableHighAccuracy: true});
                 }
             } catch (err) {
                 micDot.className = "status-dot bg-red-500";
@@ -276,13 +314,12 @@
 
         async function start() {
             if(!document.getElementById('bus-line').value) {
-                alert("Identifique a linha de ônibus antes de começar.");
+                alert("Identifique a linha de autocarro primeiro.");
                 return;
             }
 
             try {
                 if(!userStream) userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
                 const AC = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AC();
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -297,15 +334,10 @@
                 mainBtn.classList.add('hidden');
                 stopBtn.classList.remove('hidden');
                 csvBtn.classList.remove('hidden');
-                
-                const badge = document.getElementById('status-badge');
-                badge.innerText = "Monitorando";
-                badge.className = "bg-red-600 text-[9px] px-2 py-1 rounded-full border border-red-400 font-black animate-pulse uppercase";
-
+                document.getElementById('status-badge').innerText = "Monitorando";
+                document.getElementById('status-badge').className = "bg-red-600 text-[9px] px-2 py-1 rounded-full border border-red-400 font-black animate-pulse uppercase tracking-widest";
                 loop();
-            } catch (err) {
-                alert("Falha ao acessar sensores.");
-            }
+            } catch (err) { alert("Erro ao iniciar sensores."); }
         }
 
         function stop() {
@@ -317,17 +349,15 @@
             dbDisplay.innerText = "0";
             dbBar.style.width = "0%";
             dangerLayer.style.opacity = "0";
-            dbStatus.innerText = "Pausado";
-            const badge = document.getElementById('status-badge');
-            badge.innerText = "Standby";
-            badge.className = "bg-blue-900/40 text-[9px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-tighter";
+            dbStatus.innerText = "Inativo";
+            document.getElementById('status-badge').innerText = "Inativo";
+            document.getElementById('status-badge').className = "bg-blue-900/40 text-[9px] px-2 py-1 rounded-full border border-white/20 font-bold uppercase tracking-widest";
         }
 
         function loop() {
             if(!isActive) return;
             analyser.getByteTimeDomainData(dataArr);
             
-            // Desenho do waveform básico no canvas
             const canvas = document.getElementById('audio-visualizer');
             const cctx = canvas.getContext('2d');
             canvas.width = canvas.offsetWidth;
@@ -346,7 +376,6 @@
             }
             cctx.stroke();
 
-            // Cálculo dB
             let sum = 0;
             let sig = false;
             for(let i=0; i<dataArr.length; i++) {
@@ -363,7 +392,7 @@
             dbBar.style.width = `${p}%`;
 
             if(db >= DB_LIMIT) {
-                dbStatus.innerText = "⚠️ AGRESSÃO SONORA";
+                dbStatus.innerText = "⚠️ EXCESSO DE RUÍDO";
                 dbStatus.className = "inline-block mt-3 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-600 animate-bounce";
                 dbBar.className = "h-full bg-red-600";
                 dangerLayer.style.opacity = "1";
@@ -374,7 +403,6 @@
                 dbBar.className = "h-full bg-blue-600";
                 dangerLayer.style.opacity = "0";
             }
-
             animId = requestAnimationFrame(loop);
         }
 
@@ -384,53 +412,57 @@
             lastLog = now;
 
             const rec = {
-                t: new Date().toLocaleTimeString('pt-BR'),
-                db: db,
-                temp: tempSlider.value,
-                line: document.getElementById('bus-line').value,
-                bus: document.getElementById('bus-number').value || "S/N",
-                zone: currentZone,
-                loc: gpsText.innerText
+                hora: new Date().toLocaleTimeString('pt-BR'),
+                data: new Date().toLocaleDateString('pt-BR'),
+                ruido_db: db,
+                temp_interna: tempSlider.value,
+                linha: document.getElementById('bus-line').value,
+                prefixo: document.getElementById('bus-number').value || "S/N",
+                zona_interna: currentZone,
+                coordenadas: gpsText.innerText
             };
 
             logs.unshift(rec);
+            if(logs.length > 50) logs.pop(); // Manter apenas as últimas 50 localmente
+            localStorage.setItem('sentinela_logs', JSON.stringify(logs));
+            
             renderRecords();
+            if (window.saveLogToCloud) window.saveLogToCloud(rec);
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
         }
 
         function renderRecords() {
-            emptyView.classList.add('hidden');
+            if(logs.length > 0) emptyView.classList.add('hidden');
             logContainer.innerHTML = '';
-            logs.slice(0, 10).forEach(l => {
+            logs.slice(0, 20).forEach(l => {
                 const item = document.createElement('div');
                 item.className = "bg-white p-4 rounded-2xl border-l-8 border-red-500 shadow-sm flex justify-between items-center";
                 item.innerHTML = `
-                    <div class="space-y-1">
+                    <div class="space-y-1 text-left">
                         <div class="flex gap-2">
-                            <span class="bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded tracking-tighter">${l.db}dB</span>
-                            <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded tracking-tighter">${l.temp}°C</span>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${l.t}</span>
+                            <span class="bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded tracking-tighter">${l.ruido_db}dB</span>
+                            <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded tracking-tighter">${l.temp_interna}°C</span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${l.hora}</span>
                         </div>
-                        <p class="text-[13px] font-black text-slate-800">${l.line} <span class="text-slate-300 font-medium">#${l.bus}</span></p>
+                        <p class="text-[13px] font-black text-slate-800">${l.linha} <span class="text-slate-300 font-medium">#${l.prefixo}</span></p>
                     </div>
                     <div class="text-[9px] font-black text-slate-400 uppercase text-right leading-none">
-                        Pos: ${l.zone}<br><span class="text-blue-500 font-bold">${l.loc}</span>
+                        Pos: ${l.zona_interna}<br><span class="text-blue-500 font-bold">${l.coordenadas}</span>
                     </div>
                 `;
                 logContainer.appendChild(item);
             });
+            csvBtn.classList.toggle('hidden', logs.length === 0);
         }
 
         function downloadCSV() {
             if(!logs.length) return;
             let c = "Hora,Ruido_dB,Temperatura,Linha,Onibus,Zona,Localizacao\n";
-            logs.forEach(l => c += `${l.t},${l.db},${l.temp},${l.line},${l.bus},${l.zone},${l.loc}\n`);
+            logs.forEach(l => c += `${l.hora},${l.ruido_db},${l.temp_interna},${l.linha},${l.prefixo},${l.zona_interna},${l.coordenadas}\n`);
             const b = new Blob([c], {type:'text/csv'});
             const u = window.URL.createObjectURL(b);
             const a = document.createElement('a');
-            a.href = u;
-            a.download = `STP_EVIDENCIA_${Date.now()}.csv`;
-            a.click();
+            a.href = u; a.download = `STP_EVIDENCIA_${Date.now()}.csv`; a.click();
         }
 
         mainBtn.onclick = start;
