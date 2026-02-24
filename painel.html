@@ -10,9 +10,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        #map { height: 450px; width: 100%; border-radius: 1.5rem; z-index: 1; }
+        #map { height: 500px; width: 100%; border-radius: 1.5rem; z-index: 1; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .critical-row { background-color: #fef2f2; }
+        .critical-row { background-color: #fff1f2; }
+        .breakdown-row { background-color: #fff7ed; }
+        .delay-row { background-color: #faf5ff; }
+        
+        .stat-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="min-h-screen pb-12">
@@ -22,91 +27,119 @@
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="bg-white p-2 rounded-xl text-blue-700">
-                    <i data-lucide="bar-chart-3"></i>
+                    <i data-lucide="activity"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tighter uppercase">Sentinela STP</h1>
-                    <p class="text-[10px] font-bold opacity-75 uppercase tracking-widest">Auditoria de Salubridade Urbana</p>
+                    <p class="text-[10px] font-bold opacity-75 uppercase tracking-widest">Painel de Auditoria de Saúde e Mobilidade</p>
                 </div>
             </div>
             <div id="sync-status" class="flex items-center gap-2 bg-blue-800/50 px-4 py-2 rounded-full border border-blue-400/30 text-[10px] font-black uppercase tracking-widest">
-                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Sincronizando Frota...
+                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Sincronizando Base...
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
         
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Evidências Totais</p>
+        <!-- Grid de Estatísticas Gerais -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="stat-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Total de Denúncias</p>
                 <h3 id="stat-total" class="text-3xl font-black text-slate-800">0</h3>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-blue-600">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Ônibus Auditados</p>
+            <div class="stat-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-orange-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Veículos Quebrados</p>
+                <h3 id="stat-breakdowns" class="text-3xl font-black text-orange-600">0</h3>
+            </div>
+            <div class="stat-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-purple-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Atrasos Críticos</p>
+                <h3 id="stat-delays" class="text-3xl font-black text-purple-600">0</h3>
+            </div>
+            <div class="stat-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-red-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Ruído Crítico</p>
+                <h3 id="stat-critical" class="text-3xl font-black text-red-600">0</h3>
+            </div>
+            <div class="stat-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Frota Auditada</p>
                 <h3 id="stat-buses" class="text-3xl font-black text-blue-700">0</h3>
-            </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Média de Ruído</p>
-                <h3 id="stat-db" class="text-3xl font-black text-orange-600">0 <span class="text-sm font-bold opacity-30">dB</span></h3>
-            </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-red-600">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Agressões Graves</p>
-                <h3 id="stat-critical" class="text-3xl font-black text-red-700">0</h3>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Mapa -->
-            <div class="lg:col-span-2 bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200 space-y-4">
-                <div class="flex justify-between items-center px-2 pt-2">
-                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                        <i data-lucide="map-pinned" class="text-blue-600" size="18"></i> Pontos de Incidência
-                    </h2>
+            <!-- Coluna do Mapa -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center px-2 pb-3">
+                        <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                            <i data-lucide="map-pinned" class="text-blue-600"></i> Mapa de Incidências Sanitárias
+                        </h2>
+                        <div class="flex gap-3">
+                            <div class="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400">
+                                <span class="w-2 h-2 rounded-full bg-orange-500"></span> Quebra
+                            </div>
+                            <div class="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400">
+                                <span class="w-2 h-2 rounded-full bg-purple-500"></span> Atraso
+                            </div>
+                            <div class="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400">
+                                <span class="w-2 h-2 rounded-full bg-red-600"></span> Ruído
+                            </div>
+                        </div>
+                    </div>
+                    <div id="map"></div>
                 </div>
-                <div id="map"></div>
             </div>
 
-            <!-- Ranking dos Piores Ônibus -->
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col">
-                <h2 class="text-sm font-black text-slate-800 uppercase mb-4 flex items-center gap-2">
-                    <i data-lucide="alert-triangle" class="text-red-600" size="18"></i> Hall da Vergonha
-                </h2>
-                <div id="ranking-list" class="space-y-3 flex-1 overflow-y-auto pr-2 no-scrollbar">
-                    <!-- Gerado por JS -->
-                    <p class="text-center text-slate-400 text-xs py-12">Processando dados da frota...</p>
+            <!-- Coluna de Ranking de Reincidência -->
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col max-h-[580px]">
+                <div class="mb-4">
+                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                        <i data-lucide="alert-octagon" class="text-red-600"></i> Ranking de Reincidência
+                    </h2>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Veículos com maior volume de problemas registrados</p>
                 </div>
-                <p class="text-[9px] font-bold text-slate-400 uppercase mt-4 border-t pt-4 italic">
-                    * Veículos com maior média de agressão sonora registrada.
-                </p>
+                <div id="ranking-list" class="space-y-3 flex-1 overflow-y-auto pr-2 no-scrollbar">
+                    <!-- Gerado dinamicamente -->
+                    <div class="animate-pulse flex flex-col gap-3">
+                        <div class="h-16 bg-slate-100 rounded-2xl"></div>
+                        <div class="h-16 bg-slate-100 rounded-2xl"></div>
+                        <div class="h-16 bg-slate-100 rounded-2xl"></div>
+                    </div>
+                </div>
+                <button onclick="window.print()" class="mt-4 w-full bg-slate-900 text-white text-[10px] font-black uppercase py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+                    <i data-lucide="file-text" size="14"></i> Exportar Relatório de Auditoria
+                </button>
             </div>
         </div>
 
-        <!-- Tabela Completa -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 class="text-sm font-black text-slate-800 uppercase">Log de Auditoria em Tempo Real</h2>
-                <div class="flex gap-2">
-                    <input type="text" id="table-search" placeholder="Filtrar por Ônibus ou Linha..." 
-                        class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-600 w-64">
-                    <button onclick="window.print()" class="bg-slate-900 text-white p-2 rounded-xl active:scale-95 transition-all">
-                        <i data-lucide="printer" size="16"></i>
-                    </button>
+        <!-- Tabela de Auditoria Detalhada -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                <div>
+                    <h2 class="text-sm font-black text-slate-800 uppercase">Rastreador de Evidências em Tempo Real</h2>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Base Legal: Artigo 3º Lei 8.080/90</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-80">
+                        <i data-lucide="search" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="table-search" placeholder="Filtrar por Ônibus, Linha ou Sintoma..." 
+                            class="w-full text-xs bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+                    </div>
                 </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
+                    <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b border-slate-100">
                         <tr>
-                            <th class="px-6 py-4">Instante</th>
+                            <th class="px-6 py-4">Data / Hora</th>
+                            <th class="px-6 py-4">Evento</th>
                             <th class="px-6 py-4">Prefixo / Linha</th>
-                            <th class="px-6 py-4">Medição</th>
-                            <th class="px-6 py-4">Sintomas Relatados</th>
-                            <th class="px-6 py-4 text-right">Auditoria (Device)</th>
+                            <th class="px-6 py-4">Ruído / Temp</th>
+                            <th class="px-6 py-4">Sintomas do Passageiro</th>
+                            <th class="px-6 py-4 text-right">Auditoria</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body" class="divide-y divide-slate-100 font-medium">
+                    <tbody id="table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
                         <!-- Gerado por JS -->
                     </tbody>
                 </table>
@@ -120,6 +153,7 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Configuração original do Robson
         const firebaseConfig = {
           apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
           authDomain: "sentinela-stp.firebaseapp.com",
@@ -135,123 +169,172 @@
         const db = getFirestore(app);
         const appId = 'sentinela-stp';
 
-        // Mapa
-        const map = L.map('map').setView([-27.5945, -48.5477], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+        // Init Mapa em Florianópolis
+        const map = L.map('map').setView([-27.5945, -48.5477], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
         const markersGroup = L.layerGroup().addTo(map);
 
-        // State Global
         let allLogs = [];
 
         signInAnonymously(auth).then(() => {
             const syncStatus = document.getElementById('sync-status');
-            syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Frota Conectada';
+            syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Sistema Conectado';
             
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'), limit(200));
+            // Regra 2: Busca coleção e processa em memória
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'), limit(500));
             onSnapshot(q, (snapshot) => {
                 allLogs = [];
                 snapshot.forEach(doc => allLogs.push({ id: doc.id, ...doc.data() }));
-                renderAll();
+                renderDashboard();
+            }, (err) => {
+                console.error(err);
+                syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Erro de Sincronia';
             });
         });
 
-        function renderAll() {
+        function renderDashboard() {
             const tableBody = document.getElementById('table-body');
             const rankingList = document.getElementById('ranking-list');
             markersGroup.clearLayers();
             tableBody.innerHTML = '';
             rankingList.innerHTML = '';
 
-            // 1. Agrupamento por Ônibus (Prefixo)
-            const busStats = {};
-            let totalDb = 0;
-            let criticalCount = 0;
+            const busRegistry = {};
+            let totals = { total: 0, breakdowns: 0, delays: 0, criticalNoise: 0 };
 
-            allLogs.forEach(log => {
-                const db = parseInt(log.ruido_db);
-                totalDb += db;
-                if (db >= 85) criticalCount++;
-
-                const prefixo = log.prefixo || "S/N";
-                if (!busStats[prefixo]) {
-                    busStats[prefixo] = { count: 0, sumDb: 0, linha: log.linha, records: [] };
-                }
-                busStats[prefixo].count++;
-                busStats[prefixo].sumDb += db;
-                busStats[prefixo].records.push(log);
-
-                // Marcador no Mapa
-                if (log.coordenadas) {
-                    const [lat, lng] = log.coordenadas.split(',').map(c => parseFloat(c.trim()));
-                    if (!isNaN(lat)) {
-                        const color = db >= 85 ? '#dc2626' : (db >= 75 ? '#f97316' : '#3b82f6');
-                        L.circleMarker([lat, lng], { radius: 6, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.8 }).addTo(markersGroup)
-                         .bindPopup(`<b>Ônibus: ${prefixo}</b><br>Linha: ${log.linha}<br>Ruído: ${db}dB`);
-                    }
-                }
-            });
-
-            // 2. Renderizar Ranking (Ordenado pela média de dB dos ônibus)
-            const sortedBuses = Object.entries(busStats)
-                .map(([id, data]) => ({ id, avgDb: Math.round(data.sumDb / data.count), ...data }))
-                .sort((a, b) => b.avgDb - a.avgDb);
-
-            sortedBuses.slice(0, 8).forEach(bus => {
-                const card = document.createElement('div');
-                card.className = "bg-slate-50 p-3 rounded-2xl border border-slate-100 flex justify-between items-center";
-                card.innerHTML = `
-                    <div class="text-left">
-                        <p class="text-[10px] font-black text-slate-400 uppercase leading-none">Veículo</p>
-                        <h4 class="text-sm font-black text-slate-800">#${bus.id} <span class="text-[10px] font-bold text-slate-400">L:${bus.linha}</span></h4>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-lg font-black ${bus.avgDb >= 85 ? 'text-red-600' : 'text-orange-600'}">${bus.avgDb} <small class="text-[10px]">dB</small></span>
-                        <p class="text-[8px] font-bold text-slate-400 uppercase leading-none">${bus.count} denúncias</p>
-                    </div>
-                `;
-                rankingList.appendChild(card);
-            });
-
-            // 3. Renderizar Tabela
+            // Regra 2: Ordenação por tempo (decrescente) no JS
             const sortedLogs = [...allLogs].sort((a, b) => {
-                const timeA = a.timestamp?.seconds || 0;
-                const timeB = b.timestamp?.seconds || 0;
-                return timeB - timeA;
+                const dateA = a.timestamp?.seconds || 0;
+                const dateB = b.timestamp?.seconds || 0;
+                return dateB - dateA;
             });
 
             sortedLogs.forEach(log => {
+                totals.total++;
+                const dbValue = parseInt(log.ruido_db) || 0;
+                const type = log.tipo_evento || "Ruído Elevado";
+                const prefixo = log.prefixo || "S/N";
+
+                if (type === "Quebra de Veículo") totals.breakdowns++;
+                if (type === "Atraso Crítico") totals.delays++;
+                if (dbValue >= 85) totals.criticalNoise++;
+
+                // Lógica de Agrupamento por Ônibus (Ranking)
+                if (!busRegistry[prefixo]) {
+                    busRegistry[prefixo] = { count: 0, noiseSum: 0, breakCount: 0, delaySum: 0, line: log.linha };
+                }
+                busRegistry[prefixo].count++;
+                busRegistry[prefixo].noiseSum += dbValue;
+                if (type === "Quebra de Veículo") busRegistry[prefixo].breakCount++;
+                if (type === "Atraso Crítico") busRegistry[prefixo].delaySum++;
+
+                // Renderização do Mapa
+                if (log.coordenadas) {
+                    const coords = log.coordenadas.split(',').map(c => parseFloat(c.trim()));
+                    if (!isNaN(coords[0]) && !isNaN(coords[1])) {
+                        let color = "#3b82f6"; // Azul padrão
+                        if (dbValue >= 85) color = "#dc2626"; // Vermelho ruído
+                        if (type === "Quebra de Veículo") color = "#f97316"; // Laranja quebra
+                        if (type === "Atraso Crítico") color = "#a855f7"; // Roxo atraso
+
+                        L.circleMarker([coords[0], coords[1]], {
+                            radius: 7,
+                            fillColor: color,
+                            color: "#fff",
+                            weight: 1,
+                            fillOpacity: 0.8
+                        }).addTo(markersGroup).bindPopup(`
+                            <div class="text-[11px] font-bold p-1">
+                                <p class="text-slate-400 uppercase text-[9px] mb-1">${type}</p>
+                                <p class="text-slate-800 text-sm mb-1">#${prefixo} - ${log.linha}</p>
+                                <div class="flex gap-2">
+                                    <span class="text-red-600">🔊 ${dbValue}dB</span>
+                                    <span class="text-blue-600">🌡️ ${log.temp_interna}°C</span>
+                                </div>
+                            </div>
+                        `);
+                    }
+                }
+
+                // Renderização da Tabela
                 const row = document.createElement('tr');
-                if (parseInt(log.ruido_db) >= 85) row.className = "critical-row";
+                let rowClass = "";
+                let typeIcon = "volume-2";
+                if (dbValue >= 85) rowClass = "critical-row";
+                if (type === "Quebra de Veículo") { rowClass = "breakdown-row"; typeIcon = "wrench"; }
+                if (type === "Atraso Crítico") { rowClass = "delay-row"; typeIcon = "clock"; }
+
+                row.className = `${rowClass} transition-colors hover:bg-slate-50`;
                 row.innerHTML = `
-                    <td class="px-6 py-4 text-slate-400 text-[10px]">${log.data}<br>${log.hora}</td>
-                    <td class="px-6 py-4">
-                        <span class="font-black text-slate-800">#${log.prefixo}</span><br>
-                        <span class="text-[10px] text-slate-500 uppercase font-bold">${log.linha}</span>
-                    </td>
+                    <td class="px-6 py-4 text-slate-400 whitespace-nowrap">${log.data}<br><span class="text-[10px]">${log.hora}</span></td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
-                            <span class="font-black ${parseInt(log.ruido_db) >= 85 ? 'text-red-600' : 'text-slate-600'}">${log.ruido_db}dB</span>
+                            <i data-lucide="${typeIcon}" size="14" class="opacity-40"></i>
+                            <span class="font-bold text-[10px] uppercase tracking-tighter">${type}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="font-black text-slate-800">#${prefixo}</span><br>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase truncate max-w-[120px] block">${log.linha}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <span class="${dbValue >= 85 ? 'text-red-600 font-black' : 'text-slate-600'}">${dbValue}dB</span>
                             <span class="text-blue-600 font-bold">${log.temp_interna}°C</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 italic text-slate-500 text-[10px]">${log.sintomas || '--'}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-[10px] italic text-slate-500 leading-tight">${log.sintomas || '--'}</span>
+                    </td>
                     <td class="px-6 py-4 text-right">
-                        <span class="text-[8px] bg-slate-100 px-2 py-1 rounded-md text-slate-400 font-mono">${log.audit?.deviceId?.substring(0,8) || 'Anon'}</span>
+                        <span class="text-[8px] bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-400 font-mono" title="${log.audit?.deviceId}">
+                            ${log.audit?.deviceId?.substring(0,8) || 'Anon'}
+                        </span>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
 
-            // 4. Update Stats
-            document.getElementById('stat-total').innerText = allLogs.length;
-            document.getElementById('stat-buses').innerText = Object.keys(busStats).length;
-            document.getElementById('stat-db').innerText = Math.round(totalDb / (allLogs.length || 1));
-            document.getElementById('stat-critical').innerText = criticalCount;
-            
+            // Renderizar Ranking de Reincidência
+            const sortedRanking = Object.entries(busRegistry)
+                .map(([id, stats]) => ({ id, ...stats, score: stats.count + (stats.breakCount * 2) }))
+                .sort((a, b) => b.score - a.score);
+
+            sortedRanking.slice(0, 10).forEach((bus, index) => {
+                const rankCard = document.createElement('div');
+                rankCard.className = "bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center";
+                rankCard.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-black text-slate-300">#${index + 1}</span>
+                        <div>
+                            <h4 class="text-sm font-black text-slate-800">V: ${bus.id}</h4>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase truncate max-w-[150px]">${bus.line}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="flex gap-2 justify-end mb-1">
+                            ${bus.breakCount > 0 ? `<span class="bg-orange-100 text-orange-600 text-[8px] font-black px-1.5 rounded-md">🔧 ${bus.breakCount}</span>` : ''}
+                            <span class="bg-blue-100 text-blue-600 text-[8px] font-black px-1.5 rounded-md">Σ ${bus.count}</span>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-600">Ø ${Math.round(bus.noiseSum / bus.count)}dB</p>
+                    </div>
+                `;
+                rankingList.appendChild(rankCard);
+            });
+
+            // Atualizar contadores
+            document.getElementById('stat-total').innerText = totals.total;
+            document.getElementById('stat-breakdowns').innerText = totals.breakdowns;
+            document.getElementById('stat-delays').innerText = totals.delays;
+            document.getElementById('stat-critical').innerText = totals.criticalNoise;
+            document.getElementById('stat-buses').innerText = Object.keys(busRegistry).length;
+
             lucide.createIcons();
         }
 
-        // Busca na Tabela
+        // Sistema de Busca
         document.getElementById('table-search').oninput = function(e) {
             const term = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#table-body tr');
