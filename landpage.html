@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação Sentinela STP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .gradient-bg { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <!-- Hero Section -->
+    <header class="gradient-bg text-white min-h-[60vh] flex flex-col items-center justify-center text-center p-6 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/></pattern></defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+        </div>
+        <div class="relative z-10 max-w-4xl">
+            <div class="inline-flex items-center gap-2 bg-blue-500/30 px-4 py-2 rounded-full mb-6 border border-white/20">
+                <i data-lucide="shield-check" class="text-blue-200"></i>
+                <span class="text-xs font-black uppercase tracking-widest">Projeto Sentinela STP</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tighter">Transporte Público é <br><span class="text-blue-300 underline decoration-blue-400">Saúde Pública</span></h1>
+            <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto font-medium leading-relaxed">
+                Uma via tecnológica para auditar a salubridade urbana e devolver a dignidade ao passageiro catarinense.
+            </p>
+        </div>
+        <a href="#problema" class="absolute bottom-10 animate-bounce">
+            <i data-lucide="chevron-down" size="32"></i>
+        </a>
+    </header>
+
+    <!-- O Problema: O Diagnóstico do Adoecimento -->
+    <section id="problema" class="max-w-6xl mx-auto py-24 px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-4">O Cenário Atual</h2>
+            <h3 class="text-3xl md:text-4xl font-black tracking-tight">O "Mapa do Adoecimento" Silencioso</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="card bg-white p-8 rounded-[2.5rem] border border-slate-200">
+                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="volume-2"></i>
+                </div>
+                <h4 class="text-xl font-black mb-4">Agressão Sonora</h4>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">Ruídos superiores a <strong>85dB</strong> registrados sistematicamente. Risco de perda auditiva e estresse cardiovascular.</p>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="w-[85%] h-full bg-red-500"></div>
+                </div>
+                <span class="text-[10px] font-bold text-red-500 mt-2 block uppercase">Nível Crítico Detectado</span>
+            </div>
+
+            <div class="card bg-white p-8 rounded-[2.5rem] border border-slate-200">
+                <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="thermometer-sun"></i>
+                </div>
+                <h4 class="text-xl font-black mb-4">Tortura Térmica</h4>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">Temperaturas internas acima de <strong>32°C</strong>. Causa desidratação, picos hipertensivos e síncopes.</p>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="w-[90%] h-full bg-orange-500"></div>
+                </div>
+                <span class="text-[10px] font-bold text-orange-500 mt-2 block uppercase">Estresse Térmico Severo</span>
+            </div>
+
+            <div class="card bg-white p-8 rounded-[2.5rem] border border-slate-200">
+                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="brain"></i>
+                </div>
+                <h4 class="text-xl font-black mb-4">Colapso Mental</h4>
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">Atrasos e quebras geram picos de cortisol, ansiedade e exaustão emocional na classe trabalhadora.</p>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="w-[75%] h-full bg-purple-500"></div>
+                </div>
+                <span class="text-[10px] font-bold text-purple-500 mt-2 block uppercase">Impacto na Saúde Mental</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Base Legal -->
+    <section class="bg-slate-900 text-white py-24 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <i data-lucide="scroll-text" class="mx-auto mb-8 text-blue-400" size="48"></i>
+            <h2 class="text-3xl md:text-5xl font-black mb-8 leading-tight">Lastro Jurídico: <br>Artigo 3º da Lei 8.080/90</h2>
+            <blockquote class="text-xl italic text-slate-400 mb-8 leading-relaxed">
+                "A saúde tem como determinantes e condicionantes, entre outros, o <strong>transporte</strong>."
+            </blockquote>
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="bg-white/10 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-white/10">Constituição Federal Art. 196</span>
+                <span class="bg-white/10 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-white/10">Código de Defesa do Consumidor</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- A Solução (Caminho) -->
+    <section class="max-w-6xl mx-auto py-24 px-6">
+        <div class="flex flex-col md:flex-row items-center gap-16">
+            <div class="flex-1">
+                <h2 class="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-center md:text-left">Nossa Via</h2>
+                <h3 class="text-4xl font-black mb-8 tracking-tighter text-center md:text-left">Auditoria Digital & <br>Poder Popular</h3>
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">1</div>
+                        <div>
+                            <h5 class="font-black text-slate-800 uppercase text-xs mb-1">Captação Cidadã</h5>
+                            <p class="text-sm text-slate-500">App intuitivo registra dB, Temperatura e Sintomas com geolocalização e precisão técnica.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">2</div>
+                        <div>
+                            <h5 class="font-black text-slate-800 uppercase text-xs mb-1">Inteligência de Dados</h5>
+                            <p class="text-sm text-slate-500">Painel agrupa denúncias por prefixo de ônibus, criando um "Hall da Vergonha" para manutenção da frota.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">3</div>
+                        <div>
+                            <h5 class="font-black text-slate-800 uppercase text-xs mb-1">Ação Legislativa</h5>
+                            <p class="text-sm text-slate-500">Dados robustos para embasar leis de salubridade térmica/acústica e fiscalização pontual.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mockup do App Simulado -->
+            <div class="flex-1 w-full max-w-sm">
+                <div class="bg-slate-800 p-4 rounded-[3rem] shadow-2xl border-4 border-slate-700 aspect-[9/19] flex flex-col overflow-hidden">
+                    <div class="bg-blue-700 h-full rounded-[2.5rem] flex flex-col items-center justify-center p-6 text-white text-center">
+                        <i data-lucide="shield-alert" size="48" class="mb-4"></i>
+                        <h6 class="text-xl font-black mb-2">Sentinela STP</h6>
+                        <div class="bg-white/20 p-4 rounded-2xl w-full mb-4">
+                            <span class="text-4xl font-black">89dB</span>
+                            <p class="text-[10px] font-bold uppercase opacity-70">Agressão Sonora!</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 w-full">
+                            <div class="bg-white/10 p-2 rounded-xl text-[8px] font-bold uppercase">🌡️ 34°C</div>
+                            <div class="bg-white/10 p-2 rounded-xl text-[8px] font-bold uppercase">📍 TICEN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Convite à Parceria -->
+    <footer class="bg-blue-700 text-white py-20 px-6 text-center">
+        <div class="max-w-2xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-black mb-6 tracking-tighter">Vamos construir este caminho juntos?</h2>
+            <p class="text-blue-100 mb-10 leading-relaxed font-medium">
+                O Sentinela STP é uma proposta de colaboração para devolver a esperança à população de Florianópolis através da transparência e do fomento técnico.
+            </p>
+            <div class="bg-blue-800 p-8 rounded-[2rem] border border-blue-400/30 text-left">
+                <p class="text-xs font-black uppercase tracking-widest text-blue-300 mb-4 text-center">Contato Coordenação</p>
+                <div class="flex flex-col md:flex-row justify-center gap-8 text-center md:text-left">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-blue-200">Robson Jorge de Matos</span>
+                        <p class="font-black text-lg">48 9 8496 8927</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-blue-200">Portfólio do Projeto</span>
+                        <p class="font-black text-sm underline"><a href="https://robsonjm.github.io/Sentinela-STP/">Acessar Ferramenta</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
