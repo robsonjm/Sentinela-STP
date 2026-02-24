@@ -11,7 +11,6 @@
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         .gradient-bg { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
         
-        /* Estilo dos Cards de Feedback */
         .feedback-card {
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             animation: fadeInScale 0.6s ease-out forwards;
@@ -23,8 +22,7 @@
         }
 
         .live-dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background-color: #ef4444;
             border-radius: 50%;
             display: inline-block;
@@ -37,21 +35,24 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .law-section {
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
     <!-- Hero Section -->
-    <header class="gradient-bg text-white py-20 px-6 text-center relative overflow-hidden">
+    <header class="gradient-bg text-white py-24 px-6 text-center relative overflow-hidden">
         <div class="max-w-4xl mx-auto relative z-10">
-            <div class="inline-flex items-center gap-2 bg-blue-500/30 px-4 py-2 rounded-full mb-6 border border-white/20">
+            <div class="inline-flex items-center gap-2 bg-blue-500/30 px-4 py-2 rounded-full mb-8 border border-white/20">
                 <i data-lucide="shield-check" size="16"></i>
                 <span class="text-[10px] font-black uppercase tracking-[0.2em]">Projeto Sentinela STP</span>
             </div>
-            <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tighter leading-none">O Transporte Público<br><span class="text-blue-300">é Saúde Pública</span></h1>
-            <p class="text-lg text-blue-100 max-w-2xl mx-auto font-medium">
-                Auditoria Cidadã em tempo real contra a precarização e o adoecimento da população de Florianópolis.
+            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter leading-tight">Transporte é <br><span class="text-blue-300">Saúde Pública</span></h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto font-medium leading-relaxed">
+                Uma via tecnológica de auditoria cidadã para devolver a dignidade ao passageiro e combater o adoecimento urbano em Florianópolis.
             </p>
         </div>
     </header>
@@ -59,76 +60,127 @@
     <!-- Seção de FEEDBACK EM TEMPO REAL -->
     <section class="py-20 px-6 bg-white border-b border-slate-100">
         <div class="max-w-6xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
-                <div class="text-center md:text-left">
-                    <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div class="text-left">
+                    <div class="flex items-center gap-2 mb-2">
                         <span class="live-dot"></span>
-                        <span class="text-[10px] font-black uppercase text-red-600 tracking-widest">Feed de Impacto ao Vivo</span>
+                        <span class="text-[10px] font-black uppercase text-red-600 tracking-widest text-left">Feed de Impacto ao Vivo</span>
                     </div>
-                    <h2 class="text-3xl font-black tracking-tight">O que o povo está sentindo <span class="text-blue-600">agora</span></h2>
+                    <h2 class="text-4xl font-black tracking-tight">O que o povo está sentindo <span class="text-blue-600 italic">agora</span></h2>
                 </div>
-                <div class="bg-slate-100 px-6 py-3 rounded-2xl border border-slate-200">
-                    <p class="text-[10px] font-black text-slate-500 uppercase text-center">Registros captados via App</p>
-                    <p class="text-xs font-bold text-slate-700 italic">"O povo pelo povo"</p>
+                <div class="text-right hidden md:block">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Princípio Norteador</p>
+                    <p class="text-lg font-bold text-slate-700 italic">"O povo pelo povo"</p>
                 </div>
             </div>
 
-            <!-- Container dos Cards -->
+            <!-- Container dos Cards Dinâmicos -->
             <div id="live-stories-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[300px]">
                 <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-300">
                     <i data-lucide="loader-2" class="animate-spin mb-4" size="40"></i>
-                    <p class="font-bold uppercase text-xs tracking-widest">Sincronizando relatos...</p>
+                    <p class="font-bold uppercase text-xs tracking-widest text-center">Sincronizando relatos dos terminais...</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- O Problema & Dados Técnicos -->
+    <!-- O Problema: Diagnóstico Sanitário -->
     <section class="py-24 px-6 max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-center">Os Riscos do Descaso</h2>
+            <h3 class="text-4xl font-black tracking-tight text-center">O Mapa do Adoecimento Silencioso</h3>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
-                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="volume-2"></i>
+            <div class="p-10 bg-white rounded-[3rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+                <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-8">
+                    <i data-lucide="volume-2" size="28"></i>
                 </div>
-                <h4 class="text-xl font-black mb-2">Agressão Sonora</h4>
-                <p class="text-slate-500 text-sm leading-relaxed">Ruídos acima de 85dB causam estresse cardiovascular e danos auditivos irreversíveis (NR-15).</p>
+                <h4 class="text-2xl font-black mb-4 tracking-tight text-left">Agressão Sonora</h4>
+                <p class="text-slate-500 leading-relaxed text-left">Registros frequentes acima de <strong>85dB</strong>. Ruído excessivo causa estresse cardiovascular, perda auditiva e irritabilidade crônica conforme a NR-15.</p>
             </div>
-            <div class="p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
-                <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="thermometer-sun"></i>
+            <div class="p-10 bg-white rounded-[3rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-8">
+                    <i data-lucide="thermometer-sun" size="28"></i>
                 </div>
-                <h4 class="text-xl font-black mb-2">Tortura Térmica</h4>
-                <p class="text-slate-500 text-sm leading-relaxed">Ônibus sem climatização atingem 35°C+, provocando desidratação e picos de hipertensão.</p>
+                <h4 class="text-2xl font-black mb-4 tracking-tight text-left">Tortura Térmica</h4>
+                <p class="text-slate-500 leading-relaxed text-left">Veículos que operam acima de <strong>32°C</strong>. O estresse térmico provoca picos de hipertensão, desidratação e exaustão física extrema no trabalhador.</p>
             </div>
-            <div class="p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
-                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="clock"></i>
+            <div class="p-10 bg-white rounded-[3rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+                <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-8">
+                    <i data-lucide="brain" size="28"></i>
                 </div>
-                <h4 class="text-xl font-black mb-2">Atrasos Críticos</h4>
-                <p class="text-slate-500 text-sm leading-relaxed">A falha operacional desestrutura a vida do trabalhador e gera exaustão mental sistêmica.</p>
+                <h4 class="text-2xl font-black mb-4 tracking-tight text-left">Colapso Mental</h4>
+                <p class="text-slate-500 leading-relaxed text-left">Atrasos e quebras não são apenas falhas logísticas; eles desestruturam rotinas familiares e elevam os níveis de cortisol da população.</p>
             </div>
         </div>
     </section>
 
-    <!-- Call to Action Final -->
-    <footer class="bg-slate-900 text-white py-20 px-6">
+    <!-- Base Legal: O Pilar da Lei 8.080/90 -->
+    <section class="bg-slate-900 text-white py-24 px-6 law-section">
         <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-3xl font-black mb-6">Não somos a solução definitiva,<br>somos um <span class="text-blue-400">bom caminho</span>.</h2>
-            <p class="text-slate-400 mb-10">Este projeto busca parceria técnica e fomento para transformar a indignação em política pública baseada em dados.</p>
+            <i data-lucide="scroll-text" class="mx-auto mb-8 text-blue-400" size="64"></i>
+            <h2 class="text-4xl md:text-5xl font-black mb-8 leading-tight tracking-tighter">Lastro Jurídico:<br>Lei Federal 8.080/1990</h2>
+            <p class="text-2xl font-medium text-slate-300 italic mb-10 leading-relaxed">
+                "Art. 3º: A saúde tem como determinantes e condicionantes, entre outros, o <strong>transporte</strong>."
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left border-t border-white/10 pt-12">
+                <div class="flex gap-4">
+                    <i data-lucide="check-circle" class="text-green-400 shrink-0"></i>
+                    <p class="text-sm text-slate-400"><strong>Dever do Estado:</strong> Garantir que o serviço essencial de transporte não seja um agente causador de patologias.</p>
+                </div>
+                <div class="flex gap-4">
+                    <i data-lucide="check-circle" class="text-green-400 shrink-0"></i>
+                    <p class="text-sm text-slate-400"><strong>Direito do Cidadão:</strong> Exigir salubridade, conforto térmico e acústico em sua jornada diária.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Crítica Social e Elitismo -->
+    <section class="py-24 px-6 bg-blue-50">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-16">
+            <div class="flex-1">
+                <h2 class="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-center md:text-left">O Fator Social</h2>
+                <h3 class="text-4xl font-black mb-8 tracking-tighter text-center md:text-left leading-tight">Combatendo a Invisibilidade do Elitismo</h3>
+                <div class="space-y-6 text-slate-600 font-medium text-center md:text-left">
+                    <p>Enfrentamos uma cultura que doutrina o cidadão a ter vergonha de usar o transporte coletivo, rotulando-o como uma "evidência de pobreza".</p>
+                    <p>Essa mentalidade, unida à individualização dos direitos, permite que o sistema continue precarizado. Enquanto o ônibus for visto como um "mal necessário", a fiscalização continuará sendo omissa e conivente.</p>
+                </div>
+            </div>
+            <div class="flex-1 bg-white p-8 rounded-[3rem] border border-blue-100 shadow-xl relative text-left">
+                <i data-lucide="users" size="48" class="text-blue-600 mb-6"></i>
+                <h4 class="text-xl font-black mb-4 text-slate-800">Organização Popular</h4>
+                <p class="text-sm text-slate-500 leading-relaxed mb-6">O Sentinela STP é uma ferramenta de emancipação. Ele transforma a indignação individual em dado coletivo, rompendo com a descrença da população que está cansada de reivindicar sem ser ouvida.</p>
+                <div class="bg-blue-600 h-1 w-20 rounded-full"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action & Contato -->
+    <footer class="bg-slate-900 text-white py-24 px-6 border-t border-white/5">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-black mb-8 leading-tight tracking-tighter text-center">Este é um <span class="text-blue-400">bom caminho</span> para construir o futuro de Florianópolis.</h2>
+            <p class="text-slate-400 mb-12 max-w-2xl mx-auto">Buscamos parceria técnica e fomento parlamentar para tornar esta auditoria um patrimônio público e gratuito da nossa cidade.</p>
             
-            <div class="flex flex-wrap justify-center gap-4 mb-12">
-                <a href="https://robsonjm.github.io/Sentinela-STP/" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-2xl font-black uppercase text-xs transition-all">Testar o Aplicativo</a>
-                <a href="https://robsonjm.github.io/Sentinela-STP/painel.html" class="bg-slate-800 hover:bg-slate-700 px-8 py-4 rounded-2xl font-black uppercase text-xs border border-slate-700 transition-all">Ver Painel de Dados</a>
+            <div class="flex flex-wrap justify-center gap-4 mb-16">
+                <a href="https://robsonjm.github.io/Sentinela-STP/" class="bg-blue-600 hover:bg-blue-700 px-10 py-5 rounded-2xl font-black uppercase text-xs transition-all shadow-lg shadow-blue-900/40">Testar o Aplicativo</a>
+                <a href="https://robsonjm.github.io/Sentinela-STP/painel.html" class="bg-slate-800 hover:bg-slate-700 px-10 py-5 rounded-2xl font-black uppercase text-xs border border-slate-700 transition-all">Ver Painel de Auditoria</a>
             </div>
 
-            <div class="pt-10 border-t border-slate-800">
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Coordenação: Robson Jorge de Matos</p>
-                <p class="text-xl font-black">48 9 8496 8927</p>
+            <div class="pt-12 border-t border-slate-800 text-center">
+                <div class="inline-flex items-center gap-3 mb-6 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+                    <div class="text-left">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Idealizador e Coordenação</p>
+                        <p class="text-lg font-black text-blue-300">Robson Jorge de Matos</p>
+                    </div>
+                </div>
+                <p class="text-xl font-black opacity-80 tracking-tighter">48 9 8496 8927</p>
             </div>
         </div>
     </footer>
 
-    <!-- Firebase SDK e Lógica de Relatos -->
+    <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -149,7 +201,6 @@
         const db = getFirestore(app);
         const container = document.getElementById('live-stories-container');
 
-        // Função para iniciar a escuta dos relatos após autenticação
         const initLiveFeed = () => {
             const q = query(
                 collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'),
@@ -170,23 +221,23 @@
                     container.innerHTML = '';
                     items.slice(0, 6).forEach(item => {
                         const card = document.createElement('div');
-                        card.className = 'feedback-card bg-slate-50 p-6 rounded-[2rem] border border-blue-100 relative';
+                        card.className = 'feedback-card bg-slate-50 p-8 rounded-[3rem] border border-blue-100 relative shadow-sm hover:shadow-md transition-all text-left';
                         card.innerHTML = `
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <p class="text-[9px] font-black text-blue-600 uppercase mb-1">#${item.prefixo || 'S/N'}</p>
-                                    <p class="text-[11px] font-bold text-slate-800 uppercase leading-none">${item.linha || 'Geral'}</p>
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="text-left">
+                                    <p class="text-[9px] font-black text-blue-600 uppercase mb-1">Veículo #${item.prefixo || 'S/N'}</p>
+                                    <p class="text-[11px] font-bold text-slate-800 uppercase leading-none text-left">${item.linha || 'Geral'}</p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">${item.ruido_db}dB</span>
+                                    <span class="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm shadow-red-200">${item.ruido_db}dB</span>
                                 </div>
                             </div>
-                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative">
-                                <i data-lucide="quote" class="absolute -top-2 -left-2 text-blue-200 fill-blue-200" size="20"></i>
-                                <p class="text-sm font-medium text-slate-700 italic leading-relaxed">"${item.relato_pessoal}"</p>
+                            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative text-left">
+                                <i data-lucide="quote" class="absolute -top-3 -left-3 text-blue-500 opacity-20" size="32"></i>
+                                <p class="text-sm font-semibold text-slate-700 italic leading-relaxed text-left">"${item.relato_pessoal}"</p>
                             </div>
-                            <div class="mt-4 flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase">
-                                <span><i data-lucide="map-pin" size="10" class="inline"></i> ${item.coordenadas === 'Calculando...' ? 'Florianópolis' : 'Posição GPS'}</span>
+                            <div class="mt-6 flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                <span class="flex items-center gap-1"><i data-lucide="map-pin" size="10"></i> ${item.data}</span>
                                 <span>${item.hora}</span>
                             </div>
                         `;
@@ -196,26 +247,17 @@
                 } else {
                     container.innerHTML = `
                         <div class="col-span-full text-center py-20 text-slate-400">
-                            <p class="font-bold uppercase text-xs italic tracking-widest">Aguardando novos relatos dos terminais...</p>
+                            <p class="font-black uppercase text-xs italic tracking-widest">Aguardando novos relatos dos passageiros...</p>
                         </div>
                     `;
                 }
-            }, (error) => {
-                console.error("Erro no Firebase:", error);
-                container.innerHTML = `<div class="col-span-full text-center py-20 text-red-400 font-bold uppercase text-xs">Erro ao carregar relatos</div>`;
+            }, (err) => {
+                console.error(err);
+                container.innerHTML = `<div class="col-span-full text-center py-20 text-red-500 font-bold uppercase text-[10px]">Falha na conexão com o terminal</div>`;
             });
         };
 
-        // Regra 3: Autenticar PRIMEIRO, depois buscar dados
-        signInAnonymously(auth)
-            .then(() => {
-                console.log("Autenticado anonimamente na Landpage");
-                initLiveFeed();
-            })
-            .catch((error) => {
-                console.error("Erro na autenticação da Landpage:", error);
-            });
-
+        signInAnonymously(auth).then(() => initLiveFeed()).catch(console.error);
     </script>
 
     <script>
