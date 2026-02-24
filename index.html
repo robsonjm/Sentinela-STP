@@ -86,7 +86,7 @@
             </div>
         </div>
 
-        <!-- Header Compactado -->
+        <!-- Header -->
         <header class="bg-blue-700 text-white px-4 pb-3 shadow-lg flex-none relative z-50">
             <div class="max-w-md mx-auto flex justify-between items-center gap-2">
                 <div class="flex flex-col">
@@ -100,7 +100,7 @@
                     <span class="text-[8px] font-black uppercase tracking-tighter opacity-70">Nuvem</span>
                 </div>
 
-                <div id="status-badge" class="bg-blue-900/50 text-[8px] px-2 py-1 rounded-full border border-blue-400/50 font-bold uppercase tracking-widest shrink-0">Inativo</div>
+                <div id="status-badge" class="bg-blue-900/50 text-[8px] px-2 py-1 rounded-full border border-blue-400/50 font-bold uppercase tracking-widest shrink-0 text-center">Inativo</div>
             </div>
         </header>
 
@@ -122,14 +122,79 @@
                 <!-- Identificação do Veículo -->
                 <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-wider">Linha</label>
-                            <input type="text" id="bus-line" placeholder="Ex: 233" 
+                        <div class="relative">
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-wider">Linha Oficial</label>
+                            <input list="fenix-lines" id="bus-line" placeholder="Busque a linha..." 
                                 class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
+                            <datalist id="fenix-lines">
+                                <!-- Alimentadoras TICEN -->
+                                <option value="665 - Abraão"><option value="762 - Angelo Laporta"><option value="844 - Bairro de Fátima"><option value="V-844 - Bairro de Fátima">
+                                <option value="V-661 - Balneário"><option value="661 - Balneário"><option value="763 - Caeira do Saco dos Limões"><option value="V-662 - Canto via Otília Cruz">
+                                <option value="662 - Canto via Otília Cruz"><option value="V-631 - Capoeiras"><option value="631 - Capoeiras"><option value="183 - Carianos via Saco dos Limões">
+                                <option value="772 - Chico Mendes"><option value="V-663 - Coloninha via Araci Vaz Callado"><option value="663 - Coloninha via Araci Vaz Callado">
+                                <option value="630 - Corredor Continente"><option value="V-630 - Corredor Continente"><option value="664 - Itaguaçu"><option value="V-670 - Monte Cristo">
+                                <option value="670 - Monte Cristo"><option value="672 - Monte Cristo via Esc. Edith Gama Ramos"><option value="764 - Monte Serrat"><option value="V-764 - Monte Serrat via NEIM Evandro Sousa">
+                                <option value="160 - Morro da Cruz"><option value="161 - Morro da Penitenciária"><option value="765 - Morro da Queimada"><option value="766 - Morro do 25">
+                                <option value="760 - Morro do Geraldo"><option value="768 - Morro do Horácio"><option value="769 - Morro Nova Trento"><option value="186 - Multi-hospital via Túnel">
+                                <option value="460 - Porto da Lagoa"><option value="467 - Tapera / Saco dos Limões"><option value="461 - Tapera via Túnel"><option value="154 - TICEN - Carvoeira via Pantanal">
+                                <option value="188 - TICEN - UFSC"><option value="431 - TICEN - Aeroporto"><option value="104 - TICEN / Itacorubi via Mauro Ramos"><option value="476 - TICEN / Tapera">
+                                <option value="191 - TITRI / TICEN via Transcaeira"><option value="184 - UDESC via Beira Mar"><option value="V-671 - Vila / Promorar"><option value="671 - Vila / Promorar">
+                                <option value="761 - Vila Aparecida"><option value="137 - Volta ao Morro Norte via H.U."><option value="135 - Volta ao Morro Norte via Lauro Linhares">
+                                <option value="136 - Volta ao Morro Sul via H.U."><option value="138 - Volta ao Morro Sul via Lauro Linhares">
+                                <!-- Troncal (Inter-Terminal) -->
+                                <option value="230 - TICAN - Gama D'Eça via TITRI"><option value="224 - TICAN - TITRI via Virgílio Várzea"><option value="233 - TICAN - UFSC via Santa Mônica">
+                                <option value="210 - TICAN / TICEN Direto"><option value="221 - TICAN / TICEN via Mauro Ramos"><option value="231 - TICAN / TICEN via TITRI">
+                                <option value="840 - TICAN - TILAG via Barra da Lagoa"><option value="132 - TITRI - TICEN via Gama D'Eça/H.I"><option value="850 - TILAG / Rio Vermelho via Cidade da Barra">
+                                <option value="320 - TILAG / TICEN via Beira Mar"><option value="330 - TILAG / TICEN via Mauro Ramos"><option value="841 - TILAG / TIRIO"><option value="843 - TILAG / TIRIO via LIC">
+                                <option value="845 - TILAG / TITRI via Córrego Grande"><option value="333 - TILAG / TITRI via Madre Benvenuta"><option value="410 - TIRIO / TICEN Direto">
+                                <option value="430 - TIRIO / TICEN via Costeira"><option value="847 - TIRIO - TITRI via UFSC"><option value="212 - TISAN - TICEN Direto">
+                                <option value="332 - TISAN / TICEN via Beira Mar"><option value="331 - TISAN / TICEN via Mauro Ramos"><option value="110 - TITRI - TICEN Direto">
+                                <option value="131 - TITRI - TICEN via Gama D'Eça"><option value="133 - TITRI / TICEN via Mauro Ramos">
+                                <!-- Executivo -->
+                                <option value="2120 - Executivo Barra da Lagoa"><option value="1126 - Executivo Cachoeira"><option value="4124 - Executivo Caieira da Barra do Sul via Tapera">
+                                <option value="1120 - Executivo Canasvieiras"><option value="1128 - Executivo Costa do Moçambique"><option value="1132 - Executivo Costa do Moçambique via Vargem Grande">
+                                <option value="1127 - Executivo Gaivotas"><option value="1121 - Executivo Ingleses / Santinho"><option value="1123 - Executivo Jurerê"><option value="1129 - Executivo Muquém">
+                                <option value="4120 - Executivo Pântano do Sul via Eucaliptos"><option value="4125 - Executivo Pântano do Sul via Gramal"><option value="1122 - Executivo Praia Brava">
+                                <option value="4123 - Executivo Ribeirão da Ilha"><option value="1125 - Executivo Rio Vermelho">
+                                <!-- Convencional -->
+                                <option value="673 - Ponte Viva">
+                                <!-- Alimentadoras TICAN -->
+                                <option value="276 - Balneário Canasvieiras"><option value="277 - Balneário Ingleses"><option value="280 - Cachoeira - TICAN"><option value="260 - Cachoeira do Bom Jesus">
+                                <option value="261 - Capivari"><option value="V-261 - Capivari via SC-403"><option value="262 - Circular Canasvieiras"><option value="285 - Circular Moçambique">
+                                <option value="288 - Circular Rio Vermelho"><option value="281 - Costa do Moçambique"><option value="250 - Forte / Canasvieiras"><option value="V-250 - Forte / Canasvieiras via Col. Virgílio Várzea">
+                                <option value="263 - Gaivotas"><option value="269 - Moçambique via Rua Alzira Rosa Aguiar"><option value="265 - Ponta das Canas"><option value="266 - Praia Brava">
+                                <option value="267 - Rio Vermelho"><option value="287 - Rio Vermelho via Vargem Grande"><option value="264 - Santinho via Ingleses"><option value="268 - Sítio de Baixo">
+                                <option value="274 - Tulipas Vermelhas via Muquém"><option value="283 - Vargem do Bom Jesus"><option value="270 - Vargem Grande"><option value="289 - Circular Vargem Grande via Rio Vermelho">
+                                <option value="282 - Vargem Pequena"><option value="V-282 - Vargem Pequena via Esc. Prof. Zulma Freitas">
+                                <!-- Alimentadoras TITRI -->
+                                <option value="846 - Cacupé"><option value="V-846 - Cacupé via Caminho dos Açores"><option value="170 - Caminho da Cruz via João Paulo"><option value="151 - Centro Administrativo">
+                                <option value="164 - Córrego Grande via Poção"><option value="165 - Itacorubi"><option value="169 - Monte Verde via Mané Vicente"><option value="173 - Morro do Quilombo">
+                                <option value="V-173 - Morro do Quilombo via SC 404"><option value="178 - Saco Grande Retorno SC-401"><option value="176 - Saco Grande via HU"><option value="174 - Saco Grande via João Paulo">
+                                <option value="V-174 - Saco Grande via João Paulo / Barreira do Janga"><option value="177 - Santa Mônica"><option value="179 - Serrinha"><option value="155 - Sol Nascente">
+                                <option value="470 - Tapera / TITRI"><option value="180 - TITRI - Pantanal via Carvoeira">
+                                <!-- Alimentadoras TISAN -->
+                                <option value="366 - Barra do Sambaqui via Padre Rohr"><option value="181 - Cacupé - João Paulo"><option value="940 - Canasvieiras / Santo Antônio via Jurerê">
+                                <option value="273 - Circular Ratones"><option value="271 - Daniela"><option value="272 - Jurerê"><option value="365 - Sambaqui">
+                                <!-- Inter-Regional e Madrugadão -->
+                                <option value="601 - Circular Abraão - Estreito"><option value="291 - Circular Canasvieiras/Praia Brava"><option value="605 - Circular Estreito - Abraão"><option value="296 - Circular Santinho Ingleses">
+                                <option value="294 - Interpraias"><option value="100 - Madrugadão Centro - UFSC Norte"><option value="102 - Madrugadão Centro / UFSC Sul"><option value="600 - Madrugadão Continente Norte">
+                                <option value="604 - Madrugadão Continente Sul"><option value="300 - Madrugadão Leste"><option value="201 - Madrugadão Norte - Jurerê / Canasvieiras"><option value="200 - Madrugadão Norte - Rio Vermelho / Santinho">
+                                <option value="301 - Madrugadão Norte - Santo Antônio / TICAN"><option value="500 - Madrugadão Sul - Pântano do Sul"><option value="501 - Madrugadão Sul - Ribeirão">
+                                <option value="720 - Monte Serrat - Serrinha"><option value="722 - Morro do 25 - Morro da Cruz"><option value="721 - Morro do Horácio - Saco dos Limões">
+                                <option value="D-564 - Pântano do Sul"><option value="D-565 - Ribeirão da Ilha"><option value="D-260 - TICEN / Cachoeira do Bom Jesus via Mauro Ramos">
+                                <option value="D-264 - TICEN / Ingleses via Mauro Ramos"><option value="D-266 - TICEN / Praia Brava via Mauro Ramos"><option value="D-267 - TICEN / Rio Vermelho via Mauro Ramos">
+                                <!-- Alimentadoras TIRIO -->
+                                <option value="560 - Armação"><option value="561 - Caieira da Barra do Sul"><option value="462 - Campeche"><option value="562 - Costa de Cima">
+                                <option value="V-562 - Costa de Cima via Costa de Dentro"><option value="563 - Costa de Dentro"><option value="V-563 - Costa de Dentro via Costa de Cima"><option value="473 - Morro das Pedras via Eucaliptos">
+                                <option value="474 - Morro das Pedras via Gramal"><option value="564 - Pântano do Sul"><option value="565 - Ribeirão da Ilha"><option value="469 - Tapera / TIRIO">
+                                <option value="477 - TIRIO / Aeroporto via Tapera"><option value="V-468 - TIRIO / Multihospital via Aeroporto"><option value="468 - TIRIO / Multihospital">
+                                <!-- Alimentadoras TILAG -->
+                                <option value="360 - Barra da Lagoa"><option value="V-360 - Barra da Lagoa via Terminal Lacustre"><option value="362 - Canto dos Araçás"><option value="363 - Joaquina"><option value="364 - Osni Ortiga">
+                            </datalist>
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block tracking-wider">Nº Ônibus</label>
-                            <input type="number" id="bus-number" placeholder="0000" 
+                            <input type="number" id="bus-number" placeholder="Prefixo" 
                                 class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
                         </div>
                     </div>
@@ -144,7 +209,7 @@
                     </div>
                 </section>
 
-                <!-- Medidor SPL com Régua de Comparação -->
+                <!-- Medidor SPL -->
                 <section id="meter-card" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 text-center relative overflow-hidden">
                     <canvas id="audio-visualizer" class="absolute inset-0 w-full h-full opacity-10 pointer-events-none"></canvas>
                     <div id="danger-overlay" class="absolute inset-0 bg-red-600/10 opacity-0 pointer-events-none transition-opacity duration-300"></div>
@@ -231,7 +296,7 @@
             </div>
         </main>
 
-        <!-- Footer / Botão Principal -->
+        <!-- Rodapé -->
         <footer class="bg-white border-t border-slate-200 p-4 flex-none shadow-[0_-4px_20px_rgba(0,0,0,0.05)] relative z-50">
             <div class="max-w-md mx-auto grid grid-cols-5 gap-4 items-center">
                 <div class="col-span-1 flex flex-col items-center justify-center opacity-30 text-slate-600">
@@ -250,29 +315,27 @@
         </footer>
     </div>
 
-    <!-- Modal de Manifesto -->
+    <!-- Modal Manifesto -->
     <div id="modal-manifesto" class="fixed inset-0 bg-black/60 z-[200] hidden items-end justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-6 space-y-6 animate-in slide-in-from-bottom duration-300 max-h-[80vh] overflow-y-auto no-scrollbar">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-black text-slate-800 tracking-tighter">Transporte é Saúde</h2>
+                <h2 class="text-xl font-black text-slate-800 tracking-tighter">Manifesto Florianópolis</h2>
                 <button onclick="closeManifesto()" class="p-2 bg-slate-100 rounded-full"><i data-lucide="x" size="18"></i></button>
             </div>
             <div class="space-y-4 text-xs leading-relaxed text-slate-600 font-medium">
-                <p class="font-black text-blue-700 uppercase tracking-widest border-b pb-1">Artigo 3º da Lei 8.080/90</p>
-                <p>"Os níveis de saúde expressam a organização social e econômica do País, tendo a saúde como determinantes e condicionantes, entre outros, o <strong>transporte</strong>."</p>
-                
-                <p class="font-black text-red-600 uppercase tracking-widest border-b pb-1">O seu Direito</p>
+                <p class="font-black text-blue-700 uppercase tracking-widest border-b pb-1">Transporte é Direito (Lei 8.080)</p>
+                <p>O transporte público é um determinante social da saúde. Ônibus barulhentos e quentes não são apenas ineficientes, são patogênicos.</p>
+                <p class="font-black text-red-600 uppercase tracking-widest border-b pb-1">Seus Direitos em Campo</p>
                 <ul class="space-y-2 list-disc pl-4">
-                    <li>O ruído acima de 85dB é agressão física.</li>
-                    <li>O calor acima de 30°C é tortura térmica.</li>
-                    <li>Se o ônibus quebrar, você tem direito ao reembolso ou transporte alternativo imediato.</li>
+                    <li>Ruído > 85dB = Agressão Física.</li>
+                    <li>Calor > 30°C = Estresse Térmico.</li>
+                    <li>Em caso de quebra, o reembolso ou transporte imediato é obrigatório.</li>
                 </ul>
-                <p class="italic text-slate-400 mt-6">Este app é um instrumento de controle social e fiscalização popular da dignidade humana.</p>
             </div>
         </div>
     </div>
 
-    <!-- Firebase e Logística -->
+    <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -313,7 +376,7 @@
         const getAuditInfo = () => ({
             deviceId: localStorage.getItem('stp_device_id') || (localStorage.setItem('stp_device_id', crypto.randomUUID()), localStorage.getItem('stp_device_id')),
             userAgent: navigator.userAgent,
-            appVersion: '1.4.0-completo'
+            appVersion: '1.4.5-full-lines'
         });
 
         window.saveLogToCloud = async (rec) => {
@@ -340,7 +403,6 @@
         const DB_LIMIT = 85;
         const LOG_WAIT = 10000; 
 
-        // Referências UI
         const dbDisplay = document.getElementById('db-display');
         const dbComp = document.getElementById('db-comparison');
         const dbBar = document.getElementById('db-progress');
@@ -367,7 +429,9 @@
                         gpsText.parentElement.classList.remove('opacity-30');
                     }, null, {enableHighAccuracy: true});
                 }
-            } catch (err) { document.getElementById('mic-dot').className = "status-dot bg-red-500"; }
+            } catch (err) { 
+                document.getElementById('mic-dot').className = "status-dot bg-red-500"; 
+            }
         }
 
         function setZone(z) {
@@ -391,7 +455,8 @@
             try {
                 if(!userStream) userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const AC = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AC();
+                if (!audioCtx) audioCtx = new AC();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
                 analyser = audioCtx.createAnalyser();
                 mic = audioCtx.createMediaStreamSource(userStream);
                 analyser.fftSize = 256;
@@ -399,17 +464,15 @@
                 mic.connect(analyser);
                 isActive = true;
                 mainBtn.classList.add('hidden'); stopBtn.classList.remove('hidden');
-                document.getElementById('status-badge').innerText = "MONITORANDO";
+                document.getElementById('status-badge').innerText = "FISCALIZANDO";
                 document.getElementById('status-badge').className = "bg-red-600 text-[8px] px-2 py-1 rounded-full border border-red-400 font-black animate-pulse uppercase";
                 loop();
-            } catch (err) { alert("Erro ao iniciar sensores."); }
+            } catch (err) { alert("Erro ao acessar sensores."); }
         }
 
         function loop() {
             if(!isActive) return;
             analyser.getByteTimeDomainData(dataArr);
-            
-            // Desenho Canvas Waveform
             const cv = document.getElementById('audio-visualizer');
             const cctx = cv.getContext('2d');
             cv.width = cv.offsetWidth; cv.height = cv.offsetHeight;
@@ -423,7 +486,6 @@
             }
             cctx.stroke();
 
-            // Cálculo dB
             let sum = 0; let sig = false;
             for(let i=0; i<dataArr.length; i++) { if(dataArr[i] !== 128) sig = true; let n = (dataArr[i]-128)/128; sum += n*n; }
             let rms = Math.sqrt(sum/dataArr.length);
@@ -432,18 +494,15 @@
             dbDisplay.innerText = db;
             dbBar.style.width = `${Math.min(Math.max((db-30)/80*100,0),100)}%`;
 
-            // Comparação de Ruído
             if(db < 60) dbComp.innerText = "Conversa Normal";
             else if(db < 75) dbComp.innerText = "Aspirador de Pó";
             else if(db < 85) dbComp.innerText = "Tráfego Pesado";
-            else { dbComp.innerText = "⚠️ Britadeira / Risco"; }
+            else { dbComp.innerText = "⚠️ Risco à Saúde (Britadeira)"; }
 
             if(db >= DB_LIMIT) {
-                document.getElementById('db-status').innerText = "⚠️ EXCESSO DETECTADO";
                 document.getElementById('danger-overlay').style.opacity = "1";
                 addRecord(db);
             } else {
-                document.getElementById('db-status').innerText = "Capturando...";
                 document.getElementById('danger-overlay').style.opacity = "0";
             }
             animId = requestAnimationFrame(loop);
@@ -459,7 +518,7 @@
                     navigator.geolocation.getCurrentPosition(
                         (p) => resolve(`${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`),
                         () => resolve(gpsText.innerText),
-                        { enableHighAccuracy: true, timeout: 4000 }
+                        { enableHighAccuracy: true, timeout: 5000 }
                     );
                 });
             };
@@ -468,7 +527,7 @@
             const rec = {
                 tipo_evento: tipo,
                 ruido_db: db,
-                temp_interna: document.getElementById('temp-input').value,
+                temp_interna: tempSlider.value,
                 sintomas: activeSymptoms.join(', '),
                 linha: document.getElementById('bus-line').value,
                 prefixo: document.getElementById('bus-number').value || "S/N",
@@ -489,7 +548,6 @@
         async function logSpecialEvent(tipo) {
             if(!document.getElementById('bus-line').value) { alert("Identifique a linha primeiro."); return; }
             await addRecord(dbDisplay.innerText, tipo);
-            window.showToast(`${tipo} Registado ✓`);
         }
 
         function renderRecords() {
@@ -497,20 +555,18 @@
             logContainer.innerHTML = '';
             logs.slice(0, 15).forEach(l => {
                 const item = document.createElement('div');
-                item.className = "bg-white p-4 rounded-2xl border-l-8 border-red-500 shadow-sm space-y-2";
+                item.className = "bg-white p-4 rounded-2xl border-l-8 border-red-500 shadow-sm space-y-2 text-left";
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="space-y-1">
-                            <p class="text-[13px] font-black text-slate-800">${l.linha} <span class="text-slate-300 font-medium">#${l.prefixo}</span></p>
+                            <p class="text-[13px] font-black text-slate-800">${l.linha}</p>
                             <div class="flex gap-1.5 flex-wrap">
-                                <span class="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">${l.ruido_db}dB</span>
-                                <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">${l.temp_interna}°C</span>
-                                ${l.tipo_evento !== "Ruído Elevado" ? `<span class="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">${l.tipo_evento}</span>` : ''}
+                                <span class="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded">${l.ruido_db}dB</span>
+                                <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded">#${l.prefixo}</span>
+                                ${l.tipo_evento !== "Ruído Elevado" ? `<span class="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded">${l.tipo_evento}</span>` : ''}
                             </div>
                         </div>
-                        <div class="text-[9px] font-black text-slate-400 text-right">
-                            ${l.hora}<br>${l.data}
-                        </div>
+                        <div class="text-[9px] font-black text-slate-400 text-right">${l.hora}</div>
                     </div>
                     ${l.sintomas ? `<p class="text-[8px] font-bold text-blue-600 uppercase tracking-tighter italic">Sintomas: ${l.sintomas}</p>` : ''}
                 `;
@@ -524,7 +580,7 @@
             logs.forEach(l => c += `"${l.tipo_evento}",${l.ruido_db},${l.temp_interna},"${l.linha}","${l.prefixo}","${l.zona}","${l.sintomas}","${l.coordenadas}","${l.hora}","${l.data}"\n`);
             const b = new Blob([c], {type:'text/csv'});
             const u = window.URL.createObjectURL(b);
-            const a = document.createElement('a'); a.href = u; a.download = `STP_DENUNCIA_${Date.now()}.csv`; a.click();
+            const a = document.createElement('a'); a.href = u; a.download = `STP_AUDITORIA.csv`; a.click();
         }
 
         function stop() {
