@@ -29,7 +29,7 @@
         <div id="toast" class="pointer-events-none">
             <div class="bg-slate-900/95 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-sm">
                 <i data-lucide="cloud-check" size="14" class="text-green-400"></i>
-                <span id="toast-msg">Enviando evidência...</span>
+                <span id="toast-msg">Sincronizando...</span>
             </div>
         </div>
 
@@ -45,7 +45,7 @@
                     </div>
                     <div class="flex items-center gap-1.5 bg-blue-800/40 px-2 py-1 rounded-md">
                         <span id="cloud-dot" class="status-dot bg-slate-400"></span>
-                        <span class="text-[8px] font-black uppercase opacity-70">Nuvem</span>
+                        <span class="text-[8px] font-black uppercase tracking-tighter opacity-70">Nuvem</span>
                     </div>
                 </div>
             </div>
@@ -61,7 +61,6 @@
                             <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Linha Oficial</label>
                             <input list="fenix-lines" id="bus-line" placeholder="Busque a linha..." class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
                             <datalist id="fenix-lines">
-                                <!-- Alimentadoras TICEN -->
                                 <option value="665 - Abraão"><option value="762 - Angelo Laporta"><option value="844 - Bairro de Fátima"><option value="V-844 - Bairro de Fátima">
                                 <option value="V-661 - Balneário"><option value="661 - Balneário"><option value="763 - Caeira do Saco dos Limões"><option value="V-662 - Canto via Otília Cruz">
                                 <option value="662 - Canto via Otília Cruz"><option value="V-631 - Capoeiras"><option value="631 - Capoeiras"><option value="183 - Carianos via Saco dos Limões">
@@ -69,11 +68,9 @@
                                 <option value="630 - Corredor Continente"><option value="V-630 - Corredor Continente"><option value="664 - Itaguaçu"><option value="V-670 - Monte Cristo">
                                 <option value="670 - Monte Cristo"><option value="672 - Monte Cristo via Esc. Edith Gama Ramos"><option value="764 - Monte Serrat"><option value="V-764 - Monte Serrat via NEIM Evandro Sousa">
                                 <option value="160 - Morro da Cruz"><option value="161 - Morro da Penitenciária"><option value="186 - Multi-hospital via Túnel"><option value="467 - Tapera / Saco dos Limões">
-                                <!-- Troncal -->
                                 <option value="210 - TICAN / TICEN Direto"><option value="221 - TICAN / TICEN via Mauro Ramos"><option value="233 - TICAN - UFSC via Santa Mônica">
                                 <option value="320 - TILAG / TICEN via Beira Mar"><option value="330 - TILAG / TICEN via Mauro Ramos"><option value="410 - TIRIO / TICEN Direto">
                                 <option value="430 - TIRIO / TICEN via Costeira"><option value="110 - TITRI - TICEN Direto"><option value="133 - TITRI / TICEN via Mauro Ramos">
-                                <!-- Executivo -->
                                 <option value="2120 - Executivo Barra da Lagoa"><option value="1120 - Executivo Canasvieiras"><option value="1121 - Executivo Ingleses / Santinho">
                                 <option value="1123 - Executivo Jurerê"><option value="1125 - Executivo Rio Vermelho"><option value="4123 - Executivo Ribeirão da Ilha">
                                 <option value="673 - Ponte Viva">
@@ -193,22 +190,28 @@
             document.getElementById('cloud-dot').className = user ? "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "status-dot bg-red-500";
         });
 
-        // Função de Geocalização de Alta Fidelidade (Promisified)
+        // Função de Geocalização de Alta Fidelidade (Promisified) com melhor tratamento de erro
         const getPreciseLocation = () => {
             return new Promise((resolve) => {
                 if (!navigator.geolocation) return resolve("Sem Suporte");
                 navigator.geolocation.getCurrentPosition(
                     (p) => resolve(`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`),
-                    () => resolve("Erro GPS"),
-                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                    (err) => {
+                        console.error("Erro GPS:", err);
+                        resolve(`Erro: ${err.message}`);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             });
         };
 
         window.saveLogToCloud = async (rec) => {
-            if (!user) return;
+            if (!user) {
+                window.showToast("Erro: Não autenticado na nuvem.");
+                return;
+            }
             const story = document.getElementById('personal-story').value;
-            const coords = await getPreciseLocation(); // Captura exata no momento do log
+            const coords = await getPreciseLocation(); 
             
             try {
                 await addDoc(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'), {
@@ -221,7 +224,10 @@
                 });
                 document.getElementById('personal-story').value = "";
                 window.showToast("Dados Sincronizados ✓");
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error("Erro ao salvar:", err);
+                window.showToast("Erro ao sincronizar dados.");
+            }
         };
     </script>
 
@@ -242,17 +248,36 @@
         };
 
         async function requestPermissions() {
+            // Verifica se está em contexto seguro (HTTPS)
+            if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+                window.showToast("Erro: Sensores exigem HTTPS!");
+                return;
+            }
+
             try {
+                // Áudio
                 userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                document.getElementById('mic-dot').className = "status-dot bg-green-500";
+                document.getElementById('mic-dot').className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
                 
+                // Localização
                 navigator.geolocation.watchPosition(p => {
                     document.getElementById('geo-dot').className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
                     document.getElementById('gps-label').innerText = "GPS ATIVO";
-                    document.getElementById('gps-icon').setAttribute('data-lucide', 'map-pin');
+                    const gpsIcon = document.getElementById('gps-icon');
+                    gpsIcon.setAttribute('data-lucide', 'map-pin');
+                    gpsIcon.parentElement.classList.replace('text-slate-400', 'text-blue-600');
                     lucide.createIcons();
-                }, null, { enableHighAccuracy: true });
-            } catch(e) { window.showToast("Ative áudio e localização!"); }
+                }, (err) => {
+                    console.warn("GPS Denied or Error:", err);
+                    document.getElementById('geo-dot').className = "status-dot bg-red-500";
+                    window.showToast("Permita a localização no navegador!");
+                }, { enableHighAccuracy: true });
+
+            } catch(e) { 
+                console.error("Mic Error:", e);
+                document.getElementById('mic-dot').className = "status-dot bg-red-500";
+                window.showToast("Permita o microfone no navegador!");
+            }
         }
 
         function setZone(z) {
@@ -270,21 +295,34 @@
         tempSlider.oninput = (e) => { tempLabel.innerText = `${e.target.value}°C`; };
 
         async function start() {
-            if(!document.getElementById('bus-line').value) return alert("Por favor, identifique a linha.");
-            if(!userStream) await requestPermissions();
-            const AC = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AC();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-            analyser = audioCtx.createAnalyser();
-            mic = audioCtx.createMediaStreamSource(userStream);
-            dataArr = new Uint8Array(analyser.frequencyBinCount);
-            mic.connect(analyser);
-            isActive = true;
-            document.getElementById('main-btn').classList.add('hidden');
-            document.getElementById('stop-btn').classList.remove('hidden');
-            document.getElementById('status-badge').innerText = "FISCALIZANDO";
-            document.getElementById('status-badge').className = "bg-red-600 text-[8px] px-2 py-1 rounded-full font-black animate-pulse";
-            loop();
+            if(!document.getElementById('bus-line').value) {
+                window.showToast("Identifique a linha primeiro!");
+                return;
+            }
+            
+            try {
+                if(!userStream) await requestPermissions();
+                
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!audioCtx) audioCtx = new AC();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                
+                analyser = audioCtx.createAnalyser();
+                mic = audioCtx.createMediaStreamSource(userStream);
+                analyser.fftSize = 256;
+                dataArr = new Uint8Array(analyser.frequencyBinCount);
+                mic.connect(analyser);
+                
+                isActive = true;
+                document.getElementById('main-btn').classList.add('hidden');
+                document.getElementById('stop-btn').classList.remove('hidden');
+                document.getElementById('status-badge').innerText = "FISCALIZANDO";
+                document.getElementById('status-badge').className = "bg-red-600 text-[8px] px-2 py-1 rounded-full font-black animate-pulse";
+                loop();
+            } catch (err) {
+                console.error("Start Error:", err);
+                window.showToast("Erro ao iniciar sensores. Tente recarregar.");
+            }
         }
 
         function loop() {
@@ -329,7 +367,14 @@
             container.prepend(d);
         }
 
-        function stop() { isActive = false; document.getElementById('stop-btn').classList.add('hidden'); document.getElementById('main-btn').classList.remove('hidden'); document.getElementById('status-badge').innerText = "Inativo"; document.getElementById('status-badge').className = "bg-blue-900/50 text-[8px] px-2 py-1 rounded-full font-bold uppercase"; }
+        function stop() { 
+            isActive = false; 
+            document.getElementById('stop-btn').classList.add('hidden'); 
+            document.getElementById('main-btn').classList.remove('hidden'); 
+            document.getElementById('status-badge').innerText = "Inativo"; 
+            document.getElementById('status-badge').className = "bg-blue-900/50 text-[8px] px-2 py-1 rounded-full font-bold uppercase"; 
+        }
+        
         document.getElementById('main-btn').onclick = start;
         document.getElementById('stop-btn').onclick = stop;
     </script>
