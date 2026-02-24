@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinela STP - Mural da Voz Popular</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        .feedback-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+        
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .live-dot {
+            width: 10px; height: 10px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.6); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Efeito de vidro para o cabeçalho fixo */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- Cabeçalho Fixo de Status -->
+    <nav class="glass-header sticky top-0 z-[100] px-6 py-4 shadow-sm">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-xl text-white">
+                    <i data-lucide="shield-alert" size="20"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tighter uppercase leading-none">Sentinela STP</h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mural da Voz Popular</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-full border border-red-100">
+                    <span class="live-dot"></span>
+                    <span class="text-[10px] font-black uppercase text-red-600 tracking-widest">Tempo Real</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6 md:pt-12">
+        <!-- Introdução do Mural -->
+        <header class="text-center mb-16 space-y-4">
+            <h2 class="text-3xl md:text-5xl font-black tracking-tight text-slate-800 leading-tight">
+                O que Florianópolis está<br><span class="text-blue-600 italic">dizendo sobre o transporte?</span>
+            </h2>
+            <p class="text-slate-500 font-medium max-w-xl mx-auto">
+                Este é o feed contínuo de relatos captados pelo sistema Sentinela. Cada card representa a experiência de um cidadão neste exato momento.
+            </p>
+        </header>
+
+        <!-- Container do Feed Infinito -->
+        <div id="infinite-feed" class="space-y-8">
+            <!-- Loader Inicial -->
+            <div id="initial-loader" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                <i data-lucide="loader-2" class="animate-spin mb-4" size="48"></i>
+                <p class="font-bold uppercase text-xs tracking-widest">Conectando ao banco de dados...</p>
+            </div>
+        </div>
+
+        <!-- Sentinela de Scroll (para carregar mais) -->
+        <div id="scroll-anchor" class="h-20 flex items-center justify-center mt-12">
+            <div id="load-more-loader" class="hidden text-slate-400 flex items-center gap-2">
+                <i data-lucide="refresh-cw" class="animate-spin" size="16"></i>
+                <span class="text-[10px] font-black uppercase">Carregando histórico...</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase e Lógica de Scroll -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+          authDomain: "sentinela-stp.firebaseapp.com",
+          projectId: "sentinela-stp",
+          storageBucket: "sentinela-stp.firebasestorage.app",
+          messagingSenderId: "845865605498",
+          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
+          measurementId: "G-6DT4QG0RVT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Cache de elementos do DOM para evitar erros de null pointer
+        const container = document.getElementById('infinite-feed');
+        const scrollAnchor = document.getElementById('scroll-anchor');
+        const loadMoreLoader = document.getElementById('load-more-loader');
+        
+        let lastVisible = null;
+        let isLoadingMore = false;
+        let hasMore = true; // Flag para parar de buscar quando acabar o histórico
+
+        // Criar Card de Feedback
+        const createCard = (item, isNew = false) => {
+            if (!item.relato_pessoal || item.relato_pessoal.trim() === "") return null;
+
+            const card = document.createElement('div');
+            card.className = `feedback-card bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative ${isNew ? 'ring-2 ring-blue-500 ring-offset-4' : ''}`;
+            
+            const dbVal = parseInt(item.ruido_db) || 0;
+            const noiseColor = dbVal >= 85 ? 'bg-red-500' : 'bg-blue-600';
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-6 text-left">
+                    <div>
+                        <p class="text-[10px] font-black text-blue-600 uppercase mb-1">Veículo #${item.prefixo || 'S/N'}</p>
+                        <h4 class="text-sm font-bold text-slate-800 uppercase leading-none">${item.linha || 'Linha Não Informada'}</h4>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="${noiseColor} text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm">${dbVal}dB</span>
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">${item.temp_interna}°C</span>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative mb-6 text-left">
+                    <i data-lucide="quote" class="absolute -top-3 -left-3 text-blue-500 opacity-20" size="40"></i>
+                    <p class="text-base font-semibold text-slate-700 italic leading-relaxed">"${item.relato_pessoal}"</p>
+                </div>
+                <div class="flex justify-between items-center text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center gap-1"><i data-lucide="calendar" size="12"></i> ${item.data}</span>
+                        <span class="flex items-center gap-1"><i data-lucide="clock" size="12"></i> ${item.hora}</span>
+                    </div>
+                    <span class="flex items-center gap-1"><i data-lucide="map-pin" size="12"></i> ${item.zona || 'Interno'}</span>
+                </div>
+            `;
+            return card;
+        };
+
+        // Iniciar Listener de Tempo Real para o Topo
+        const startLiveFeed = () => {
+            const qLive = query(
+                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'),
+                orderBy('timestamp', 'desc'),
+                limit(10)
+            );
+
+            onSnapshot(qLive, (snapshot) => {
+                const initialLoader = document.getElementById('initial-loader');
+                if (initialLoader) initialLoader.remove();
+                
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        const card = createCard(data, true);
+                        if (card && container) {
+                            container.prepend(card);
+                            lucide.createIcons();
+                        }
+                    }
+                });
+
+                // Inicializa o marcador de paginação na primeira carga
+                if (!lastVisible && !snapshot.empty) {
+                    lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                }
+            }, (error) => console.error("Erro Live Feed:", error));
+        };
+
+        // Função para carregar histórico (Paginação)
+        const loadHistory = async () => {
+            if (isLoadingMore || !lastVisible || !hasMore) return;
+            
+            isLoadingMore = true;
+            if (loadMoreLoader) loadMoreLoader.classList.remove('hidden');
+
+            try {
+                const qNext = query(
+                    collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'),
+                    orderBy('timestamp', 'desc'),
+                    startAfter(lastVisible),
+                    limit(5)
+                );
+
+                const snapshot = await getDocs(qNext);
+                
+                if (snapshot.empty) {
+                    hasMore = false;
+                    if (scrollAnchor) {
+                        scrollAnchor.innerHTML = `<p class="text-[10px] font-black text-slate-300 uppercase">Fim dos relatos históricos</p>`;
+                    }
+                    return;
+                }
+
+                lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                
+                snapshot.forEach(doc => {
+                    const card = createCard(doc.data());
+                    if (card && container) {
+                        container.appendChild(card);
+                    }
+                });
+                
+                lucide.createIcons();
+            } catch (e) {
+                console.error("Erro Paginação:", e);
+            } finally {
+                isLoadingMore = false;
+                if (loadMoreLoader) loadMoreLoader.classList.add('hidden');
+            }
+        };
+
+        // Infinite Scroll Observer
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) loadHistory();
+        }, { threshold: 0.1 });
+
+        if (scrollAnchor) observer.observe(scrollAnchor);
+
+        // Iniciar Autenticação e Feed
+        signInAnonymously(auth)
+            .then(() => startLiveFeed())
+            .catch(err => {
+                console.error("Erro Auth:", err);
+                if (container) {
+                    container.innerHTML = `<p class="text-center text-red-500 font-bold py-10">Erro de conexão com o servidor.</p>`;
+                }
+            });
+
+    </script>
+
+    <script>
+        // Inicialização global de ícones
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
