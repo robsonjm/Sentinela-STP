@@ -6,11 +6,35 @@
     <title>Painel Sentinela STP - Auditoria de Frota</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Leaflet Assets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet MarkerCluster Assets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        #map { height: 500px; width: 100%; border-radius: 1.5rem; z-index: 1; }
+        
+        #map { 
+            height: 500px; 
+            width: 100%; 
+            border-radius: 1.5rem; 
+            z-index: 1; 
+        }
+
+        /* Customização dos Clusters (Agrupamentos) */
+        .marker-cluster-small { background-color: rgba(181, 226, 191, 0.6); }
+        .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); color: white; font-weight: bold; }
+        .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
+        .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); color: white; font-weight: bold; }
+        .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
+        .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); color: white; font-weight: bold; }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .critical-row { background-color: #fff1f2; }
         .breakdown-row { background-color: #fff7ed; }
@@ -35,7 +59,7 @@
                 </div>
             </div>
             <div id="sync-status" class="flex items-center gap-2 bg-blue-800/50 px-4 py-2 rounded-full border border-blue-400/30 text-[10px] font-black uppercase tracking-widest">
-                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Sincronizando Base...
+                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Sincronizando...
             </div>
         </div>
     </nav>
@@ -72,19 +96,9 @@
                 <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center px-2 pb-3">
                         <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                            <i data-lucide="map-pinned" class="text-blue-600"></i> Mapa de Incidências Sanitárias
+                            <i data-lucide="map-pinned" class="text-blue-600"></i> Mapa de Auditoria Cidadã
                         </h2>
-                        <div class="flex gap-3">
-                            <div class="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400">
-                                <span class="w-2 h-2 rounded-full bg-orange-500"></span> Quebra
-                            </div>
-                            <div class="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400">
-                                <span class="w-2 h-2 rounded-full bg-purple-500"></span> Atraso
-                            </div>
-                            <div class="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400">
-                                <span class="w-2 h-2 rounded-full bg-red-600"></span> Ruído
-                            </div>
-                        </div>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">Passe o mouse nos grupos para expandir</p>
                     </div>
                     <div id="map"></div>
                 </div>
@@ -92,22 +106,17 @@
 
             <!-- Coluna de Ranking de Reincidência -->
             <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col max-h-[580px]">
-                <div class="mb-4">
-                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                        <i data-lucide="alert-octagon" class="text-red-600"></i> Ranking de Reincidência
+                <div class="mb-4 text-center">
+                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center justify-center gap-2">
+                        <i data-lucide="alert-octagon" class="text-red-600"></i> Hall da Vergonha
                     </h2>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Veículos com maior volume de problemas registrados</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Veículos com maior incidência de falhas</p>
                 </div>
                 <div id="ranking-list" class="space-y-3 flex-1 overflow-y-auto pr-2 no-scrollbar">
-                    <!-- Gerado dinamicamente -->
-                    <div class="animate-pulse flex flex-col gap-3">
-                        <div class="h-16 bg-slate-100 rounded-2xl"></div>
-                        <div class="h-16 bg-slate-100 rounded-2xl"></div>
-                        <div class="h-16 bg-slate-100 rounded-2xl"></div>
-                    </div>
+                    <div class="text-center py-12 text-slate-300 italic text-xs">Aguardando dados...</div>
                 </div>
                 <button onclick="window.print()" class="mt-4 w-full bg-slate-900 text-white text-[10px] font-black uppercase py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
-                    <i data-lucide="file-text" size="14"></i> Exportar Relatório de Auditoria
+                    <i data-lucide="file-text" size="14"></i> Gerar Relatório PDF
                 </button>
             </div>
         </div>
@@ -116,15 +125,12 @@
         <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
                 <div>
-                    <h2 class="text-sm font-black text-slate-800 uppercase">Rastreador de Evidências em Tempo Real</h2>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Base Legal: Artigo 3º Lei 8.080/90</p>
+                    <h2 class="text-sm font-black text-slate-800 uppercase text-center md:text-left">Logs de Evidências Sanitárias</h2>
                 </div>
-                <div class="flex gap-2 w-full md:w-auto">
-                    <div class="relative flex-1 md:w-80">
-                        <i data-lucide="search" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="table-search" placeholder="Filtrar por Ônibus, Linha ou Sintoma..." 
-                            class="w-full text-xs bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-600 transition-all">
-                    </div>
+                <div class="relative flex-1 md:w-80">
+                    <i data-lucide="search" size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="table-search" placeholder="Filtrar ônibus, linha ou sintoma..." 
+                        class="w-full text-xs bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-600 transition-all">
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -135,25 +141,22 @@
                             <th class="px-6 py-4">Evento</th>
                             <th class="px-6 py-4">Prefixo / Linha</th>
                             <th class="px-6 py-4">Ruído / Temp</th>
-                            <th class="px-6 py-4">Sintomas do Passageiro</th>
+                            <th class="px-6 py-4">Sintomas</th>
                             <th class="px-6 py-4 text-right">Auditoria</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
-                        <!-- Gerado por JS -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuração original do Robson
         const firebaseConfig = {
           apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
           authDomain: "sentinela-stp.firebaseapp.com",
@@ -169,34 +172,44 @@
         const db = getFirestore(app);
         const appId = 'sentinela-stp';
 
-        // Init Mapa em Florianópolis
+        // Inicializar Mapa
         const map = L.map('map').setView([-27.5945, -48.5477], 12);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
-        const markersGroup = L.layerGroup().addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // Configuração do Agrupador (MarkerCluster)
+        // spiderfyOnMaxZoom: true permite a expansão radial
+        // showCoverageOnHover: false deixa a UI mais limpa
+        const markersGroup = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            maxClusterRadius: 40 // Ajusta quão "perto" os itens precisam estar para agrupar
+        });
+        map.addLayer(markersGroup);
+
+        // Evento extra: Expandir radialmente ao passar o mouse (Hover Spiderfy)
+        markersGroup.on('clustermouseover', function (a) {
+            a.layer.spiderfy();
+        });
 
         let allLogs = [];
 
         signInAnonymously(auth).then(() => {
             const syncStatus = document.getElementById('sync-status');
-            syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Sistema Conectado';
+            syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Online';
             
-            // Regra 2: Busca coleção e processa em memória
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'), limit(500));
             onSnapshot(q, (snapshot) => {
                 allLogs = [];
                 snapshot.forEach(doc => allLogs.push({ id: doc.id, ...doc.data() }));
                 renderDashboard();
-            }, (err) => {
-                console.error(err);
-                syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Erro de Sincronia';
             });
         });
 
         function renderDashboard() {
             const tableBody = document.getElementById('table-body');
             const rankingList = document.getElementById('ranking-list');
+            
             markersGroup.clearLayers();
             tableBody.innerHTML = '';
             rankingList.innerHTML = '';
@@ -204,7 +217,7 @@
             const busRegistry = {};
             let totals = { total: 0, breakdowns: 0, delays: 0, criticalNoise: 0 };
 
-            // Regra 2: Ordenação por tempo (decrescente) no JS
+            // Ordenar por tempo
             const sortedLogs = [...allLogs].sort((a, b) => {
                 const dateA = a.timestamp?.seconds || 0;
                 const dateB = b.timestamp?.seconds || 0;
@@ -221,7 +234,7 @@
                 if (type === "Atraso Crítico") totals.delays++;
                 if (dbValue >= 85) totals.criticalNoise++;
 
-                // Lógica de Agrupamento por Ônibus (Ranking)
+                // Dados por Ônibus
                 if (!busRegistry[prefixo]) {
                     busRegistry[prefixo] = { count: 0, noiseSum: 0, breakCount: 0, delaySum: 0, line: log.linha };
                 }
@@ -230,31 +243,32 @@
                 if (type === "Quebra de Veículo") busRegistry[prefixo].breakCount++;
                 if (type === "Atraso Crítico") busRegistry[prefixo].delaySum++;
 
-                // Renderização do Mapa
+                // Adicionar Marcador ao Cluster
                 if (log.coordenadas) {
                     const coords = log.coordenadas.split(',').map(c => parseFloat(c.trim()));
                     if (!isNaN(coords[0]) && !isNaN(coords[1])) {
-                        let color = "#3b82f6"; // Azul padrão
-                        if (dbValue >= 85) color = "#dc2626"; // Vermelho ruído
-                        if (type === "Quebra de Veículo") color = "#f97316"; // Laranja quebra
-                        if (type === "Atraso Crítico") color = "#a855f7"; // Roxo atraso
+                        let color = "#3b82f6";
+                        if (dbValue >= 85) color = "#dc2626";
+                        if (type === "Quebra de Veículo") color = "#f97316";
+                        if (type === "Atraso Crítico") color = "#a855f7";
 
-                        L.circleMarker([coords[0], coords[1]], {
-                            radius: 7,
+                        const marker = L.circleMarker([coords[0], coords[1]], {
+                            radius: 8,
                             fillColor: color,
                             color: "#fff",
-                            weight: 1,
-                            fillOpacity: 0.8
-                        }).addTo(markersGroup).bindPopup(`
+                            weight: 1.5,
+                            fillOpacity: 0.9
+                        }).bindPopup(`
                             <div class="text-[11px] font-bold p-1">
-                                <p class="text-slate-400 uppercase text-[9px] mb-1">${type}</p>
-                                <p class="text-slate-800 text-sm mb-1">#${prefixo} - ${log.linha}</p>
-                                <div class="flex gap-2">
-                                    <span class="text-red-600">🔊 ${dbValue}dB</span>
-                                    <span class="text-blue-600">🌡️ ${log.temp_interna}°C</span>
+                                <p class="text-slate-400 uppercase text-[9px] mb-1 font-black">${type}</p>
+                                <p class="text-slate-800 text-sm mb-1">V: ${prefixo} - ${log.linha}</p>
+                                <div class="flex gap-2 border-t pt-1 mt-1">
+                                    <span class="text-red-600 font-black">🔊 ${dbValue}dB</span>
+                                    <span class="text-blue-600 font-black">🌡️ ${log.temp_interna}°C</span>
                                 </div>
                             </div>
                         `);
+                        markersGroup.addLayer(marker);
                     }
                 }
 
@@ -268,11 +282,11 @@
 
                 row.className = `${rowClass} transition-colors hover:bg-slate-50`;
                 row.innerHTML = `
-                    <td class="px-6 py-4 text-slate-400 whitespace-nowrap">${log.data}<br><span class="text-[10px]">${log.hora}</span></td>
+                    <td class="px-6 py-4 text-slate-400 whitespace-nowrap">${log.data}<br><span class="text-[10px] font-bold">${log.hora}</span></td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
                             <i data-lucide="${typeIcon}" size="14" class="opacity-40"></i>
-                            <span class="font-bold text-[10px] uppercase tracking-tighter">${type}</span>
+                            <span class="font-black text-[9px] uppercase tracking-tighter">${type}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -289,7 +303,7 @@
                         <span class="text-[10px] italic text-slate-500 leading-tight">${log.sintomas || '--'}</span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <span class="text-[8px] bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-400 font-mono" title="${log.audit?.deviceId}">
+                        <span class="text-[8px] bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-400 font-mono">
                             ${log.audit?.deviceId?.substring(0,8) || 'Anon'}
                         </span>
                     </td>
@@ -297,14 +311,14 @@
                 tableBody.appendChild(row);
             });
 
-            // Renderizar Ranking de Reincidência
+            // Gerar Ranking
             const sortedRanking = Object.entries(busRegistry)
-                .map(([id, stats]) => ({ id, ...stats, score: stats.count + (stats.breakCount * 2) }))
+                .map(([id, stats]) => ({ id, ...stats, score: (stats.count) + (stats.breakCount * 5) + (stats.delaySum * 2) }))
                 .sort((a, b) => b.score - a.score);
 
             sortedRanking.slice(0, 10).forEach((bus, index) => {
                 const rankCard = document.createElement('div');
-                rankCard.className = "bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center";
+                rankCard.className = "bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center hover:border-blue-200 transition-all";
                 rankCard.innerHTML = `
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black text-slate-300">#${index + 1}</span>
@@ -324,7 +338,7 @@
                 rankingList.appendChild(rankCard);
             });
 
-            // Atualizar contadores
+            // Atualizar Stats
             document.getElementById('stat-total').innerText = totals.total;
             document.getElementById('stat-breakdowns').innerText = totals.breakdowns;
             document.getElementById('stat-delays').innerText = totals.delays;
@@ -334,13 +348,11 @@
             lucide.createIcons();
         }
 
-        // Sistema de Busca
+        // Filtro da Tabela
         document.getElementById('table-search').oninput = function(e) {
             const term = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#table-body tr');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
+            document.querySelectorAll('#table-body tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
             });
         };
     </script>
