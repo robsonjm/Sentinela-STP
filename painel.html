@@ -6,99 +6,160 @@
     <title>Painel Sentinela STP - Auditoria de Frota</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Leaflet Assets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet MarkerCluster Assets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        #map { height: 500px; width: 100%; border-radius: 1.5rem; z-index: 1; }
-        .story-badge { background-color: #fefce8; border: 1px solid #fde047; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-style: italic; color: #854d0e; }
-        .filter-btn-active { background-color: #1d4ed8 !important; color: white !important; }
+        
+        #map { 
+            height: 500px; 
+            width: 100%; 
+            border-radius: 1.5rem; 
+            z-index: 1; 
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .critical-row { background-color: #fff1f2; }
+        .breakdown-row { background-color: #fff7ed; }
+        .delay-row { background-color: #faf5ff; }
+        
+        .filter-btn-active {
+            background-color: #1d4ed8 !important;
+            color: white !important;
+            border-color: #1d4ed8 !important;
+        }
+
+        /* Customização da Popup do Leaflet */
+        .leaflet-popup-content-wrapper {
+            border-radius: 1.5rem;
+            padding: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .leaflet-popup-tip { background: white; }
+
+        .story-badge { 
+            background-color: #fefce8; 
+            border: 1px solid #fde047; 
+            padding: 8px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            font-style: italic; 
+            color: #854d0e; 
+            margin-top: 8px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-12">
 
+    <!-- Header -->
     <nav class="bg-blue-700 text-white p-6 shadow-xl sticky top-0 z-[100]">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <i data-lucide="activity" class="bg-white text-blue-700 p-1.5 rounded-lg"></i>
-                <h1 class="text-xl font-black uppercase tracking-tighter">Sentinela STP</h1>
+                <div class="bg-white p-2 rounded-xl text-blue-700">
+                    <i data-lucide="activity"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tighter uppercase">Sentinela STP</h1>
+                    <p class="text-[10px] font-bold opacity-75 uppercase tracking-widest">Painel de Auditoria de Saúde e Mobilidade</p>
+                </div>
             </div>
-            <div id="sync-status" class="text-[10px] font-black uppercase bg-blue-800/50 px-4 py-2 rounded-full border border-blue-400/30">
-                Sincronizando...
+            <div id="sync-status" class="flex items-center gap-2 bg-blue-800/50 px-4 py-2 rounded-full border border-blue-400/30 text-[10px] font-black uppercase tracking-widest">
+                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Sincronizando...
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
         
-        <!-- Filtros -->
-        <section class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200 flex flex-wrap gap-2 items-center">
-            <span class="text-[10px] font-black text-slate-400 uppercase mr-2">Filtro Temporal:</span>
-            <button onclick="setPeriodFilter('hoje')" id="filter-hoje" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 hover:bg-slate-50">Hoje</button>
-            <button onclick="setPeriodFilter('semana')" id="filter-semana" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 hover:bg-slate-50">Semana</button>
-            <button onclick="setPeriodFilter('mes')" id="filter-mes" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 hover:bg-slate-50">Mês</button>
-            <button onclick="setPeriodFilter('todos')" id="filter-todos" class="filter-btn-active px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100">Tudo</button>
+        <!-- Barra de Filtros -->
+        <section class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase mr-2 flex items-center gap-1">
+                    <i data-lucide="calendar"></i> Filtrar Período:
+                </span>
+                <button onclick="setPeriodFilter('hoje')" id="filter-hoje" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">Hoje</button>
+                <button onclick="setPeriodFilter('semana')" id="filter-semana" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">Semana</button>
+                <button onclick="setPeriodFilter('mes')" id="filter-mes" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">Mês</button>
+                <button onclick="setPeriodFilter('todos')" id="filter-todos" class="filter-btn-active px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">Todo o Período</button>
+            </div>
         </section>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase">Total</p>
-                <h3 id="stat-total" class="text-3xl font-black">0</h3>
+                <h3 id="stat-total" class="text-3xl font-black text-slate-800">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-orange-200 border-l-4 border-l-orange-500">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-orange-500">
                 <p class="text-[10px] font-black text-slate-400 uppercase">Quebras</p>
                 <h3 id="stat-breakdowns" class="text-3xl font-black text-orange-600">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-purple-200 border-l-4 border-l-purple-500">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-purple-500">
                 <p class="text-[10px] font-black text-slate-400 uppercase">Atrasos</p>
                 <h3 id="stat-delays" class="text-3xl font-black text-purple-600">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-red-200 border-l-4 border-l-red-500">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-red-500">
                 <p class="text-[10px] font-black text-slate-400 uppercase">Ruído Crítico</p>
                 <h3 id="stat-critical" class="text-3xl font-black text-red-600">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-blue-200 border-l-4 border-l-blue-500 hidden lg:block">
-                <p class="text-[10px] font-black text-slate-400 uppercase">Ônibus Únicos</p>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-blue-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Frota</p>
                 <h3 id="stat-buses" class="text-3xl font-black text-blue-700">0</h3>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200">
-                <div id="map"></div>
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center px-2 pb-3">
+                        <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                            <i data-lucide="map-pinned" class="text-blue-600"></i> Mapa de Incidências Sanitárias
+                        </h2>
+                    </div>
+                    <div id="map"></div>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col">
-                <h2 class="text-sm font-black uppercase flex items-center gap-2 mb-4">
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col max-h-[580px]">
+                <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2 mb-4">
                     <i data-lucide="alert-octagon" class="text-red-600"></i> Hall da Vergonha
                 </h2>
-                <div id="ranking-list" class="space-y-3 flex-1 overflow-y-auto no-scrollbar"></div>
+                <div id="ranking-list" class="space-y-3 flex-1 overflow-y-auto pr-2 no-scrollbar text-left">
+                </div>
             </div>
         </div>
 
-        <!-- Tabela com Relatos -->
-        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-                <h2 class="text-sm font-black uppercase">Auditoria Cidadã Detalhada</h2>
-                <input type="text" id="table-search" placeholder="Filtrar..." class="text-xs bg-white border rounded-xl px-4 py-2 md:w-64">
+        <!-- Tabela -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden text-left">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                <h2 class="text-sm font-black text-slate-800 uppercase">Logs de Auditoria Cidadã</h2>
+                <input type="text" id="table-search" placeholder="Buscar por linha ou veículo..." 
+                    class="text-xs border border-slate-200 rounded-xl px-4 py-2 md:w-80 outline-none focus:ring-2 focus:ring-blue-600">
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
                         <tr>
-                            <th class="px-6 py-4">Data</th>
-                            <th class="px-6 py-4">Prefixo / Linha</th>
+                            <th class="px-6 py-4">Data/Hora</th>
+                            <th class="px-6 py-4">Evento</th>
+                            <th class="px-6 py-4">Veículo/Linha</th>
                             <th class="px-6 py-4">Métricas</th>
                             <th class="px-6 py-4">Relato de Impacto</th>
-                            <th class="px-6 py-4 text-right">ID</th>
+                            <th class="px-6 py-4 text-right">Auditoria</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body" class="divide-y divide-slate-100 font-medium"></tbody>
+                    <tbody id="table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -122,71 +183,142 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = 'sentinela-stp';
+
         const map = L.map('map').setView([-27.5945, -48.5477], 12);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-        const markersGroup = L.markerClusterGroup({ spiderfyOnMaxZoom: true });
+
+        const markersGroup = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            maxClusterRadius: 40
+        });
         map.addLayer(markersGroup);
 
-        let allLogs = [], currentPeriod = 'todos';
+        // Spiderfy on hover
+        markersGroup.on('clustermouseover', a => a.layer.spiderfy());
+
+        let allLogs = [];
+        let currentPeriod = 'todos';
 
         signInAnonymously(auth).then(() => {
-            document.getElementById('sync-status').innerText = "CONECTADO";
-            onSnapshot(query(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'), limit(1000)), snap => {
-                allLogs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const syncStatus = document.getElementById('sync-status');
+            syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Online';
+            
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'), limit(1000));
+            onSnapshot(q, (snapshot) => {
+                allLogs = [];
+                snapshot.forEach(doc => allLogs.push({ id: doc.id, ...doc.data() }));
                 renderDashboard();
             });
         });
 
-        window.setPeriodFilter = p => {
-            currentPeriod = p;
-            document.querySelectorAll('button[id^="filter-"]').forEach(b => b.classList.remove('filter-btn-active'));
-            document.getElementById(`filter-${p}`).classList.add('filter-btn-active');
+        window.setPeriodFilter = (period) => {
+            currentPeriod = period;
+            document.querySelectorAll('button[id^="filter-"]').forEach(btn => btn.classList.remove('filter-btn-active'));
+            document.getElementById(`filter-${period}`).classList.add('filter-btn-active');
             renderDashboard();
         };
 
         function renderDashboard() {
             const tableBody = document.getElementById('table-body');
             const rankingList = document.getElementById('ranking-list');
-            markersGroup.clearLayers(); tableBody.innerHTML = ''; rankingList.innerHTML = '';
-
-            const busStats = {}; let stats = { total:0, break:0, delay:0, crit:0 };
             
-            const filtered = allLogs.filter(log => {
-                if(currentPeriod === 'todos') return true;
-                const d = new Date(log.data.split('/').reverse().join('-'));
-                const today = new Date(); today.setHours(0,0,0,0);
-                if(currentPeriod === 'hoje') return d >= today;
-                if(currentPeriod === 'semana') return d >= new Date(today - 7*24*60*60*1000);
-                if(currentPeriod === 'mes') return d >= new Date(today.getFullYear(), today.getMonth(), 1);
+            markersGroup.clearLayers();
+            tableBody.innerHTML = '';
+            rankingList.innerHTML = '';
+
+            const busRegistry = {};
+            let totals = { total: 0, breakdowns: 0, delays: 0, criticalNoise: 0 };
+
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - 7);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            const filteredLogs = allLogs.filter(log => {
+                const logDate = new Date(log.data.split('/').reverse().join('-') + 'T00:00:00');
+                if (currentPeriod === 'hoje') return logDate >= startOfDay;
+                if (currentPeriod === 'semana') return logDate >= startOfWeek;
+                if (currentPeriod === 'mes') return logDate >= startOfMonth;
                 return true;
-            }).sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+            }).sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
 
-            filtered.forEach(log => {
-                stats.total++;
-                const dbVal = parseInt(log.ruido_db) || 0;
-                if(log.tipo_evento === "Quebra de Veículo") stats.break++;
-                if(log.tipo_evento === "Atraso Crítico") stats.delay++;
-                if(dbVal >= 85) stats.crit++;
+            filteredLogs.forEach(log => {
+                totals.total++;
+                const dbValue = parseInt(log.ruido_db) || 0;
+                const type = log.tipo_evento || "Ruído Elevado";
+                const prefixo = log.prefixo || "S/N";
 
-                if(!busStats[log.prefixo]) busStats[log.prefixo] = { score:0, line: log.linha };
-                busStats[log.prefixo].score += (log.tipo_evento !== "Ruído Elevado" ? 5 : 1);
+                if (type === "Quebra de Veículo") totals.breakdowns++;
+                if (type === "Atraso Crítico") totals.delays++;
+                if (dbValue >= 85) totals.criticalNoise++;
 
-                // Mapa
-                if(log.coordenadas && log.coordenadas !== "Calculando...") {
-                    const c = log.coordenadas.split(',').map(parseFloat);
-                    const color = log.tipo_evento === "Quebra de Veículo" ? "#f97316" : (dbVal >= 85 ? "#dc2626" : "#3b82f6");
-                    markersGroup.addLayer(L.circleMarker(c, { radius:8, fillColor:color, color:"#fff", weight:1.5, fillOpacity:0.9 }));
+                if (!busRegistry[prefixo]) {
+                    busRegistry[prefixo] = { count: 0, noiseSum: 0, breakCount: 0, delaySum: 0, line: log.linha };
+                }
+                busRegistry[prefixo].count++;
+                busRegistry[prefixo].noiseSum += dbValue;
+                if (type === "Quebra de Veículo") busRegistry[prefixo].breakCount++;
+                if (type === "Atraso Crítico") busRegistry[prefixo].delaySum++;
+
+                // Lógica de Marcador e DETALHAMENTO (Popup)
+                if (log.coordenadas && log.coordenadas.includes(',')) {
+                    const coords = log.coordenadas.split(',').map(c => parseFloat(c.trim()));
+                    if (!isNaN(coords[0])) {
+                        const color = type === "Quebra de Veículo" ? "#f97316" : (dbValue >= 85 ? "#dc2626" : "#3b82f6");
+                        
+                        const marker = L.circleMarker([coords[0], coords[1]], {
+                            radius: 10, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.9
+                        });
+
+                        // CONTEÚDO DO DETALHAMENTO AO CLICAR
+                        const popupContent = `
+                            <div class="p-2 min-w-[200px]">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">${type}</p>
+                                <h4 class="text-sm font-black text-slate-800 mb-2">#${prefixo} - ${log.linha}</h4>
+                                <div class="grid grid-cols-2 gap-2 mb-3">
+                                    <div class="bg-slate-50 p-2 rounded-lg text-center">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Ruído</p>
+                                        <p class="text-sm font-black ${dbValue >= 85 ? 'text-red-600' : 'text-slate-700'}">${dbValue}dB</p>
+                                    </div>
+                                    <div class="bg-slate-50 p-2 rounded-lg text-center">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Temp.</p>
+                                        <p class="text-sm font-black text-blue-600">${log.temp_interna}°C</p>
+                                    </div>
+                                </div>
+                                ${log.sintomas ? `
+                                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Sintomas:</p>
+                                    <p class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md mb-2 inline-block">${log.sintomas}</p>
+                                ` : ''}
+                                ${log.relato_pessoal ? `
+                                    <div class="story-badge">
+                                        <i data-lucide="quote" class="inline-block w-3 h-3 mb-1"></i>
+                                        "${log.relato_pessoal}"
+                                    </div>
+                                ` : ''}
+                                <p class="text-[9px] text-slate-300 mt-3 text-right">${log.data} às ${log.hora}</p>
+                            </div>
+                        `;
+
+                        marker.bindPopup(popupContent);
+                        markersGroup.addLayer(marker);
+                    }
                 }
 
-                // Tabela
+                // Linha da Tabela
                 const row = document.createElement('tr');
+                let rowClass = dbValue >= 85 ? "critical-row" : (type === "Quebra de Veículo" ? "breakdown-row" : (type === "Atraso Crítico" ? "delay-row" : ""));
+                row.className = rowClass;
                 row.innerHTML = `
-                    <td class="px-6 py-4 text-slate-400">${log.hora}</td>
-                    <td class="px-6 py-4"><span class="font-black">#${log.prefixo}</span><br>${log.linha}</td>
-                    <td class="px-6 py-4"><span class="${dbVal >= 85 ? 'text-red-600 font-bold' : ''}">${dbVal}dB</span> | ${log.temp_interna}°C</td>
+                    <td class="px-6 py-4 text-slate-400">${log.data}<br><span class="text-[10px] font-bold">${log.hora}</span></td>
+                    <td class="px-6 py-4 font-black uppercase text-[10px] tracking-tighter text-slate-600">${type}</td>
+                    <td class="px-6 py-4"><span class="font-black text-slate-800">#${prefixo}</span><br><span class="opacity-50">${log.linha}</span></td>
+                    <td class="px-6 py-4"><span class="${dbValue >= 85 ? 'text-red-600 font-bold' : ''}">${dbValue}dB</span> | ${log.temp_interna}°C</td>
                     <td class="px-6 py-4">
                         ${log.relato_pessoal ? `<div class="story-badge">${log.relato_pessoal}</div>` : `<span class="opacity-20 italic">Sem relato</span>`}
-                        <div class="text-[9px] mt-1 text-blue-600 uppercase font-black">${log.sintomas || ''}</div>
+                        <div class="text-[9px] mt-1 text-blue-600 font-black uppercase">${log.sintomas || ''}</div>
                     </td>
                     <td class="px-6 py-4 text-right opacity-30 font-mono">${log.audit?.deviceId?.substring(0,6) || '---'}</td>
                 `;
@@ -194,20 +326,42 @@
             });
 
             // Ranking
-            Object.entries(busStats).sort((a,b) => b[1].score - a[1].score).slice(0,8).forEach(([id, s]) => {
-                const item = document.createElement('div');
-                item.className = "bg-slate-50 p-3 rounded-2xl border border-slate-100 flex justify-between";
-                item.innerHTML = `<div class="text-[10px] font-black">#${id}<br><span class="opacity-40 uppercase">${s.line}</span></div><div class="text-xs font-black text-red-600">${s.score} pts</div>`;
-                rankingList.appendChild(item);
-            });
+            Object.entries(busRegistry)
+                .map(([id, stats]) => ({ id, ...stats, score: (stats.count) + (stats.breakCount * 5) + (stats.delaySum * 2) }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 8).forEach((bus, index) => {
+                    const item = document.createElement('div');
+                    item.className = "bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center";
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-black text-slate-300">#${index+1}</span>
+                            <div class="text-left">
+                                <p class="text-sm font-black text-slate-800">V: ${bus.id}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase truncate max-w-[120px]">${bus.line}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-black text-red-600">${bus.score} pts</span>
+                        </div>
+                    `;
+                    rankingList.appendChild(item);
+                });
 
-            document.getElementById('stat-total').innerText = stats.total;
-            document.getElementById('stat-breakdowns').innerText = stats.break;
-            document.getElementById('stat-delays').innerText = stats.delay;
-            document.getElementById('stat-critical').innerText = stats.crit;
-            document.getElementById('stat-buses').innerText = Object.keys(busStats).length;
+            document.getElementById('stat-total').innerText = totals.total;
+            document.getElementById('stat-breakdowns').innerText = totals.breakdowns;
+            document.getElementById('stat-delays').innerText = totals.delays;
+            document.getElementById('stat-critical').innerText = totals.criticalNoise;
+            document.getElementById('stat-buses').innerText = Object.keys(busRegistry).length;
+
             lucide.createIcons();
         }
+
+        document.getElementById('table-search').oninput = function(e) {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('#table-body tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+            });
+        };
     </script>
 </body>
 </html>
