@@ -3,176 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apresentação Sentinela STP</title>
+    <title>Sentinela STP - Apresentação Executiva</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         .gradient-bg { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
-        .card { transition: all 0.3s ease; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* Estilo dos Cards de Feedback */
+        .feedback-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+        
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
     <!-- Hero Section -->
-    <header class="gradient-bg text-white min-h-[60vh] flex flex-col items-center justify-center text-center p-6 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                <defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/></pattern></defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-        </div>
-        <div class="relative z-10 max-w-4xl">
+    <header class="gradient-bg text-white py-20 px-6 text-center relative overflow-hidden">
+        <div class="max-w-4xl mx-auto relative z-10">
             <div class="inline-flex items-center gap-2 bg-blue-500/30 px-4 py-2 rounded-full mb-6 border border-white/20">
-                <i data-lucide="shield-check" class="text-blue-200"></i>
-                <span class="text-xs font-black uppercase tracking-widest">Projeto Sentinela STP</span>
+                <i data-lucide="shield-check" size="16"></i>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em]">Projeto Sentinela STP</span>
             </div>
-            <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tighter">Transporte Público é <br><span class="text-blue-300 underline decoration-blue-400">Saúde Pública</span></h1>
-            <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto font-medium leading-relaxed">
-                Uma via tecnológica para auditar a salubridade urbana e devolver a dignidade ao passageiro catarinense.
+            <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tighter leading-none">O Transporte Público<br><span class="text-blue-300">é Saúde Pública</span></h1>
+            <p class="text-lg text-blue-100 max-w-2xl mx-auto font-medium">
+                Auditoria Cidadã em tempo real contra a precarização e o adoecimento da população de Florianópolis.
             </p>
         </div>
-        <a href="#problema" class="absolute bottom-10 animate-bounce">
-            <i data-lucide="chevron-down" size="32"></i>
-        </a>
     </header>
 
-    <!-- O Problema: O Diagnóstico do Adoecimento -->
-    <section id="problema" class="max-w-6xl mx-auto py-24 px-6">
-        <div class="text-center mb-16">
-            <h2 class="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-4">O Cenário Atual</h2>
-            <h3 class="text-3xl md:text-4xl font-black tracking-tight">O "Mapa do Adoecimento" Silencioso</h3>
-        </div>
+    <!-- Seção de FEEDBACK EM TEMPO REAL -->
+    <section class="py-20 px-6 bg-white border-b border-slate-100">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
+                <div class="text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+                        <span class="live-dot"></span>
+                        <span class="text-[10px] font-black uppercase text-red-600 tracking-widest">Feed de Impacto ao Vivo</span>
+                    </div>
+                    <h2 class="text-3xl font-black tracking-tight">O que o povo está sentindo <span class="text-blue-600">agora</span></h2>
+                </div>
+                <div class="bg-slate-100 px-6 py-3 rounded-2xl border border-slate-200">
+                    <p class="text-[10px] font-black text-slate-500 uppercase text-center">Registros captados via App</p>
+                    <p class="text-xs font-bold text-slate-700 italic">"O povo pelo povo"</p>
+                </div>
+            </div>
 
+            <!-- Container dos Cards (Masonry-like grid) -->
+            <div id="live-stories-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[300px]">
+                <!-- Cards serão injetados aqui pelo JavaScript -->
+                <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-300">
+                    <i data-lucide="loader-2" class="animate-spin mb-4" size="40"></i>
+                    <p class="font-bold uppercase text-xs tracking-widest">Sincronizando relatos...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- O Problema & Dados Técnicos -->
+    <section class="py-24 px-6 max-w-6xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="card bg-white p-8 rounded-[2.5rem] border border-slate-200">
+            <div class="p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
                 <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6">
                     <i data-lucide="volume-2"></i>
                 </div>
-                <h4 class="text-xl font-black mb-4">Agressão Sonora</h4>
-                <p class="text-slate-500 text-sm leading-relaxed mb-4">Ruídos superiores a <strong>85dB</strong> registrados sistematicamente. Risco de perda auditiva e estresse cardiovascular.</p>
-                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="w-[85%] h-full bg-red-500"></div>
-                </div>
-                <span class="text-[10px] font-bold text-red-500 mt-2 block uppercase">Nível Crítico Detectado</span>
+                <h4 class="text-xl font-black mb-2">Agressão Sonora</h4>
+                <p class="text-slate-500 text-sm leading-relaxed">Ruídos acima de 85dB causam estresse cardiovascular e danos auditivos irreversíveis (NR-15).</p>
             </div>
-
-            <div class="card bg-white p-8 rounded-[2.5rem] border border-slate-200">
+            <div class="p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
                 <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
                     <i data-lucide="thermometer-sun"></i>
                 </div>
-                <h4 class="text-xl font-black mb-4">Tortura Térmica</h4>
-                <p class="text-slate-500 text-sm leading-relaxed mb-4">Temperaturas internas acima de <strong>32°C</strong>. Causa desidratação, picos hipertensivos e síncopes.</p>
-                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="w-[90%] h-full bg-orange-500"></div>
-                </div>
-                <span class="text-[10px] font-bold text-orange-500 mt-2 block uppercase">Estresse Térmico Severo</span>
+                <h4 class="text-xl font-black mb-2">Tortura Térmica</h4>
+                <p class="text-slate-500 text-sm leading-relaxed">Ônibus sem climatização atingem 35°C+, provocando desidratação e picos de hipertensão.</p>
             </div>
-
-            <div class="card bg-white p-8 rounded-[2.5rem] border border-slate-200">
+            <div class="p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
                 <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="brain"></i>
+                    <i data-lucide="clock"></i>
                 </div>
-                <h4 class="text-xl font-black mb-4">Colapso Mental</h4>
-                <p class="text-slate-500 text-sm leading-relaxed mb-4">Atrasos e quebras geram picos de cortisol, ansiedade e exaustão emocional na classe trabalhadora.</p>
-                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="w-[75%] h-full bg-purple-500"></div>
-                </div>
-                <span class="text-[10px] font-bold text-purple-500 mt-2 block uppercase">Impacto na Saúde Mental</span>
+                <h4 class="text-xl font-black mb-2">Atrasos Críticos</h4>
+                <p class="text-slate-500 text-sm leading-relaxed">A falha operacional desestrutura a vida do trabalhador e gera exaustão mental sistêmica.</p>
             </div>
         </div>
     </section>
 
-    <!-- Base Legal -->
-    <section class="bg-slate-900 text-white py-24 px-6">
+    <!-- Call to Action Final -->
+    <footer class="bg-slate-900 text-white py-20 px-6">
         <div class="max-w-4xl mx-auto text-center">
-            <i data-lucide="scroll-text" class="mx-auto mb-8 text-blue-400" size="48"></i>
-            <h2 class="text-3xl md:text-5xl font-black mb-8 leading-tight">Lastro Jurídico: <br>Artigo 3º da Lei 8.080/90</h2>
-            <blockquote class="text-xl italic text-slate-400 mb-8 leading-relaxed">
-                "A saúde tem como determinantes e condicionantes, entre outros, o <strong>transporte</strong>."
-            </blockquote>
-            <div class="flex flex-wrap justify-center gap-4">
-                <span class="bg-white/10 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-white/10">Constituição Federal Art. 196</span>
-                <span class="bg-white/10 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-white/10">Código de Defesa do Consumidor</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- A Solução (Caminho) -->
-    <section class="max-w-6xl mx-auto py-24 px-6">
-        <div class="flex flex-col md:flex-row items-center gap-16">
-            <div class="flex-1">
-                <h2 class="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-center md:text-left">Nossa Via</h2>
-                <h3 class="text-4xl font-black mb-8 tracking-tighter text-center md:text-left">Auditoria Digital & <br>Poder Popular</h3>
-                <div class="space-y-6">
-                    <div class="flex gap-4">
-                        <div class="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">1</div>
-                        <div>
-                            <h5 class="font-black text-slate-800 uppercase text-xs mb-1">Captação Cidadã</h5>
-                            <p class="text-sm text-slate-500">App intuitivo registra dB, Temperatura e Sintomas com geolocalização e precisão técnica.</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">2</div>
-                        <div>
-                            <h5 class="font-black text-slate-800 uppercase text-xs mb-1">Inteligência de Dados</h5>
-                            <p class="text-sm text-slate-500">Painel agrupa denúncias por prefixo de ônibus, criando um "Hall da Vergonha" para manutenção da frota.</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">3</div>
-                        <div>
-                            <h5 class="font-black text-slate-800 uppercase text-xs mb-1">Ação Legislativa</h5>
-                            <p class="text-sm text-slate-500">Dados robustos para embasar leis de salubridade térmica/acústica e fiscalização pontual.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <h2 class="text-3xl font-black mb-6">Não somos a solução definitiva,<br>somos um <span class="text-blue-400">bom caminho</span>.</h2>
+            <p class="text-slate-400 mb-10">Este projeto busca parceria técnica e fomento para transformar a indignação em política pública baseada em dados.</p>
             
-            <!-- Mockup do App Simulado -->
-            <div class="flex-1 w-full max-w-sm">
-                <div class="bg-slate-800 p-4 rounded-[3rem] shadow-2xl border-4 border-slate-700 aspect-[9/19] flex flex-col overflow-hidden">
-                    <div class="bg-blue-700 h-full rounded-[2.5rem] flex flex-col items-center justify-center p-6 text-white text-center">
-                        <i data-lucide="shield-alert" size="48" class="mb-4"></i>
-                        <h6 class="text-xl font-black mb-2">Sentinela STP</h6>
-                        <div class="bg-white/20 p-4 rounded-2xl w-full mb-4">
-                            <span class="text-4xl font-black">89dB</span>
-                            <p class="text-[10px] font-bold uppercase opacity-70">Agressão Sonora!</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 w-full">
-                            <div class="bg-white/10 p-2 rounded-xl text-[8px] font-bold uppercase">🌡️ 34°C</div>
-                            <div class="bg-white/10 p-2 rounded-xl text-[8px] font-bold uppercase">📍 TICEN</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <a href="https://robsonjm.github.io/Sentinela-STP/" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-2xl font-black uppercase text-xs transition-all">Testar o Aplicativo</a>
+                <a href="https://robsonjm.github.io/Sentinela-STP/painel.html" class="bg-slate-800 hover:bg-slate-700 px-8 py-4 rounded-2xl font-black uppercase text-xs border border-slate-700 transition-all">Ver Painel de Dados</a>
             </div>
-        </div>
-    </section>
 
-    <!-- Convite à Parceria -->
-    <footer class="bg-blue-700 text-white py-20 px-6 text-center">
-        <div class="max-w-2xl mx-auto">
-            <h2 class="text-3xl md:text-4xl font-black mb-6 tracking-tighter">Vamos construir este caminho juntos?</h2>
-            <p class="text-blue-100 mb-10 leading-relaxed font-medium">
-                O Sentinela STP é uma proposta de colaboração para devolver a esperança à população de Florianópolis através da transparência e do fomento técnico.
-            </p>
-            <div class="bg-blue-800 p-8 rounded-[2rem] border border-blue-400/30 text-left">
-                <p class="text-xs font-black uppercase tracking-widest text-blue-300 mb-4 text-center">Contato Coordenação</p>
-                <div class="flex flex-col md:flex-row justify-center gap-8 text-center md:text-left">
-                    <div>
-                        <span class="text-[10px] font-bold uppercase text-blue-200">Robson Jorge de Matos</span>
-                        <p class="font-black text-lg">48 9 8496 8927</p>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-bold uppercase text-blue-200">Portfólio do Projeto</span>
-                        <p class="font-black text-sm underline"><a href="https://robsonjm.github.io/Sentinela-STP/">Acessar Ferramenta</a></p>
-                    </div>
-                </div>
+            <div class="pt-10 border-t border-slate-800">
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Coordenação: Robson Jorge de Matos</p>
+                <p class="text-xl font-black">48 9 8496 8927</p>
             </div>
         </div>
     </footer>
+
+    <!-- Firebase SDK e Lógica de Relatos -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+          authDomain: "sentinela-stp.firebaseapp.com",
+          projectId: "sentinela-stp"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const container = document.getElementById('live-stories-container');
+
+        // Escuta os últimos 6 relatos que tenham texto
+        const q = query(
+            collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'),
+            orderBy('timestamp', 'desc'),
+            limit(12) // Puxamos mais para filtrar os que têm relato_pessoal
+        );
+
+        onSnapshot(q, (snapshot) => {
+            const items = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.relato_pessoal && data.relato_pessoal.trim() !== "") {
+                    items.push(data);
+                }
+            });
+
+            if (items.length > 0) {
+                container.innerHTML = '';
+                // Mostra apenas os 6 mais recentes com relato
+                items.slice(0, 6).forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'feedback-card bg-slate-50 p-6 rounded-[2rem] border border-blue-100 relative';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">#${item.prefixo || 'S/N'}</p>
+                                <p class="text-[11px] font-bold text-slate-800 uppercase leading-none">${item.linha || 'Geral'}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">${item.ruido_db}dB</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative">
+                            <i data-lucide="quote" class="absolute -top-2 -left-2 text-blue-200 fill-blue-200" size="20"></i>
+                            <p class="text-sm font-medium text-slate-700 italic leading-relaxed">"${item.relato_pessoal}"</p>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase">
+                            <span><i data-lucide="map-pin" size="10" class="inline"></i> ${item.coordenadas === 'Calculando...' ? 'Florianópolis' : 'Posição GPS'}</span>
+                            <span>${item.hora}</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                lucide.createIcons();
+            } else {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20 text-slate-400">
+                        <p class="font-bold uppercase text-xs italic tracking-widest">Aguardando novos relatos dos terminais...</p>
+                    </div>
+                `;
+            }
+        }, (error) => {
+            console.error("Erro no Firebase:", error);
+        });
+    </script>
 
     <script>
         lucide.createIcons();
