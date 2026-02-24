@@ -18,7 +18,6 @@
         .active-zone { background-color: #1d4ed8 !important; color: white !important; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s; }
         
-        /* Toast compacto, transparente e rápido logo abaixo do header */
         #toast { 
             position: fixed; 
             top: calc(3.8rem + var(--sat)); 
@@ -37,9 +36,9 @@
 </head>
 <body class="overflow-hidden">
     <div class="app-container">
-        <!-- Toast Otimizado -->
+        <!-- Toast -->
         <div id="toast" class="pointer-events-none">
-            <div class="bg-slate-900/60 backdrop-blur-md text-white text-[9px] font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-white/10">
+            <div class="bg-slate-900/60 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 border border-white/10">
                 <i data-lucide="check-circle" size="12" class="text-green-400"></i>
                 <span id="toast-msg">Sincronizando...</span>
             </div>
@@ -77,7 +76,6 @@
                             <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Linha Oficial</label>
                             <input list="fenix-lines" id="bus-line" placeholder="Busque a linha..." class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
                             <datalist id="fenix-lines">
-                                <!-- Linhas Alimentadora TICEN -->
                                 <option value="665 - Abraão"><option value="762 - Angelo Laporta"><option value="844 - Bairro de Fátima">
                                 <option value="V-844 - Bairro de Fátima"><option value="V-661 - Balneário"><option value="661 - Balneário">
                                 <option value="763 - Caeira do Saco dos Limões"><option value="V-662 - Canto via Otília Cruz"><option value="662 - Canto via Otília Cruz">
@@ -94,8 +92,6 @@
                                 <option value="191 - TITRI / TICEN via Transcaeira"><option value="184 - UDESC via Beira Mar"><option value="V-671 - Vila / Promorar">
                                 <option value="671 - Vila / Promorar"><option value="761 - Vila Aparecida"><option value="137 - Volta ao Morro Norte via H.U.">
                                 <option value="135 - Volta ao Morro Norte via Lauro Linhares"><option value="136 - Volta ao Morro Sul via H.U."><option value="138 - Volta ao Morro Sul via Lauro Linhares">
-                                
-                                <!-- Linhas Troncal (Inter-Terminal) -->
                                 <option value="230 - TICAN - Gama D'Eça via TITRI"><option value="224 - TICAN - TITRI via Virgílio Várzea"><option value="233 - TICAN - UFSC via Santa Mônica">
                                 <option value="210 - TICAN / TICEN Direto"><option value="221 - TICAN / TICEN via Mauro Ramos"><option value="231 - TICAN / TICEN via TITRI">
                                 <option value="840 - TICAN - TILAG via Barra da Lagoa"><option value="132 - TITRI - TICEN via Gama D'Eça/H.I"><option value="850 - TILAG / Rio Vermelho via Cidade da Barra">
@@ -104,19 +100,12 @@
                                 <option value="410 - TIRIO / TICEN Direto"><option value="430 - TIRIO / TICEN via Costeira"><option value="847 - TIRIO - TITRI via UFSC">
                                 <option value="212 - TISAN - TICEN Direto"><option value="332 - TISAN / TICEN via Beira Mar"><option value="331 - TISAN / TICEN via Mauro Ramos">
                                 <option value="110 - TITRI - TICEN Direto"><option value="131 - TITRI - TICEN via Gama D'Eça"><option value="133 - TITRI / TICEN via Mauro Ramos">
-                                
-                                <!-- Linhas Executivo -->
                                 <option value="2120 - Executivo Barra da Lagoa"><option value="1126 - Executivo Cachoeira"><option value="4124 - Executivo Caieira da Barra do Sul via Tapera">
                                 <option value="1120 - Executivo Canasvieiras"><option value="1128 - Executivo Costa do Moçambique"><option value="1132 - Executivo Costa do Moçambique via Vargem Grande">
                                 <option value="1127 - Executivo Gaivotas"><option value="1121 - Executivo Ingleses / Santinho"><option value="1123 - Executivo Jurerê">
                                 <option value="1129 - Executivo Muquém"><option value="4120 - Executivo Pântano do Sul via Eucaliptos"><option value="4125 - Executivo Pântano do Sul via Gramal">
                                 <option value="1122 - Executivo Praia Brava"><option value="4123 - Executivo Ribeirão da Ilha"><option value="1125 - Executivo Rio Vermelho">
-                                
-                                <!-- Linhas Convencional -->
-                                <option value="673 - Ponte Viva">
-                                
-                                <!-- Linhas Alimentadora TICAN -->
-                                <option value="276 - Balneário Canasvieiras"><option value="277 - Balneário Ingleses"><option value="280 - Cachoeira - TICAN">
+                                <option value="673 - Ponte Viva"><option value="276 - Balneário Canasvieiras"><option value="277 - Balneário Ingleses"><option value="280 - Cachoeira - TICAN">
                                 <option value="260 - Cachoeira do Bom Jesus"><option value="261 - Capivari"><option value="V-261 - Capivari via SC-403">
                                 <option value="262 - Circular Canasvieiras"><option value="285 - Circular Moçambique"><option value="288 - Circular Rio Vermelho">
                                 <option value="281 - Costa do Moçambique"><option value="250 - Forte / Canasvieiras"><option value="V-250 - Forte / Canasvieiras via Col. Virgílio Várzea">
@@ -125,20 +114,14 @@
                                 <option value="264 - Santinho via Ingleses"><option value="268 - Sítio de Baixo"><option value="274 - Tulipas Vermelhas via Muquém">
                                 <option value="283 - Vargem do Bom Jesus"><option value="270 - Vargem Grande"><option value="289 - Circular Vargem Grande via Rio Vermelho">
                                 <option value="282 - Vargem Pequena"><option value="V-282 - Vargem Pequena via Esc. Prof. Zulma Freitas">
-                                
-                                <!-- Linhas Alimentadora TITRI -->
                                 <option value="846 - Cacupé"><option value="V-846 - Cacupé via Caminho dos Açores"><option value="170 - Caminho da Cruz via João Paulo">
                                 <option value="151 - Centro Administrativo"><option value="164 - Córrego Grande via Poção"><option value="165 - Itacorubi">
                                 <option value="169 - Monte Verde via Mané Vicente"><option value="173 - Morro do Quilombo"><option value="V-173 - Morro do Quilombo via SC 404">
                                 <option value="178 - Saco Grande Retorno SC-401"><option value="176 - Saco Grande via HU"><option value="174 - Saco Grande via João Paulo">
                                 <option value="V-174 - Saco Grande via João Paulo / Barreira do Janga"><option value="177 - Santa Mônica"><option value="179 - Serrinha">
                                 <option value="155 - Sol Nascente"><option value="470 - Tapera / TITRI"><option value="180 - TITRI - Pantanal via Carvoeira">
-                                
-                                <!-- Linhas Alimentadora TISAN -->
                                 <option value="366 - Barra do Sambaqui via Padre Rohr"><option value="181 - Cacupé - João Paulo"><option value="940 - Canasvieiras / Santo Antônio via Jurerê">
                                 <option value="273 - Circular Ratones"><option value="271 - Daniela"><option value="272 - Jurerê"><option value="365 - Sambaqui">
-                                
-                                <!-- Linhas Inter-Regional -->
                                 <option value="601 - Circular Abraão - Estreito"><option value="291 - Circular Canasvieiras/Praia Brava"><option value="605 - Circular Estreito - Abraão">
                                 <option value="296 - Circular Santinho Ingleses"><option value="294 - Interpraias"><option value="100 - Madrugadão Centro - UFSC Norte">
                                 <option value="102 - Madrugadão Centro / UFSC Sul"><option value="600 - Madrugadão Continente Norte"><option value="604 - Madrugadão Continente Sul">
@@ -147,17 +130,13 @@
                                 <option value="720 - Monte Serrat - Serrinha"><option value="722 - Morro do 25 - Morro da Cruz"><option value="721 - Morro do Horácio - Saco dos Limões">
                                 <option value="D-564 - Pântano do Sul"><option value="D-565 - Ribeirão da Ilha"><option value="D-260 - TICEN / Cachoeira do Bom Jesus via Mauro Ramos">
                                 <option value="D-264 - TICEN / Ingleses via Mauro Ramos"><option value="D-266 - TICEN / Praia Brava via Mauro Ramos"><option value="D-267 - TICEN / Rio Vermelho via Mauro Ramos">
-                                
-                                <!-- Linhas Alimentadora TIRIO -->
                                 <option value="560 - Armação"><option value="561 - Caieira da Barra do Sul"><option value="462 - Campeche">
                                 <option value="562 - Costa de Cima"><option value="V-562 - Costa de Cima via Costa de Dentro"><option value="563 - Costa de Dentro">
                                 <option value="V-563 - Costa de Dentro via Costa de Cima"><option value="473 - Morro das Pedras via Eucaliptos"><option value="474 - Morro das Pedras via Gramal">
                                 <option value="564 - Pântano do Sul"><option value="565 - Ribeirão da Ilha"><option value="469 - Tapera / TIRIO">
                                 <option value="477 - TIRIO / Aeroporto via Tapera"><option value="V-468 - TIRIO / Multihospital via Aeroporto"><option value="468 - TIRIO / Multihospital">
-                                
-                                <!-- Linhas Alimentadora TILAG -->
                                 <option value="360 - Barra da Lagoa"><option value="V-360 - Barra da Lagoa via Terminal Lacustre"><option value="362 - Canto dos Araçás">
-                                <option value="363 - Joaquina"><option value="364 - Osni Ortiga">
+                                <option value="363 - Joaquina"><option value="364 - Osni Ortiga"><option value="840 - TICAN - TILAG via Barra da Lagoa">
                             </datalist>
                         </div>
                         <div>
@@ -172,7 +151,7 @@
                     </div>
                 </section>
 
-                <!-- Medidor de Ruído -->
+                <!-- Medidor SPL -->
                 <section id="meter-card" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 text-center relative overflow-hidden">
                     <canvas id="audio-visualizer" class="absolute inset-0 w-full h-full opacity-10 pointer-events-none"></canvas>
                     <div id="danger-overlay" class="absolute inset-0 bg-red-600/10 opacity-0 pointer-events-none transition-opacity"></div>
@@ -189,11 +168,18 @@
                     </div>
                 </section>
 
-                <!-- Relato de Impacto Pessoal -->
-                <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase block text-center tracking-widest">Relato de Impacto (Opcional)</label>
-                    <textarea id="personal-story" placeholder="Como isso afeta seu dia? Ex: Vou atrasar no trabalho, sinto tontura..." 
-                        class="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-600 h-20 resize-none"></textarea>
+                <!-- Relato de Impacto & Botão de Descontentamento -->
+                <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase block text-center tracking-widest">Relato de Impacto (Opcional)</label>
+                        <textarea id="personal-story" placeholder="Como isso afeta seu dia? Ex: Vou atrasar no trabalho, sinto tontura..." 
+                            class="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-600 h-20 resize-none"></textarea>
+                    </div>
+                    
+                    <button onclick="logSpecialEvent('Descontentamento Geral')" class="w-full bg-red-50 border border-red-100 py-3 rounded-2xl text-center active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="frown" class="text-red-600" size="18"></i>
+                        <span class="text-[10px] font-black text-red-800 uppercase tracking-widest">Registrar Descontentamento</span>
+                    </button>
                 </section>
 
                 <!-- Sintomas -->
@@ -207,7 +193,7 @@
                     </div>
                 </section>
 
-                <!-- Ações Especiais -->
+                <!-- Ações de Infraestrutura -->
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="logSpecialEvent('Quebra de Veículo')" class="bg-orange-50 border border-orange-100 p-4 rounded-2xl text-center active:scale-95 transition-all">
                         <i data-lucide="wrench" class="mx-auto mb-1 text-orange-600" size="20"></i>
@@ -222,7 +208,7 @@
                 <!-- Temperatura -->
                 <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-[10px] font-black text-slate-400 uppercase">Temperatura Manual</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Temperatura Interna</span>
                         <span id="temp-val" class="text-xl font-black text-blue-700">25°C</span>
                     </div>
                     <input type="range" id="temp-input" min="15" max="45" value="25" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer">
@@ -290,7 +276,8 @@
 
         window.saveLogToCloud = async (rec) => {
             if (!user) return;
-            const story = document.getElementById('personal-story').value;
+            const storyInput = document.getElementById('personal-story');
+            const story = storyInput ? storyInput.value : "";
             const coords = await getPreciseLocation(); 
             
             try {
@@ -302,7 +289,7 @@
                     timestamp: serverTimestamp(),
                     audit: { deviceId: localStorage.getItem('stp_id') || (localStorage.setItem('stp_id', crypto.randomUUID()), localStorage.getItem('stp_id')) }
                 });
-                document.getElementById('personal-story').value = "";
+                if(storyInput) storyInput.value = "";
                 window.showToast("Evidência Sincronizada ✓");
             } catch (err) { console.error(err); }
         };
@@ -321,7 +308,6 @@
             const toast = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
             toast.classList.add('show');
-            // Recolha rápida: 1.5 segundos
             setTimeout(() => toast.classList.remove('show'), 1500);
         };
 
