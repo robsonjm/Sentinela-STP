@@ -2,6 +2,17 @@
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [0.3.0-beta] - 2026-02-25
+
+### Adicionado
+- **Suporte a Fotos**: Usuários podem anexar fotos às denúncias de Quebra, Atraso e Lotação.
+  - Otimização automática (resize/compressão) antes do envio.
+  - Armazenamento externo via **ImgBB** para não sobrecarregar o banco de dados.
+- **Botão Atraso Crítico**: Reintegrado à interface principal (Index).
+- **Contador de Lotação**: Novo indicador estatístico nos painéis de monitoramento.
+- **Admin Painel**: Novo painel administrativo (`admin-painel.html`) com autenticação, exclusão de registros e visualização completa.
+- **Feed Social**: Sistema de reações com emojis (😡, 😢, ✊, 📢) e prevenção de spam.
+
 ## [0.2.2-beta] - 2026-02-25
 
 ### Adicionado
