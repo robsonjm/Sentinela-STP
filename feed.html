@@ -103,6 +103,33 @@
             <div class="h-px bg-slate-200 flex-1"></div>
         </div>
 
+        <!-- Filtros e Controles -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8">
+            <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <i data-lucide="filter" class="text-slate-400" size="16"></i>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filtrar por:</span>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <select id="filter-zone" class="bg-slate-50 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 uppercase tracking-wide">
+                        <option value="">Todas as Zonas</option>
+                        <option value="Norte">Zona Norte</option>
+                        <option value="Sul">Zona Sul</option>
+                        <option value="Leste">Zona Leste</option>
+                        <option value="Oeste">Zona Oeste</option>
+                        <option value="Centro">Centro</option>
+                    </select>
+
+                    <input type="text" id="filter-line" placeholder="Linha (Ex: 8615)" class="bg-slate-50 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 uppercase tracking-wide">
+                    
+                    <button id="apply-filters" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                        Aplicar <i data-lucide="arrow-right" size="14"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Feed de Relatos -->
         <div id="infinite-feed" class="space-y-8">
             <div id="initial-loader" class="flex flex-col items-center justify-center py-20 text-slate-300">
@@ -145,7 +172,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, startAfter, where, doc, updateDoc, increment, getDoc, setDoc, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
@@ -166,13 +193,19 @@
         const loadMoreLoader = document.getElementById('load-more-loader');
         const editorialContent = document.getElementById('editorial-content');
         
+        // Filtros UI
+        const filterZone = document.getElementById('filter-zone');
+        const filterLine = document.getElementById('filter-line');
+        const applyFiltersBtn = document.getElementById('apply-filters');
+
         let lastVisible = null;
         let isLoadingMore = false;
         let hasMore = true;
+        let unsubscribeLiveFeed = null;
+        let currentFilters = {};
 
         // --- SISTEMA JORNALÍSTICO (ALIMENTAÇÃO DINÂMICA) ---
         const loadLatestEditorial = () => {
-            // Busca o último artigo publicado na coleção 'artigos'
             const qArtigo = query(
                 collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'),
                 orderBy('timestamp', 'desc'),
@@ -201,7 +234,6 @@
                     `;
                     lucide.createIcons();
                 } else {
-                    // Caso não haja artigos, mantemos um padrão informativo do projeto
                     editorialContent.style.display = 'block';
                     editorialContent.innerHTML = `
                         <div class="relative z-10 text-left">
@@ -217,6 +249,23 @@
             });
         };
 
+        // Configuração de Reações
+        const REACTION_TYPES = {
+            angry: { icon: '😡', label: 'Indignado' },
+            sad: { icon: '😢', label: 'Triste' },
+            support: { icon: '✊', label: 'Apoio' },
+            noise: { icon: '📢', label: 'Barulho' }
+        };
+
+        const getUserId = () => {
+            let id = localStorage.getItem('sentinela_uid');
+            if (!id) {
+                id = 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('sentinela_uid', id);
+            }
+            return id;
+        };
+
         const createCard = (item, isNew = false) => {
             if (!item.relato_pessoal || item.relato_pessoal.trim() === "") return null;
 
@@ -225,6 +274,33 @@
             
             const dbVal = parseInt(item.ruido_db) || 0;
             const noiseColor = dbVal >= 85 ? 'bg-red-500' : 'bg-blue-600';
+            
+            // Reações
+            const reactions = item.reactions || {};
+            const userReaction = localStorage.getItem(`reacted_${item.id}`);
+
+            let reactionsHtml = '';
+            for (const [key, config] of Object.entries(REACTION_TYPES)) {
+                const count = reactions[key] || 0;
+                const isActive = userReaction === key;
+                // Estilo ajustado: sem scale, fundo mais sutil, foco no contorno e cor do ícone
+                const activeClass = isActive 
+                    ? 'bg-blue-50 ring-2 ring-blue-500 grayscale-0 opacity-100' 
+                    : 'bg-slate-50 hover:bg-slate-100 grayscale opacity-60 hover:grayscale-0 hover:opacity-100';
+                
+                // Texto colorido apenas se ativo
+                const textClass = isActive ? 'text-blue-700' : 'text-slate-500';
+
+                reactionsHtml += `
+                    <button onclick="handleReaction(event, '${item.id}', '${key}')" 
+                        data-emoji-type="${key}"
+                        class="reaction-btn group flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 border border-transparent ${activeClass}" 
+                        title="${config.label}">
+                        <span class="text-lg transition-transform group-active:scale-90">${config.icon}</span>
+                        <span class="count-span text-[10px] font-black ${textClass}">${count > 0 ? count : ''}</span>
+                    </button>
+                `;
+            }
 
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-6 text-left">
@@ -241,7 +317,16 @@
                     <i data-lucide="quote" class="absolute -top-3 -left-3 text-blue-500 opacity-20" size="40"></i>
                     <p class="text-base font-semibold text-slate-700 italic leading-relaxed text-left">"${item.relato_pessoal}"</p>
                 </div>
-                <div class="flex justify-between items-center text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                
+                <!-- Barra de Reações -->
+                <div class="flex flex-col gap-2 mb-4">
+                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest pl-2">Reações da Comunidade</p>
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar p-1">
+                        ${reactionsHtml}
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center text-[11px] font-black text-slate-400 uppercase tracking-widest pt-4 border-t border-slate-100">
                     <div class="flex items-center gap-4">
                         <span class="flex items-center gap-1"><i data-lucide="calendar" size="12"></i> ${item.data}</span>
                         <span class="flex items-center gap-1"><i data-lucide="clock" size="12"></i> ${item.hora}</span>
@@ -252,32 +337,200 @@
             return card;
         };
 
-        const startLiveFeed = () => {
-            const qLive = query(
-                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'),
-                orderBy('timestamp', 'desc'),
-                limit(10)
-            );
+        window.handleReaction = async (event, docId, emojiType) => {
+            const btn = event.currentTarget;
+            const container = btn.parentElement;
+            const userId = getUserId();
+            const storageKey = `reacted_${docId}`;
+            const previousReaction = localStorage.getItem(storageKey);
+            
+            // --- ATUALIZAÇÃO OTIMISTA DA UI ---
+            // 1. Reverter estado visual do botão anteriormente ativo (se houver e for diferente)
+            if (previousReaction && previousReaction !== emojiType) {
+                const prevBtn = container.querySelector(`button[data-emoji-type="${previousReaction}"]`);
+                if (prevBtn) {
+                    // Resetar estilos
+                    prevBtn.className = 'reaction-btn group flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 border border-transparent bg-slate-50 hover:bg-slate-100 grayscale opacity-60 hover:grayscale-0 hover:opacity-100';
+                    const prevCountSpan = prevBtn.querySelector('.count-span');
+                    prevCountSpan.className = 'count-span text-[10px] font-black text-slate-500';
+                    
+                    // Decrementar contador
+                    let prevCount = parseInt(prevCountSpan.innerText) || 0;
+                    prevCount = Math.max(0, prevCount - 1);
+                    prevCountSpan.innerText = prevCount > 0 ? prevCount : '';
+                }
+            }
 
-            onSnapshot(qLive, (snapshot) => {
-                const initialLoader = document.getElementById('initial-loader');
-                if (initialLoader) initialLoader.remove();
-                
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const data = change.doc.data();
-                        const card = createCard(data, true);
-                        if (card && container) {
-                            container.prepend(card);
-                            lucide.createIcons();
+            // 2. Atualizar estado do botão clicado
+            const isActive = previousReaction === emojiType; // Se já estava ativo, é um toggle OFF
+            const countSpan = btn.querySelector('.count-span');
+            let currentCount = parseInt(countSpan.innerText) || 0;
+
+            if (isActive) {
+                // TOGGLE OFF: Remover estilos e decrementar
+                btn.className = 'reaction-btn group flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 border border-transparent bg-slate-50 hover:bg-slate-100 grayscale opacity-60 hover:grayscale-0 hover:opacity-100';
+                countSpan.className = 'count-span text-[10px] font-black text-slate-500';
+                currentCount = Math.max(0, currentCount - 1);
+                localStorage.removeItem(storageKey); // Atualiza localstorage otimistamente também
+            } else {
+                // TOGGLE ON: Adicionar estilos e incrementar
+                btn.className = 'reaction-btn group flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 border border-transparent bg-blue-50 ring-2 ring-blue-500 grayscale-0 opacity-100';
+                countSpan.className = 'count-span text-[10px] font-black text-blue-700';
+                currentCount++;
+                localStorage.setItem(storageKey, emojiType); // Atualiza localstorage otimistamente
+            }
+            countSpan.innerText = currentCount > 0 ? currentCount : '';
+
+            // --- FIM DA ATUALIZAÇÃO OTIMISTA ---
+            
+            try {
+                const docRef = doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias', docId);
+                const interactionRef = doc(docRef, 'interactions', userId);
+                let action = 'set';
+
+                await runTransaction(db, async (transaction) => {
+                    const interactionDoc = await transaction.get(interactionRef);
+                    const currentData = interactionDoc.exists() ? interactionDoc.data() : null;
+                    
+                    if (currentData && currentData.emoji === emojiType) {
+                        // Toggle Off (Remover reação)
+                        transaction.delete(interactionRef);
+                        transaction.update(docRef, { [`reactions.${emojiType}`]: increment(-1) });
+                        action = 'remove';
+                    } else {
+                        // Nova reação ou Troca
+                        if (currentData) {
+                            // Troca: remove anterior
+                            transaction.update(docRef, { [`reactions.${currentData.emoji}`]: increment(-1) });
                         }
+                        // Adiciona nova
+                        transaction.set(interactionRef, { emoji: emojiType, timestamp: new Date() });
+                        transaction.update(docRef, { [`reactions.${emojiType}`]: increment(1) });
+                        action = 'set';
                     }
                 });
-
-                if (!lastVisible && !snapshot.empty) {
-                    lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                
+                // Sincronização final do LocalStorage (redundância para garantir consistência)
+                if (action === 'remove') {
+                    localStorage.removeItem(storageKey);
+                } else {
+                    localStorage.setItem(storageKey, emojiType);
                 }
-            }, (error) => console.error("Erro Live Feed:", error));
+                
+            } catch (e) {
+                console.error("Erro na reação:", e);
+                // Rollback visual simples: recarregar a página ou reverter classes (opcional, mas recomendado em apps complexos)
+                // Aqui, como o listener do Firestore vai disparar em breve se houver erro de rede, a UI vai se corrigir sozinha eventualmente.
+                // Mas para feedback de erro imediato:
+                window.showToast ? window.showToast("Erro ao salvar reação") : alert("Erro ao salvar reação");
+            }
+        };
+
+        const buildQuery = (baseCollection, isHistory = false) => {
+            let constraints = [];
+            
+            // Adicionar Filtros
+            if (currentFilters.zona) constraints.push(where('zona', '==', currentFilters.zona));
+            if (currentFilters.linha) constraints.push(where('linha', '==', currentFilters.linha));
+            
+            // Ordenação (Sempre por Timestamp Descendente)
+            constraints.push(orderBy('timestamp', 'desc'));
+
+            // Paginação ou Limite Inicial
+            if (isHistory) {
+                constraints.push(startAfter(lastVisible));
+                constraints.push(limit(5));
+            } else {
+                constraints.push(limit(10));
+            }
+
+            return query(baseCollection, ...constraints);
+        };
+
+        const startLiveFeed = () => {
+            // Cancelar listener anterior se existir
+            if (unsubscribeLiveFeed) {
+                unsubscribeLiveFeed();
+                unsubscribeLiveFeed = null;
+            }
+
+            // Resetar estado
+            container.innerHTML = `
+                <div id="initial-loader" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                    <i data-lucide="loader-2" class="animate-spin mb-4" size="48"></i>
+                    <p class="font-bold uppercase text-xs tracking-widest">Conectando ao banco de dados...</p>
+                </div>
+            `;
+            lucide.createIcons();
+            lastVisible = null;
+            hasMore = true;
+
+            try {
+                const qLive = buildQuery(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'));
+                let isFirstLoad = true;
+
+                unsubscribeLiveFeed = onSnapshot(qLive, (snapshot) => {
+                    const initialLoader = document.getElementById('initial-loader');
+                    if (initialLoader) initialLoader.remove();
+                    
+                    if (snapshot.empty && isFirstLoad) {
+                        container.innerHTML = `
+                            <div class="text-center py-12 text-slate-400">
+                                <i data-lucide="inbox" class="mx-auto mb-2" size="32"></i>
+                                <p class="text-xs font-bold uppercase tracking-widest">Nenhum relato encontrado com este filtro.</p>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                        isFirstLoad = false;
+                        return;
+                    }
+
+                    if (isFirstLoad) {
+                        // Carga Inicial: Renderizar tudo mantendo a ordem da query (Descendente)
+                        // Usamos appendChild para manter a ordem [Mais Recente -> Mais Antigo]
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const card = createCard({ id: doc.id, ...data });
+                            if (card) container.appendChild(card);
+                        });
+                        isFirstLoad = false;
+                    } else {
+                        // Atualizações em Tempo Real: Novos itens vão para o topo
+                        snapshot.docChanges().forEach((change) => {
+                            if (change.type === "added") {
+                                const data = change.doc.data();
+                                const card = createCard({ id: change.doc.id, ...data }, true);
+                                if (card) {
+                                    container.prepend(card);
+                                    // Remover o loader de "sem relatos" se ele estiver lá
+                                    if(container.innerText.includes("Nenhum relato")) {
+                                        const emptyMsg = container.querySelector('.text-center');
+                                        if(emptyMsg) emptyMsg.remove();
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    if (!lastVisible && !snapshot.empty) {
+                        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                    }
+                    lucide.createIcons();
+
+                }, (error) => {
+                    console.error("Erro Live Feed:", error);
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-red-400">
+                            <i data-lucide="alert-triangle" class="mx-auto mb-2" size="24"></i>
+                            <p class="text-xs font-bold uppercase">Erro ao carregar feed. Verifique sua conexão ou filtros.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                });
+
+            } catch (e) {
+                console.error("Erro ao iniciar feed:", e);
+            }
         };
 
         const loadHistory = async () => {
@@ -287,13 +540,7 @@
             if (loadMoreLoader) loadMoreLoader.classList.remove('hidden');
 
             try {
-                const qNext = query(
-                    collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'),
-                    orderBy('timestamp', 'desc'),
-                    startAfter(lastVisible),
-                    limit(5)
-                );
-
+                const qNext = buildQuery(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'), true);
                 const snapshot = await getDocs(qNext);
                 
                 if (snapshot.empty) {
@@ -307,19 +554,30 @@
                 lastVisible = snapshot.docs[snapshot.docs.length - 1];
                 
                 snapshot.forEach(doc => {
-                    const card = createCard(doc.data());
-                    if (card && container) container.appendChild(card);
+                    const card = createCard({ id: doc.id, ...doc.data() });
+                    if (card) container.appendChild(card);
                 });
                 
                 lucide.createIcons();
             } catch (e) {
                 console.error("Erro Paginação:", e);
+                hasMore = false; // Parar de tentar se der erro (ex: falta de indice)
             } finally {
                 isLoadingMore = false;
                 if (loadMoreLoader) loadMoreLoader.classList.add('hidden');
             }
         };
 
+        // Event Listeners para Filtros
+        applyFiltersBtn.addEventListener('click', () => {
+            currentFilters = {
+                zona: filterZone.value,
+                linha: filterLine.value.trim()
+            };
+            startLiveFeed();
+        });
+
+        // Trigger inicial
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) loadHistory();
         }, { threshold: 0.1 });
@@ -328,8 +586,8 @@
 
         signInAnonymously(auth)
             .then(() => {
-                loadLatestEditorial(); // Carrega a notícia
-                startLiveFeed();      // Carrega os relatos
+                loadLatestEditorial();
+                startLiveFeed();
             })
             .catch(err => console.error("Erro Auth:", err));
 

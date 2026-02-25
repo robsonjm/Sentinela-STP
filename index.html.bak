@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Sentinela STP - Transporte é Saúde</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+        .app-container { height: 100dvh; display: flex; flex-direction: column; }
+        header { padding-top: calc(0.5rem + var(--sat)); }
+        /* Ajuste para não esconder conteúdo atrás da nav bar */
+        main { padding-bottom: calc(5rem + var(--sab)); }
+        .active-zone { background-color: #1d4ed8 !important; color: white !important; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s; }
+        
+        #toast { 
+            position: fixed; 
+            top: calc(3.8rem + var(--sat)); 
+            left: 50%; 
+            transform: translate(-50%, -150%); 
+            z-index: 40; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            width: fit-content;
+        }
+        #toast.show { transform: translate(-50%, 0); }
+
+        .symptom-chip { border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .symptom-chip.active { background-color: #dbeafe; border-color: #2563eb; color: #1e40af; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Nav Bar Styles */
+        .nav-link.active { color: #1d4ed8; }
+        .nav-link.active i { color: #1d4ed8; fill: #dbeafe; }
+    </style>
+</head>
+<body class="overflow-hidden">
+    <div class="app-container">
+        <!-- Toast -->
+        <div id="toast" class="pointer-events-none">
+            <div class="bg-slate-900/60 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 border border-white/10">
+                <i data-lucide="check-circle" size="12" class="text-green-400"></i>
+                <span id="toast-msg">Sincronizando...</span>
+            </div>
+        </div>
+
+        <header class="bg-blue-700 text-white px-4 pb-3 shadow-lg flex-none z-50">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <h1 class="text-base font-black tracking-tighter flex items-center gap-1 uppercase">
+                    <i data-lucide="shield-alert" size="16"></i> Sentinela STP
+                </h1>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 bg-blue-800/40 px-2 py-1 rounded-md">
+                        <span id="mic-dot" class="status-dot bg-slate-400"></span>
+                        <span class="text-[8px] font-black uppercase opacity-70">Mic</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-blue-800/40 px-2 py-1 rounded-md">
+                        <span id="geo-dot" class="status-dot bg-slate-400"></span>
+                        <span id="gps-label" class="text-[8px] font-black uppercase opacity-70">GPS OFF</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-blue-800/40 px-2 py-1 rounded-md">
+                        <span id="cloud-dot" class="status-dot bg-slate-400"></span>
+                        <span class="text-[8px] font-black uppercase opacity-70">Nuvem</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto bg-slate-50 no-scrollbar">
+            <div class="max-w-md mx-auto p-4 space-y-4">
+                
+                <!-- Identificação -->
+                <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Linha Oficial</label>
+                            <input list="fenix-lines" id="bus-line" placeholder="Busque a linha..." class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
+                            <datalist id="fenix-lines">
+                                <option value="665 - Abraão"><option value="762 - Angelo Laporta"><option value="844 - Bairro de Fátima">
+                                <option value="V-844 - Bairro de Fátima"><option value="V-661 - Balneário"><option value="661 - Balneário">
+                                <option value="763 - Caeira do Saco dos Limões"><option value="V-662 - Canto via Otília Cruz"><option value="662 - Canto via Otília Cruz">
+                                <option value="631 - Capoeiras"><option value="V-631 - Capoeiras"><option value="183 - Carianos via Saco dos Limões">
+                                <option value="772 - Chico Mendes"><option value="V-663 - Coloninha via Araci Vaz Callado"><option value="663 - Coloninha via Araci Vaz Callado">
+                                <option value="630 - Corredor Continente"><option value="V-630 - Corredor Continente"><option value="664 - Itaguaçu">
+                                <option value="V-670 - Monte Cristo"><option value="670 - Monte Cristo"><option value="672 - Monte Cristo via Esc. Edith Gama Ramos">
+                                <option value="764 - Monte Serrat"><option value="V-764 - Monte Serrat via NEIM Evandro Sousa"><option value="160 - Morro da Cruz">
+                                <option value="161 - Morro da Penitenciária"><option value="765 - Morro da Queimada"><option value="766 - Morro do 25">
+                                <option value="760 - Morro do Geraldo"><option value="768 - Morro do Horácio"><option value="769 - Morro Nova Trento">
+                                <option value="186 - Multi-hospital via Túnel"><option value="460 - Porto da Lagoa"><option value="467 - Tapera / Saco dos Limões">
+                                <option value="461 - Tapera via Túnel"><option value="154 - TICEN - Carvoeira via Pantanal"><option value="188 - TICEN - UFSC">
+                                <option value="431 - TICEN - Aeroporto"><option value="104 - TICEN / Itacorubi via Mauro Ramos"><option value="476 - TICEN / Tapera">
+                                <option value="191 - TITRI / TICEN via Transcaeira"><option value="184 - UDESC via Beira Mar"><option value="V-671 - Vila / Promorar">
+                                <option value="671 - Vila / Promorar"><option value="761 - Vila Aparecida"><option value="137 - Volta ao Morro Norte via H.U.">
+                                <option value="135 - Volta ao Morro Norte via Lauro Linhares"><option value="136 - Volta ao Morro Sul via H.U."><option value="138 - Volta ao Morro Sul via Lauro Linhares">
+                                <option value="230 - TICAN - Gama D'Eça via TITRI"><option value="224 - TICAN - TITRI via Virgílio Várzea"><option value="233 - TICAN - UFSC via Santa Mônica">
+                                <option value="210 - TICAN / TICEN Direto"><option value="221 - TICAN / TICEN via Mauro Ramos"><option value="231 - TICAN / TICEN via TITRI">
+                                <option value="840 - TICAN - TILAG via Barra da Lagoa"><option value="132 - TITRI - TICEN via Gama D'Eça/H.I"><option value="850 - TILAG / Rio Vermelho via Cidade da Barra">
+                                <option value="320 - TILAG / TICEN via Beira Mar"><option value="330 - TILAG / TICEN via Mauro Ramos"><option value="841 - TILAG / TIRIO">
+                                <option value="843 - TILAG / TIRIO via LIC"><option value="845 - TILAG / TITRI via Córrego Grande"><option value="333 - TILAG / TITRI via Madre Benvenuta">
+                                <option value="410 - TIRIO / TICEN Direto"><option value="430 - TIRIO / TICEN via Costeira"><option value="847 - TIRIO - TITRI via UFSC">
+                                <option value="212 - TISAN - TICEN Direto"><option value="332 - TISAN / TICEN via Beira Mar"><option value="331 - TISAN / TICEN via Mauro Ramos">
+                                <option value="110 - TITRI - TICEN Direto"><option value="131 - TITRI - TICEN via Gama D'Eça"><option value="133 - TITRI / TICEN via Mauro Ramos">
+                                <option value="2120 - Executivo Barra da Lagoa"><option value="1126 - Executivo Cachoeira"><option value="4124 - Executivo Caieira da Barra do Sul via Tapera">
+                                <option value="1120 - Executivo Canasvieiras"><option value="1128 - Executivo Costa do Moçambique"><option value="1132 - Executivo Costa do Moçambique via Vargem Grande">
+                                <option value="1127 - Executivo Gaivotas"><option value="1121 - Executivo Ingleses / Santinho"><option value="1123 - Executivo Jurerê">
+                                <option value="1129 - Executivo Muquém"><option value="4120 - Executivo Pântano do Sul via Eucaliptos"><option value="4125 - Executivo Pântano do Sul via Gramal">
+                                <option value="1122 - Executivo Praia Brava"><option value="4123 - Executivo Ribeirão da Ilha"><option value="1125 - Executivo Rio Vermelho">
+                                <option value="673 - Ponte Viva"><option value="276 - Balneário Canasvieiras"><option value="277 - Balneário Ingleses"><option value="280 - Cachoeira - TICAN">
+                                <option value="260 - Cachoeira do Bom Jesus"><option value="261 - Capivari"><option value="V-261 - Capivari via SC-403">
+                                <option value="262 - Circular Canasvieiras"><option value="285 - Circular Moçambique"><option value="288 - Circular Rio Vermelho">
+                                <option value="281 - Costa do Moçambique"><option value="250 - Forte / Canasvieiras"><option value="V-250 - Forte / Canasvieiras via Col. Virgílio Várzea">
+                                <option value="263 - Gaivotas"><option value="269 - Moçambique via Rua Alzira Rosa Aguiar"><option value="265 - Ponta das Canas">
+                                <option value="266 - Praia Brava"><option value="267 - Rio Vermelho"><option value="287 - Rio Vermelho via Vargem Grande">
+                                <option value="264 - Santinho via Ingleses"><option value="268 - Sítio de Baixo"><option value="274 - Tulipas Vermelhas via Muquém">
+                                <option value="283 - Vargem do Bom Jesus"><option value="270 - Vargem Grande"><option value="289 - Circular Vargem Grande via Rio Vermelho">
+                                <option value="282 - Vargem Pequena"><option value="V-282 - Vargem Pequena via Esc. Prof. Zulma Freitas">
+                                <option value="846 - Cacupé"><option value="V-846 - Cacupé via Caminho dos Açores"><option value="170 - Caminho da Cruz via João Paulo">
+                                <option value="151 - Centro Administrativo"><option value="164 - Córrego Grande via Poção"><option value="165 - Itacorubi">
+                                <option value="169 - Monte Verde via Mané Vicente"><option value="173 - Morro do Quilombo"><option value="V-173 - Morro do Quilombo via SC 404">
+                                <option value="178 - Saco Grande Retorno SC-401"><option value="176 - Saco Grande via HU"><option value="174 - Saco Grande via João Paulo">
+                                <option value="V-174 - Saco Grande via João Paulo / Barreira do Janga"><option value="177 - Santa Mônica"><option value="179 - Serrinha">
+                                <option value="155 - Sol Nascente"><option value="470 - Tapera / TITRI"><option value="180 - TITRI - Pantanal via Carvoeira">
+                                <option value="366 - Barra do Sambaqui via Padre Rohr"><option value="181 - Cacupé - João Paulo"><option value="940 - Canasvieiras / Santo Antônio via Jurerê">
+                                <option value="273 - Circular Ratones"><option value="271 - Daniela"><option value="272 - Jurerê"><option value="365 - Sambaqui">
+                                <option value="601 - Circular Abraão - Estreito"><option value="291 - Circular Canasvieiras/Praia Brava"><option value="605 - Circular Estreito - Abraão">
+                                <option value="296 - Circular Santinho Ingleses"><option value="294 - Interpraias"><option value="100 - Madrugadão Centro - UFSC Norte">
+                                <option value="102 - Madrugadão Centro / UFSC Sul"><option value="600 - Madrugadão Continente Norte"><option value="604 - Madrugadão Continente Sul">
+                                <option value="300 - Madrugadão Leste"><option value="201 - Madrugadão Norte - Jurerê / Canasvieiras"><option value="200 - Madrugadão Norte - Rio Vermelho / Santinho">
+                                <option value="301 - Madrugadão Norte - Santo Antônio / TICAN"><option value="500 - Madrugadão Sul - Pântano do Sul"><option value="501 - Madrugadão Sul - Ribeirão">
+                                <option value="720 - Monte Serrat - Serrinha"><option value="722 - Morro do 25 - Morro da Cruz"><option value="721 - Morro do Horácio - Saco dos Limões">
+                                <option value="D-564 - Pântano do Sul"><option value="D-565 - Ribeirão da Ilha"><option value="D-260 - TICEN / Cachoeira do Bom Jesus via Mauro Ramos">
+                                <option value="D-264 - TICEN / Ingleses via Mauro Ramos"><option value="D-266 - TICEN / Praia Brava via Mauro Ramos"><option value="D-267 - TICEN / Rio Vermelho via Mauro Ramos">
+                                <option value="560 - Armação"><option value="561 - Caieira da Barra do Sul"><option value="462 - Campeche">
+                                <option value="562 - Costa de Cima"><option value="V-562 - Costa de Cima via Costa de Dentro"><option value="563 - Costa de Dentro">
+                                <option value="V-563 - Costa de Dentro via Costa de Cima"><option value="473 - Morro das Pedras via Eucaliptos"><option value="474 - Morro das Pedras via Gramal">
+                                <option value="564 - Pântano do Sul"><option value="565 - Ribeirão da Ilha"><option value="469 - Tapera / TIRIO">
+                                <option value="477 - TIRIO / Aeroporto via Tapera"><option value="V-468 - TIRIO / Multihospital via Aeroporto"><option value="468 - TIRIO / Multihospital">
+                                <option value="360 - Barra da Lagoa"><option value="V-360 - Barra da Lagoa via Terminal Lacustre"><option value="362 - Canto dos Araçás">
+                                <option value="363 - Joaquina"><option value="364 - Osni Ortiga"><option value="840 - TICAN - TILAG via Barra da Lagoa">
+                            </datalist>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Nº Ônibus</label>
+                            <input type="number" id="bus-number" placeholder="Prefixo" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 pt-1">
+                        <button onclick="setZone('Frente')" id="zone-Frente" class="zone-btn py-2 bg-slate-50 border rounded-xl text-[10px] font-black uppercase">Frente</button>
+                        <button onclick="setZone('Meio')" id="zone-Meio" class="zone-btn active-zone py-2 bg-slate-50 border rounded-xl text-[10px] font-black uppercase">Meio</button>
+                        <button onclick="setZone('Fundo')" id="zone-Fundo" class="zone-btn py-2 bg-slate-50 border rounded-xl text-[10px] font-black uppercase">Fundo</button>
+                    </div>
+                </section>
+
+                <!-- Medidor SPL -->
+                <section id="meter-card" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 text-center relative overflow-hidden">
+                    <canvas id="audio-visualizer" class="absolute inset-0 w-full h-full opacity-10 pointer-events-none"></canvas>
+                    <div id="danger-overlay" class="absolute inset-0 bg-red-600/10 opacity-0 pointer-events-none transition-opacity"></div>
+                    <div class="relative z-10">
+                        <p class="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-widest">Pressão Sonora (dB)</p>
+                        <div class="flex justify-center items-baseline">
+                            <span id="db-display" class="text-8xl font-black tabular-nums tracking-tighter text-slate-800">0</span>
+                            <span class="text-2xl font-bold text-slate-300 ml-1">dB</span>
+                        </div>
+                        <div class="mt-4 w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="db-progress" class="h-full bg-blue-600 w-0 transition-all duration-200"></div>
+                        </div>
+                        <div id="db-warning" class="text-[9px] font-bold text-slate-400 uppercase mt-2">Aguardando Captura...</div>
+                    </div>
+                </section>
+
+                <!-- Relato de Impacto & Botão de Descontentamento -->
+                <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase block text-center tracking-widest">Relato de Impacto (Opcional)</label>
+                        <textarea id="personal-story" placeholder="Como isso afeta seu dia? Ex: Vou atrasar no trabalho, sinto tontura..." 
+                            class="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-600 h-20 resize-none"></textarea>
+                    </div>
+                    
+                    <button onclick="logSpecialEvent('Descontentamento Geral')" class="w-full bg-red-50 border border-red-100 py-3 rounded-2xl text-center active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="frown" class="text-red-600" size="18"></i>
+                        <span class="text-[10px] font-black text-red-800 uppercase tracking-widest">Registrar Descontentamento</span>
+                    </button>
+                </section>
+
+                <!-- Sintomas -->
+                <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block text-center tracking-widest">O que está sentindo?</label>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button onclick="toggleSymptom(this, 'Dor de Cabeça')" class="symptom-chip px-3 py-2 rounded-full text-[10px] font-black uppercase">Dor de Cabeça</button>
+                        <button onclick="toggleSymptom(this, 'Estresse')" class="symptom-chip px-3 py-2 rounded-full text-[10px] font-black uppercase">Estresse</button>
+                        <button onclick="toggleSymptom(this, 'Tontura')" class="symptom-chip px-3 py-2 rounded-full text-[10px] font-black uppercase">Tontura</button>
+                        <button onclick="toggleSymptom(this, 'Calor')" class="symptom-chip px-3 py-2 rounded-full text-[10px] font-black uppercase">Calor</button>
+                    </div>
+                </section>
+
+                <!-- Ações de Infraestrutura -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="logSpecialEvent('Quebra de Veículo')" class="bg-orange-50 border border-orange-100 p-4 rounded-2xl text-center active:scale-95 transition-all">
+                        <i data-lucide="wrench" class="mx-auto mb-1 text-orange-600" size="20"></i>
+                        <span class="text-[9px] font-black text-orange-800 uppercase block">Ônibus Quebrado</span>
+                    </button>
+                    <button onclick="logSpecialEvent('Atraso Crítico')" class="bg-purple-50 border border-purple-100 p-4 rounded-2xl text-center active:scale-95 transition-all">
+                        <i data-lucide="clock" class="mx-auto mb-1 text-purple-600" size="20"></i>
+                        <span class="text-[9px] font-black text-purple-800 uppercase block">Atraso Crítico</span>
+                    </button>
+                </div>
+
+                <!-- Temperatura -->
+                <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Temperatura Interna</span>
+                        <span id="temp-val" class="text-xl font-black text-blue-700">25°C</span>
+                    </div>
+                    <input type="range" id="temp-input" min="15" max="45" value="25" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+                </section>
+
+                <!-- Ações Principais (Movido para o final do conteúdo) -->
+                <div class="pt-4 pb-8 flex gap-4 items-center">
+                    <button id="status-btn" onclick="requestPermissions()" class="w-14 h-14 flex-none flex items-center justify-center bg-white border border-slate-200 rounded-2xl text-slate-400 shadow-sm active:scale-95 transition-all">
+                        <i data-lucide="map-pin-off" id="gps-icon" size="24"></i>
+                    </button>
+                    <button id="main-btn" onclick="start()" class="flex-1 bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
+                        <i data-lucide="play" size="18"></i> Iniciar Fiscalização
+                    </button>
+                    <button id="stop-btn" onclick="stop()" class="hidden flex-1 bg-red-600 active:scale-95 hover:bg-red-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
+                        <i data-lucide="square" size="18"></i> Parar Sensores
+                    </button>
+                </div>
+
+                <div id="log-list" class="space-y-2 pb-2"></div>
+            </div>
+        </main>
+
+        <!-- Barra de Navegação Padrão -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <a href="index.html" class="nav-link active flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="home" size="20"></i>
+                    <span>Início</span>
+                </a>
+                <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="message-square" size="20"></i>
+                    <span>Feed</span>
+                </a>
+                <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="bar-chart" size="20"></i>
+                    <span>Painel</span>
+                </a>
+                <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="info" size="20"></i>
+                    <span>Sobre</span>
+                </a>
+            </div>
+        </nav>
+
+        <script>
+            // Script simples para garantir que os ícones da nav bar sejam renderizados
+            document.addEventListener('DOMContentLoaded', () => {
+                lucide.createIcons();
+            });
+        </script>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+          authDomain: "sentinela-stp.firebaseapp.com",
+          projectId: "sentinela-stp",
+          storageBucket: "sentinela-stp.firebasestorage.app",
+          messagingSenderId: "845865605498",
+          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
+          measurementId: "G-6DT4QG0RVT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let user = null;
+
+        signInAnonymously(auth);
+        onAuthStateChanged(auth, u => {
+            user = u;
+            const cloudDot = document.getElementById('cloud-dot');
+            if (cloudDot) {
+                cloudDot.className = user ? "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "status-dot bg-red-500";
+            }
+        });
+
+        const getPreciseLocation = () => {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve("Sem Suporte");
+                navigator.geolocation.getCurrentPosition(
+                    (p) => resolve(`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`),
+                    (err) => resolve(`Erro: ${err.message}`),
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                );
+            });
+        };
+
+        window.saveLogToCloud = async (rec) => {
+            if (!user) return;
+            const storyInput = document.getElementById('personal-story');
+            const story = storyInput ? storyInput.value : "";
+            const coords = await getPreciseLocation(); 
+            
+            try {
+                await addDoc(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'), {
+                    ...rec,
+                    relato_pessoal: story,
+                    coordenadas: coords,
+                    userId: user.uid,
+                    timestamp: serverTimestamp(),
+                    audit: { deviceId: localStorage.getItem('stp_id') || (localStorage.setItem('stp_id', crypto.randomUUID()), localStorage.getItem('stp_id')) }
+                });
+                if(storyInput) storyInput.value = "";
+                window.showToast("Evidência Sincronizada ✓");
+            } catch (err) { console.error(err); }
+        };
+    </script>
+
+    <script>
+        lucide.createIcons();
+        let audioCtx, analyser, mic, dataArr, animId, isActive = false, lastLog = 0, currentZone = "Meio", activeSymptoms = [], userStream = null;
+
+        const dbDisplay = document.getElementById('db-display');
+        const dbBar = document.getElementById('db-progress');
+        const tempSlider = document.getElementById('temp-input');
+        const tempLabel = document.getElementById('temp-val');
+
+        window.showToast = (msg) => {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1500);
+        };
+
+        async function requestPermissions() {
+            try {
+                console.log("Solicitando permissões...");
+                userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log("Áudio permitido");
+                
+                const micDot = document.getElementById('mic-dot');
+                if (micDot) micDot.className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
+                
+                navigator.geolocation.watchPosition(p => {
+                    console.log("GPS obtido");
+                    const geoDot = document.getElementById('geo-dot');
+                    const gpsLabel = document.getElementById('gps-label');
+                    const gpsIcon = document.getElementById('gps-icon');
+                    
+                    if (geoDot) geoDot.className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
+                    if (gpsLabel) gpsLabel.innerText = "GPS ATIVO";
+                    if (gpsIcon) {
+                        gpsIcon.setAttribute('data-lucide', 'map-pin');
+                        gpsIcon.parentElement.classList.replace('text-slate-400', 'text-blue-600');
+                        lucide.createIcons();
+                    }
+                }, (err) => {
+                    console.error("Erro GPS:", err);
+                    window.showToast("Ative o GPS!");
+                }, { enableHighAccuracy: true });
+                
+                return true;
+            } catch(e) { 
+                console.error("Erro Permissões:", e);
+                window.showToast("Permita o uso do microfone!"); 
+                return false;
+            }
+        }
+
+        function setZone(z) {
+            currentZone = z;
+            document.querySelectorAll('.zone-btn').forEach(b => b.classList.remove('active-zone'));
+            document.getElementById(`zone-${z}`).classList.add('active-zone');
+        }
+
+        function toggleSymptom(el, name) {
+            el.classList.toggle('active');
+            if(el.classList.contains('active')) activeSymptoms.push(name);
+            else activeSymptoms = activeSymptoms.filter(s => s !== name);
+        }
+
+        tempSlider.oninput = (e) => { tempLabel.innerText = `${e.target.value}°C`; };
+
+        async function start() {
+            if(!document.getElementById('bus-line').value) return window.showToast("Selecione a Linha!");
+            
+            try {
+                if(!userStream) {
+                    const success = await requestPermissions();
+                    if(!success) return;
+                }
+                
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!audioCtx) audioCtx = new AC();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                
+                analyser = audioCtx.createAnalyser();
+                mic = audioCtx.createMediaStreamSource(userStream);
+                dataArr = new Uint8Array(analyser.frequencyBinCount);
+                mic.connect(analyser);
+                
+                isActive = true;
+                document.getElementById('main-btn').classList.add('hidden');
+                document.getElementById('stop-btn').classList.remove('hidden');
+                loop();
+                window.showToast("Fiscalização Iniciada!");
+            } catch (err) { 
+                console.error(err);
+                window.showToast("Erro ao iniciar sensores."); 
+            }
+        }
+
+        function loop() {
+            if(!isActive) return;
+            analyser.getByteTimeDomainData(dataArr);
+            let sum = 0; for(let i=0; i<dataArr.length; i++) { let n = (dataArr[i]-128)/128; sum += n*n; }
+            let db = Math.round(20 * Math.log10(Math.sqrt(sum/dataArr.length) || 0.0001) + 105);
+            dbDisplay.innerText = Math.max(db, 30);
+            dbBar.style.width = `${Math.min((db/110)*100, 100)}%`;
+            if(db >= 85) addRecord(db);
+            animId = requestAnimationFrame(loop);
+        }
+
+        async function addRecord(db, tipo = "Ruído Elevado") {
+            const now = Date.now(); if(now - lastLog < 15000) return; lastLog = now;
+            const rec = {
+                tipo_evento: tipo, ruido_db: db, temp_interna: tempSlider.value, sintomas: activeSymptoms.join(', '),
+                linha: document.getElementById('bus-line').value, prefixo: document.getElementById('bus-number').value || "S/N",
+                zona: currentZone, hora: new Date().toLocaleTimeString(), data: new Date().toLocaleDateString()
+            };
+            if (window.saveLogToCloud) window.saveLogToCloud(rec);
+            renderLocalLog(rec);
+        }
+
+        window.logSpecialEvent = async (tipo) => { await addRecord(dbDisplay.innerText, tipo); };
+
+        function renderLocalLog(l) {
+            const container = document.getElementById('log-list');
+            const d = document.createElement('div');
+            d.className = "bg-white p-3 rounded-xl border-l-4 border-blue-500 shadow-sm text-[10px] font-bold";
+            d.innerHTML = `${l.tipo_evento} - ${l.linha} (#${l.prefixo}) <span class="float-right opacity-40">${l.hora}</span>`;
+            container.prepend(d);
+        }
+
+        function stop() { isActive = false; document.getElementById('stop-btn').classList.add('hidden'); document.getElementById('main-btn').classList.remove('hidden'); }
+    </script>
+    <script src="version-display.js"></script>
+</body>
+</html>

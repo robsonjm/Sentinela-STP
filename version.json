@@ -1,6 +1,6 @@
 {
-    "version": "0.1.0-beta",
-    "build": "20260225",
+    "version": "0.3.0-beta",
+    "build": "20260225-r1",
     "status": "beta",
     "appName": "Sentinela STP"
 }

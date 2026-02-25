@@ -2,6 +2,38 @@
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
+## [0.2.2-beta] - 2026-02-25
+
+### Adicionado
+- **Mapa Interativo (painel.html)**:
+  - **Categorização Visual**: Marcadores agora têm cores distintas para cada tipo de evento:
+    - 🔴 **Ruído Crítico (>=85dB)**: Vermelho
+    - 🟠 **Quebra de Veículo**: Laranja
+    - 🟣 **Atraso Crítico**: Roxo
+    - 🟡 **Lotação Excessiva**: Amarelo
+    - 🔵 **Normal/Outros**: Azul
+  - **Estilo Balão de HQ**: Relatos de usuários (comentários sem incidentes técnicos críticos) são exibidos como balões de fala saindo de um ícone de ônibus, destacando a voz do cidadão no mapa.
+
+## [0.2.1-beta] - 2026-02-25
+
+### Alterado
+- **Layout Index**: Área central dividida (aprox. 55/45) entre Medidor de Ruído e Área de Relato.
+- **Relato de Usuário**: Restaurado campo de texto para comentários e botão dedicado "Enviar Relato" na tela principal.
+- **Medidor**: Ajustado tamanho da fonte e botão de ação para acomodar o novo layout dividido.
+
+## [0.2.0-beta] - 2026-02-25
+
+### Adicionado
+- **Interface Otimizada (index.html)**: Redesenho completo para caber em uma única tela (100dvh), eliminando a necessidade de rolagem durante o uso.
+- **Controle de Permissões**: Modal informativo obrigatório no primeiro acesso solicitando ativação de GPS e Microfone para funcionamento correto.
+- **Filtros no Feed**: Adicionada funcionalidade de filtrar postagens por Zona (Norte, Sul, Leste, Oeste, Centro) e Linha de ônibus.
+- **Ordenação**: Feed agora exibe postagens em ordem cronológica inversa (mais recentes primeiro).
+
+### Alterado
+- **Botão Principal**: Renomeado de "Iniciar Fiscalização" para "MEDIR RUÍDO" e movido para destaque central junto ao medidor de decibéis.
+- **Layout de Identificação**: Seleção de linha, prefixo e zona compactada para economizar espaço.
+- **Sintomas e Eventos**: Botões reorganizados para acesso rápido sem ocupar muito espaço vertical.
+
 ## [0.1.0-beta] - 2026-02-25
 
 ### Adicionado
