@@ -219,23 +219,22 @@
                     <input type="range" id="temp-input" min="15" max="45" value="25" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer">
                 </section>
 
-                <div id="log-list" class="space-y-2 pb-8"></div>
+                <!-- Ações Principais (Movido para o final do conteúdo) -->
+                <div class="pt-4 pb-8 flex gap-4 items-center">
+                    <button id="status-btn" onclick="requestPermissions()" class="w-14 h-14 flex-none flex items-center justify-center bg-white border border-slate-200 rounded-2xl text-slate-400 shadow-sm active:scale-95 transition-all">
+                        <i data-lucide="map-pin-off" id="gps-icon" size="24"></i>
+                    </button>
+                    <button id="main-btn" onclick="start()" class="flex-1 bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
+                        <i data-lucide="play" size="18"></i> Iniciar Fiscalização
+                    </button>
+                    <button id="stop-btn" onclick="stop()" class="hidden flex-1 bg-red-600 active:scale-95 hover:bg-red-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
+                        <i data-lucide="square" size="18"></i> Parar Sensores
+                    </button>
+                </div>
+
+                <div id="log-list" class="space-y-2 pb-2"></div>
             </div>
         </main>
-
-        <footer class="bg-white border-t border-slate-200 p-4 flex-none shadow-lg z-50">
-            <div class="max-w-md mx-auto flex gap-4 items-center">
-                <button id="status-btn" onclick="requestPermissions()" class="w-12 h-12 flex items-center justify-center bg-slate-100 rounded-2xl text-slate-400">
-                    <i data-lucide="map-pin-off" id="gps-icon" size="20"></i>
-                </button>
-                <button id="main-btn" class="flex-1 bg-blue-600 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
-                    <i data-lucide="play" size="18"></i> Iniciar Fiscalização
-                </button>
-                <button id="stop-btn" class="hidden flex-1 bg-red-600 active:scale-95 text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest transition-all">
-                    <i data-lucide="square" size="18"></i> Parar Sensores
-                </button>
-            </div>
-        </footer>
 
         <!-- Barra de Navegação Padrão -->
         <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
@@ -347,11 +346,15 @@
 
         async function requestPermissions() {
             try {
+                console.log("Solicitando permissões...");
                 userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log("Áudio permitido");
+                
                 const micDot = document.getElementById('mic-dot');
                 if (micDot) micDot.className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
                 
                 navigator.geolocation.watchPosition(p => {
+                    console.log("GPS obtido");
                     const geoDot = document.getElementById('geo-dot');
                     const gpsLabel = document.getElementById('gps-label');
                     const gpsIcon = document.getElementById('gps-icon');
@@ -363,8 +366,17 @@
                         gpsIcon.parentElement.classList.replace('text-slate-400', 'text-blue-600');
                         lucide.createIcons();
                     }
-                }, null, { enableHighAccuracy: true });
-            } catch(e) { window.showToast("Permita áudio e localização!"); }
+                }, (err) => {
+                    console.error("Erro GPS:", err);
+                    window.showToast("Ative o GPS!");
+                }, { enableHighAccuracy: true });
+                
+                return true;
+            } catch(e) { 
+                console.error("Erro Permissões:", e);
+                window.showToast("Permita o uso do microfone!"); 
+                return false;
+            }
         }
 
         function setZone(z) {
@@ -382,21 +394,32 @@
         tempSlider.oninput = (e) => { tempLabel.innerText = `${e.target.value}°C`; };
 
         async function start() {
-            if(!document.getElementById('bus-line').value) return window.showToast("Linha?");
+            if(!document.getElementById('bus-line').value) return window.showToast("Selecione a Linha!");
+            
             try {
-                if(!userStream) await requestPermissions();
+                if(!userStream) {
+                    const success = await requestPermissions();
+                    if(!success) return;
+                }
+                
                 const AC = window.AudioContext || window.webkitAudioContext;
                 if (!audioCtx) audioCtx = new AC();
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
+                
                 analyser = audioCtx.createAnalyser();
                 mic = audioCtx.createMediaStreamSource(userStream);
                 dataArr = new Uint8Array(analyser.frequencyBinCount);
                 mic.connect(analyser);
+                
                 isActive = true;
                 document.getElementById('main-btn').classList.add('hidden');
                 document.getElementById('stop-btn').classList.remove('hidden');
                 loop();
-            } catch (err) { window.showToast("Erro nos sensores."); }
+                window.showToast("Fiscalização Iniciada!");
+            } catch (err) { 
+                console.error(err);
+                window.showToast("Erro ao iniciar sensores."); 
+            }
         }
 
         function loop() {
@@ -432,8 +455,6 @@
         }
 
         function stop() { isActive = false; document.getElementById('stop-btn').classList.add('hidden'); document.getElementById('main-btn').classList.remove('hidden'); }
-        document.getElementById('main-btn').onclick = start;
-        document.getElementById('stop-btn').onclick = stop;
     </script>
     <script src="version-display.js"></script>
 </body>
