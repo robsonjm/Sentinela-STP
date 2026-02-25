@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinela STP - Admin Notícias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; padding-bottom: calc(5rem + var(--sab)); }
+        
+        .nav-link.active { color: #1d4ed8; }
+        .nav-link.active i { color: #1d4ed8; fill: #dbeafe; }
+        
+        /* Estilo do Card de Preview */
+        .preview-card {
+            background: linear-gradient(to bottom right, #1e3a8a, #1d4ed8);
+            color: white;
+            border-radius: 2.5rem;
+            box-shadow: 0 20px 25px -5px rgba(29, 78, 216, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white px-6 py-4 shadow-lg sticky top-0 z-[100]">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 p-2 rounded-xl text-white backdrop-blur-sm">
+                    <i data-lucide="shield-check" size="20"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tighter uppercase leading-none">Sentinela STP</h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">Painel Administrativo</p>
+                </div>
+            </div>
+            <button id="logout-btn" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 p-2 rounded-lg transition-colors" title="Sair">
+                <i data-lucide="log-out" size="18"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-6 space-y-8">
+        
+        <!-- Título da Seção -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-200">
+                <i data-lucide="file-plus" size="12"></i> Nova Publicação
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tight">Alimentar Feed Investigativo</h2>
+            <p class="text-sm text-slate-500 font-medium">Preencha os dados abaixo para atualizar o mural de notícias em tempo real.</p>
+        </div>
+
+        <!-- Formulário -->
+        <form id="news-form" class="space-y-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+            
+            <!-- Título -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Título da Matéria</label>
+                <input type="text" id="titulo" required placeholder="Ex: A Máfia do Transporte" 
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:text-slate-300">
+            </div>
+
+            <!-- Resumo -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Resumo (Lead)</label>
+                <textarea id="resumo" required rows="3" placeholder="Um parágrafo curto que instiga a leitura..." 
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:text-slate-300 resize-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Categoria -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria</label>
+                    <select id="categoria" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-600 appearance-none">
+                        <option value="Investigação">Investigação</option>
+                        <option value="Denúncia">Denúncia</option>
+                        <option value="Urgente">Urgente</option>
+                        <option value="Legislativo">Legislativo</option>
+                        <option value="Vitória Popular">Vitória Popular</option>
+                    </select>
+                </div>
+
+                <!-- Ícone -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ícone (Lucide)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="icone" value="alert-triangle" placeholder="Ex: alert-triangle" 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-mono font-medium text-slate-600 outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+                    <button type="button" id="open-icon-picker" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-3 rounded-xl transition-colors border border-slate-200" title="Escolher Ícone">
+                        <i data-lucide="layout-grid" size="20"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo Completo (WYSIWYG Simplificado) -->
+        <div class="space-y-2">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conteúdo da Matéria (HTML)</label>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                <div class="flex items-center gap-1 p-2 border-b border-slate-200 bg-slate-100">
+                    <button type="button" onclick="insertTag('<b>', '</b>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 font-bold" title="Negrito">B</button>
+                    <button type="button" onclick="insertTag('<i>', '</i>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 italic" title="Itálico">I</button>
+                    <button type="button" onclick="insertTag('<h2>', '</h2>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 font-bold text-xs" title="Subtítulo">H2</button>
+                    <button type="button" onclick="insertTag('<p>', '</p>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 text-xs" title="Parágrafo">P</button>
+                    <button type="button" onclick="insertTag('<ul>\n<li>', '</li>\n</ul>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 text-xs" title="Lista">List</button>
+                    <button type="button" onclick="insertTag('<blockquote>', '</blockquote>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 text-xs" title="Citação">Quote</button>
+                    <div class="h-4 w-px bg-slate-300 mx-1"></div>
+                    
+                    <!-- Botão de Upload -->
+                    <button type="button" onclick="triggerImageUpload()" class="p-2 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 text-[10px] font-bold uppercase" title="Enviar Imagem">
+                        <i data-lucide="upload-cloud" size="14"></i> Upload Foto
+                    </button>
+                    <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                    
+                    <button type="button" onclick="insertImage()" class="p-2 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 text-[10px] font-bold uppercase ml-1 opacity-50 hover:opacity-100" title="Inserir URL Manualmente">
+                        <i data-lucide="link" size="14"></i> URL
+                    </button>
+                </div>
+                <textarea id="conteudo_html" rows="12" placeholder="Escreva sua matéria aqui. Use os botões acima para formatar." 
+                    class="w-full bg-white p-4 text-sm font-mono text-slate-700 outline-none resize-y"></textarea>
+            </div>
+            <p class="text-[10px] text-slate-400 italic pl-1">Dica: Use parágrafos &lt;p&gt; para separar blocos de texto.</p>
+        </div>
+
+        <!-- Link (Opcional / Automático) -->
+        <div class="space-y-1 opacity-50">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Link Externo (Opcional)</label>
+            <div class="relative">
+                <i data-lucide="link" size="14" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="url" id="link" placeholder="Deixe em branco para usar o artigo interno" 
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium text-blue-600 outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:text-slate-300">
+            </div>
+        </div>
+
+        <!-- Data Customizada -->
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Data de Exibição</label>
+                <input type="text" id="data_str" placeholder="Ex: 25 de Outubro, 2025" 
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex gap-3 pt-2">
+                <button type="button" id="cancel-edit-btn" class="hidden w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold uppercase text-xs tracking-widest py-4 rounded-xl transition-all">
+                    Cancelar
+                </button>
+                <button type="submit" id="submit-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-widest py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="send" size="16"></i> <span id="submit-btn-text">Publicar Notícia</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Preview em Tempo Real -->
+        <div class="space-y-4 opacity-50 pointer-events-none" id="preview-container">
+            <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] text-center">Prévia do Card</h3>
+            <div id="card-preview" class="preview-card p-8 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i id="preview-icon" data-lucide="alert-triangle" size="120"></i>
+                </div>
+                <div class="relative z-10 text-left">
+                    <span id="preview-categoria" class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">Investigação</span>
+                    <h2 id="preview-titulo" class="text-2xl font-black tracking-tight mb-4 leading-tight">Título da Matéria</h2>
+                    <p id="preview-resumo" class="text-blue-100 text-sm font-medium leading-relaxed mb-6">
+                        Resumo da matéria aparecerá aqui...
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <span class="bg-white text-blue-700 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-widest">Ler Matéria</span>
+                        <span id="preview-data" class="text-[9px] font-bold text-blue-200">Data Atual</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Gerenciamento -->
+        <div class="space-y-4 pt-8 border-t border-slate-200" id="manage-news-section">
+            <div class="flex justify-between items-end px-2">
+                <div>
+                    <h3 class="text-lg font-black text-slate-800 tracking-tight">Gerenciar Publicações</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Editar ou remover notícias</p>
+                </div>
+                <div class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                    <i data-lucide="database" size="10"></i> <span id="news-count">0</span>
+                </div>
+            </div>
+            
+            <div id="news-list" class="space-y-3">
+                <!-- Loading State -->
+                <div class="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <i data-lucide="loader-2" class="animate-spin mx-auto mb-3 text-blue-500" size="24"></i>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Carregando notícias...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Editor de Imagem (Cropper) -->
+    <div id="cropper-modal" class="fixed inset-0 bg-black/90 z-[300] hidden flex flex-col p-4 opacity-0 transition-opacity duration-300">
+        <div class="flex-1 relative bg-black rounded-xl overflow-hidden mb-4">
+            <img id="image-to-crop" class="max-w-full h-auto opacity-0" src="">
+        </div>
+        
+        <div class="flex flex-col gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+            <div class="flex justify-between items-center text-white">
+                <h3 class="font-bold text-sm uppercase tracking-widest">Ajustar Imagem</h3>
+                <button onclick="closeCropper()" class="text-slate-400 hover:text-white"><i data-lucide="x" size="24"></i></button>
+            </div>
+            
+            <!-- Controles Rápidos -->
+            <div class="flex gap-2 overflow-x-auto pb-2">
+                <button type="button" data-aspect-ratio="1.7777" class="aspect-ratio-btn bg-slate-800 text-slate-300 px-3 py-2 rounded text-xs font-bold whitespace-nowrap hover:bg-slate-700">16:9 (Capa)</button>
+                <button type="button" data-aspect-ratio="1.3333" class="aspect-ratio-btn bg-slate-800 text-slate-300 px-3 py-2 rounded text-xs font-bold whitespace-nowrap hover:bg-slate-700">4:3 (Padrão)</button>
+                <button type="button" data-aspect-ratio="1" class="aspect-ratio-btn bg-slate-800 text-slate-300 px-3 py-2 rounded text-xs font-bold whitespace-nowrap hover:bg-slate-700">1:1 (Quadrado)</button>
+                <button type="button" data-aspect-ratio="NaN" class="aspect-ratio-btn bg-slate-800 text-slate-300 px-3 py-2 rounded text-xs font-bold whitespace-nowrap hover:bg-slate-700">Livre</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeCropper()" class="bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-700 transition-colors">Cancelar</button>
+                <button onclick="confirmCrop()" id="confirm-crop-btn" class="bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="check" size="18"></i> Confirmar & Upload
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Seletor de Ícones -->
+    <div id="icon-picker-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col overflow-hidden scale-95 transition-transform duration-300 transform">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                    <h3 class="text-lg font-black text-slate-800 tracking-tight">Escolher Ícone</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selecione um ícone para a matéria</p>
+                </div>
+                <button type="button" id="close-icon-picker" class="bg-slate-200 hover:bg-slate-300 text-slate-600 p-2 rounded-full transition-colors">
+                    <i data-lucide="x" size="20"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto grid grid-cols-4 gap-4" id="icon-grid">
+                <!-- Ícones serão injetados aqui via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal API Key ImgBB -->
+    <div id="api-key-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[400] hidden flex items-center justify-center p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden scale-95 transition-transform duration-300 transform">
+            <div class="p-6 border-b border-slate-100 bg-slate-50">
+                <h3 class="text-lg font-black text-slate-800 tracking-tight">Configurar ImgBB</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chave de API necessária</p>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-600">
+                    A chave de API atual é inválida ou expirou. Por favor, insira uma nova chave para continuar fazendo uploads.
+                </p>
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <p class="text-[10px] text-blue-700 font-medium">
+                        <i data-lucide="info" size="10" class="inline mr-1"></i>
+                        Obtenha gratuitamente em: <a href="https://api.imgbb.com/" target="_blank" class="underline font-bold">api.imgbb.com</a>
+                    </p>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sua API Key</label>
+                    <input type="text" id="imgbb-api-key-input" placeholder="Cole sua chave aqui..." 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-mono font-medium text-slate-600 outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button type="button" id="cancel-api-key-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-colors text-xs uppercase tracking-widest">
+                        Cancelar
+                    </button>
+                    <button type="button" id="save-api-key-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors text-xs uppercase tracking-widest shadow-lg shadow-blue-200">
+                        Salvar Chave
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Navegação Padrão (para facilitar o retorno) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="home" size="20"></i>
+                <span>Início</span>
+            </a>
+            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="message-square" size="20"></i>
+                <span>Feed</span>
+            </a>
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="bar-chart" size="20"></i>
+                <span>Painel</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="info" size="20"></i>
+                <span>Sobre</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+          authDomain: "sentinela-stp.firebaseapp.com",
+          projectId: "sentinela-stp",
+          storageBucket: "sentinela-stp.firebasestorage.app",
+          messagingSenderId: "845865605498",
+          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
+          measurementId: "G-6DT4QG0RVT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Elementos do DOM
+        const form = document.getElementById('news-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitBtnText = document.getElementById('submit-btn-text');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const newsListEl = document.getElementById('news-list');
+        const newsCountEl = document.getElementById('news-count');
+        const previewContainer = document.getElementById('preview-container');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        let editingId = null;
+
+        // Verificar Autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuário está logado
+                console.log("Usuário autenticado:", user.email);
+                previewContainer.classList.remove('opacity-50', 'pointer-events-none');
+                loadNewsList();
+            } else {
+                // Usuário não está logado
+                console.log("Usuário não autenticado. Redirecionando...");
+                window.location.href = "login.html";
+            }
+        });
+
+        // Logout
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    console.log("Logout realizado com sucesso.");
+                    window.location.href = "login.html";
+                }).catch((error) => {
+                    console.error("Erro ao fazer logout:", error);
+                });
+            });
+        }
+
+        // Helper para inserir tags no Textarea
+        window.insertTag = (startTag, endTag) => {
+            const textarea = document.getElementById('conteudo_html');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const selection = text.substring(start, end);
+            const after = text.substring(end);
+            
+            textarea.value = before + startTag + selection + endTag + after;
+            textarea.focus();
+            textarea.selectionStart = start + startTag.length;
+            textarea.selectionEnd = end + startTag.length;
+        };
+
+        window.insertImage = () => {
+            const url = prompt("Cole a URL da imagem:");
+            if (url) {
+                insertTag(`<img src="${url}" alt="Imagem da matéria">`, '');
+            }
+        };
+
+        // ImgBB Upload & Cropper Logic
+        // Tenta pegar a API Key do LocalStorage ou usa uma chave padrão (que pode estar inválida/expirada)
+        let IMGBB_API_KEY = localStorage.getItem('imgbb_api_key') || '5a004494191316c17430155a5b58390b'; 
+        let cropper;
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const cropperModal = document.getElementById('cropper-modal');
+        const imageToCrop = document.getElementById('image-to-crop');
+        const confirmCropBtn = document.getElementById('confirm-crop-btn');
+        
+        // Elementos do Modal de API Key
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeyInput = document.getElementById('imgbb-api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const cancelApiKeyBtn = document.getElementById('cancel-api-key-btn');
+        const apiKeyModalContent = apiKeyModal.querySelector('div');
+
+        // Adicionar Listeners para os botões de Aspect Ratio
+        document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (!cropper) return;
+                const ratio = parseFloat(e.target.dataset.aspectRatio);
+                cropper.setAspectRatio(ratio);
+            });
+        });
+
+        window.triggerImageUpload = () => {
+            imageUploadInput.click();
+        };
+
+        imageUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageToCrop.src = e.target.result;
+                    openCropper();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function openCropper() {
+            cropperModal.classList.remove('hidden');
+            setTimeout(() => {
+                cropperModal.classList.remove('opacity-0');
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 16 / 9,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                });
+                imageToCrop.classList.remove('opacity-0');
+            }, 100);
+        }
+
+        window.closeCropper = () => {
+            cropperModal.classList.add('opacity-0');
+            setTimeout(() => {
+                cropperModal.classList.add('hidden');
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+                imageUploadInput.value = ''; // Reset input
+            }, 300);
+        };
+
+        window.confirmCrop = () => {
+            if (!cropper) return;
+
+            // Loading state
+            const originalBtnContent = confirmCropBtn.innerHTML;
+            confirmCropBtn.disabled = true;
+            confirmCropBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin" size="18"></i> Processando...`;
+            lucide.createIcons();
+
+            // Obter canvas cortado e redimensionado (max 1024px)
+            const canvas = cropper.getCroppedCanvas({
+                maxWidth: 1024,
+                maxHeight: 1024,
+                fillColor: '#fff',
+            });
+
+            // Converter para Blob (JPEG 80% qualidade)
+            canvas.toBlob((blob) => {
+                uploadToImgBB(blob, originalBtnContent);
+            }, 'image/jpeg', 0.8);
+        };
+
+        // Função para abrir o modal de API Key e retornar uma Promise com a nova chave
+        function requestNewApiKey() {
+            return new Promise((resolve, reject) => {
+                apiKeyModal.classList.remove('hidden');
+                // Animação de entrada
+                setTimeout(() => {
+                    apiKeyModal.classList.remove('opacity-0');
+                    apiKeyModalContent.classList.remove('scale-95');
+                    apiKeyModalContent.classList.add('scale-100');
+                }, 10);
+
+                apiKeyInput.value = '';
+                apiKeyInput.focus();
+
+                const handleSave = () => {
+                    const newKey = apiKeyInput.value.trim();
+                    if (newKey) {
+                        cleanup();
+                        resolve(newKey);
+                    } else {
+                        alert("Por favor, insira uma chave válida.");
+                    }
+                };
+
+                const handleCancel = () => {
+                    cleanup();
+                    reject(new Error("Solicitação de API Key cancelada pelo usuário."));
+                };
+
+                const cleanup = () => {
+                    saveApiKeyBtn.removeEventListener('click', handleSave);
+                    cancelApiKeyBtn.removeEventListener('click', handleCancel);
+                    
+                    // Fechar modal
+                    apiKeyModal.classList.add('opacity-0');
+                    apiKeyModalContent.classList.remove('scale-100');
+                    apiKeyModalContent.classList.add('scale-95');
+                    setTimeout(() => {
+                        apiKeyModal.classList.add('hidden');
+                    }, 300);
+                };
+
+                saveApiKeyBtn.addEventListener('click', handleSave);
+                cancelApiKeyBtn.addEventListener('click', handleCancel);
+            });
+        }
+
+        function uploadToImgBB(imageBlob, originalBtnContent) {
+            confirmCropBtn.innerHTML = `<i data-lucide="upload-cloud" class="animate-spin" size="18"></i> Enviando...`;
+            lucide.createIcons();
+
+            const formData = new FormData();
+            formData.append('image', imageBlob);
+
+            return fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const imageUrl = data.data.url;
+                    insertTag(`<img src="${imageUrl}" alt="Imagem da matéria">`, '');
+                    closeCropper();
+                } else {
+                    // Se o erro for de API Key inválida (código 400 ou mensagem específica)
+                    if (data.error && (data.error.message.includes('API key') || data.status_code === 400)) {
+                        // Substituindo prompt() por modal customizado
+                        return requestNewApiKey().then(newKey => {
+                            IMGBB_API_KEY = newKey;
+                            localStorage.setItem('imgbb_api_key', IMGBB_API_KEY);
+                            // Tentar novamente com a nova chave (retornando a promise para encadear)
+                            return uploadToImgBB(imageBlob, originalBtnContent); 
+                        });
+                    }
+                    throw new Error(data.error ? data.error.message : 'Erro desconhecido no upload');
+                }
+            })
+            .catch(error => {
+                console.error('Erro no upload:', error);
+                // Se o erro não for de cancelamento (que já tratamos), mostra alerta
+                if (error.message !== "Solicitação de API Key cancelada pelo usuário.") {
+                    alert('Falha ao enviar imagem: ' + error.message);
+                }
+            })
+            .finally(() => {
+                // Apenas restaura o botão se não estivermos no meio de uma nova tentativa (que seria assíncrona)
+                // Mas como o finally executa após a cadeia de promises...
+                // Se requestNewApiKey for chamado, ele retorna uma promise. 
+                // Se o usuário demorar 10 segundos, o finally só roda depois?
+                // Sim, porque retornamos a promise do requestNewApiKey dentro do .then
+                confirmCropBtn.disabled = false;
+                confirmCropBtn.innerHTML = originalBtnContent;
+                lucide.createIcons();
+            });
+        }
+
+        // Icon Picker Logic
+        const iconPickerModal = document.getElementById('icon-picker-modal');
+        const openIconPickerBtn = document.getElementById('open-icon-picker');
+        const closeIconPickerBtn = document.getElementById('close-icon-picker');
+        const iconGrid = document.getElementById('icon-grid');
+        const modalContent = iconPickerModal.querySelector('div'); // O card branco
+
+        const availableIcons = [
+            'alert-triangle', 'newspaper', 'file-text', 'search', 'shield-alert', 
+            'megaphone', 'check-circle', 'scale', 'users', 'info', 'camera', 
+            'video', 'map-pin', 'calendar', 'dollar-sign', 'flame', 'zap', 
+            'trending-up', 'activity', 'lock', 'unlock', 'eye', 'eye-off',
+            'bell', 'bookmark', 'award', 'flag', 'target', 'compass', 'globe',
+            'home', 'message-square', 'bar-chart', 'settings', 'user', 'user-check',
+            'briefcase', 'clipboard', 'file-plus', 'folder', 'image', 'mic',
+            'music', 'pause', 'play', 'power', 'printer', 'save', 'send',
+            'share', 'shield', 'shield-check', 'smartphone', 'star', 'sun',
+            'moon', 'thumbs-up', 'thumbs-down', 'trash', 'truck', 'wifi'
+        ];
+
+        function renderIconGrid() {
+            iconGrid.innerHTML = '';
+            availableIcons.forEach(iconName => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-blue-100 hover:text-blue-600 transition-colors border border-slate-100';
+                btn.innerHTML = `
+                    <i data-lucide="${iconName}" size="24"></i>
+                    <span class="text-[8px] font-mono font-medium text-slate-500 uppercase truncate w-full text-center">${iconName}</span>
+                `;
+                btn.onclick = () => {
+                    document.getElementById('icone').value = iconName;
+                    updatePreview();
+                    closeIconPicker();
+                };
+                iconGrid.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function openIconPicker() {
+            renderIconGrid();
+            iconPickerModal.classList.remove('hidden');
+            // Timeout para permitir a transição CSS
+            setTimeout(() => {
+                iconPickerModal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeIconPicker() {
+            iconPickerModal.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                iconPickerModal.classList.add('hidden');
+            }, 300); // Tempo da transição
+        }
+
+        openIconPickerBtn.addEventListener('click', openIconPicker);
+        closeIconPickerBtn.addEventListener('click', closeIconPicker);
+        
+        // Fechar ao clicar fora
+        iconPickerModal.addEventListener('click', (e) => {
+            if (e.target === iconPickerModal) closeIconPicker();
+        });
+
+        // Live Preview Logic
+        const inputs = ['titulo', 'resumo', 'categoria', 'icone', 'data_str'];
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        // Preencher data atual automaticamente se vazio
+        const today = new Date();
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        document.getElementById('data_str').value = today.toLocaleDateString('pt-BR', options);
+        updatePreview();
+
+        function updatePreview() {
+            document.getElementById('preview-titulo').innerText = document.getElementById('titulo').value || 'Título da Matéria';
+            document.getElementById('preview-resumo').innerText = document.getElementById('resumo').value || 'Resumo da matéria aparecerá aqui...';
+            document.getElementById('preview-categoria').innerText = document.getElementById('categoria').value;
+            document.getElementById('preview-data').innerText = document.getElementById('data_str').value;
+            
+            // Atualizar ícone
+            const iconName = document.getElementById('icone').value || 'alert-triangle';
+            const iconContainer = document.querySelector('#card-preview .absolute');
+            iconContainer.innerHTML = `<i data-lucide="${iconName}" size="120"></i>`;
+            lucide.createIcons();
+        }
+
+        // Funções de Gerenciamento de Notícias
+        function loadNewsList() {
+            const q = query(
+                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'),
+                orderBy('timestamp', 'desc')
+            );
+
+            onSnapshot(q, (snapshot) => {
+                newsCountEl.innerText = snapshot.size;
+                
+                if (snapshot.empty) {
+                    newsListEl.innerHTML = `
+                        <div class="text-center py-8 text-slate-400">
+                            <i data-lucide="inbox" class="mx-auto mb-2" size="24"></i>
+                            <p class="text-xs font-medium">Nenhuma notícia publicada ainda.</p>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const id = doc.id;
+                    const date = data.data_str || 'Sem data';
+                    
+                    html += `
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between gap-4 hover:shadow-md transition-shadow group">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="bg-blue-50 p-2 rounded-lg text-blue-600 flex-shrink-0">
+                                    <i data-lucide="${data.icone || 'file-text'}" size="18"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-sm font-bold text-slate-800 truncate">${data.titulo}</h4>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                                        <span>${data.categoria}</span>
+                                        <span>•</span>
+                                        <span>${date}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="window.editNews('${id}')" class="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors" title="Editar">
+                                    <i data-lucide="edit-2" size="16"></i>
+                                </button>
+                                <button onclick="window.deleteNews('${id}')" class="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors" title="Excluir">
+                                    <i data-lucide="trash-2" size="16"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                newsListEl.innerHTML = html;
+                lucide.createIcons();
+            });
+        }
+
+        window.editNews = async (id) => {
+            try {
+                const docRef = doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', id);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Preencher formulário
+                    document.getElementById('titulo').value = data.titulo;
+                    document.getElementById('resumo').value = data.resumo;
+                    document.getElementById('categoria').value = data.categoria;
+                    document.getElementById('icone').value = data.icone;
+                    document.getElementById('link').value = (data.link && !data.link.includes('artigo.html')) ? data.link : '';
+                    document.getElementById('data_str').value = data.data_str;
+                    document.getElementById('conteudo_html').value = data.conteudo_html || '';
+
+                    // Atualizar preview
+                    updatePreview();
+
+                    // Mudar estado para edição
+                    editingId = id;
+                    submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    submitBtn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                    submitBtnText.innerText = "Salvar Alterações";
+                    cancelEditBtn.classList.remove('hidden');
+                    
+                    // Rolar para o topo
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (error) {
+                console.error("Erro ao carregar notícia para edição:", error);
+                alert("Erro ao carregar notícia.");
+            }
+        };
+
+        window.deleteNews = async (id) => {
+            if (confirm('Tem certeza que deseja excluir esta notícia? Esta ação não pode ser desfeita.')) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', id));
+                    // Lista atualiza automaticamente via onSnapshot
+                } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                    alert("Erro ao excluir notícia.");
+                }
+            }
+        };
+
+        window.cancelEdit = () => {
+            editingId = null;
+            form.reset();
+            
+            // Restaurar data
+            const today = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('data_str').value = today.toLocaleDateString('pt-BR', options);
+            
+            updatePreview();
+
+            // Restaurar botões
+            submitBtn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            submitBtnText.innerText = "Publicar Notícia";
+            cancelEditBtn.classList.add('hidden');
+        };
+
+        cancelEditBtn.addEventListener('click', window.cancelEdit);
+
+        // Submit Handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Estado de Loading
+            const originalBtnContent = submitBtn.innerHTML;
+            // Salvar classes originais (se não estiver editando, assume blue)
+            const isEditing = editingId !== null;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin" size="16"></i> ${isEditing ? 'Salvando...' : 'Publicando...'}`;
+            lucide.createIcons();
+
+            try {
+                const titulo = document.getElementById('titulo').value;
+                const resumo = document.getElementById('resumo').value;
+                const categoria = document.getElementById('categoria').value;
+                const icone = document.getElementById('icone').value;
+                let link = document.getElementById('link').value; // Link opcional
+                const data_str = document.getElementById('data_str').value;
+                const conteudo_html = document.getElementById('conteudo_html').value;
+
+                const newsData = {
+                    titulo: titulo,
+                    resumo: resumo,
+                    categoria: categoria,
+                    icone: icone,
+                    data_str: data_str,
+                    conteudo_html: conteudo_html,
+                };
+
+                // Se tiver link externo, usa. Se não, usa placeholder ou mantém o existente na edição.
+                if (link && link.trim() !== "") {
+                    newsData.link = link;
+                } else if (!editingId) {
+                    newsData.link = '#'; // Placeholder para criação
+                    newsData.timestamp = serverTimestamp(); // Apenas na criação
+                }
+
+                if (editingId) {
+                    // Atualizar Existente
+                    await updateDoc(doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', editingId), newsData);
+                    submitBtn.innerHTML = `<i data-lucide="check-circle" size="16"></i> Atualizado!`;
+                } else {
+                    // Criar Novo
+                    const docRef = await addDoc(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'), newsData);
+                    console.log("Documento escrito com ID: ", docRef.id);
+
+                    // Se o link estiver vazio, atualizar com o link interno gerado
+                    if (!link || link.trim() === "") {
+                        const generatedLink = `artigo.html?id=${docRef.id}`;
+                        await updateDoc(doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', docRef.id), {
+                            link: generatedLink
+                        });
+                    }
+                    submitBtn.innerHTML = `<i data-lucide="check-circle" size="16"></i> Publicado!`;
+                }
+
+                // Feedback de Sucesso
+                submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-amber-500', 'hover:bg-amber-600');
+                submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                lucide.createIcons();
+
+                // Limpar formulário após 1.5 segundos
+                setTimeout(() => {
+                    window.cancelEdit(); // Reseta tudo para estado inicial
+                    submitBtn.disabled = false;
+                    lucide.createIcons();
+                }, 1500);
+
+            } catch (e) {
+                console.error("Erro ao salvar: ", e);
+                alert("Erro ao salvar: " + e.message);
+                
+                // Restaurar botão
+                submitBtn.innerHTML = originalBtnContent;
+                submitBtn.disabled = false;
+                lucide.createIcons();
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+    <script src="version-display.js"></script>
+</body>
+</html>

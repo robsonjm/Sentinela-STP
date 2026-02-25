@@ -14,7 +14,8 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
         .app-container { height: 100dvh; display: flex; flex-direction: column; }
         header { padding-top: calc(0.5rem + var(--sat)); }
-        footer { padding-bottom: calc(1rem + var(--sab)); }
+        /* Ajuste para não esconder conteúdo atrás da nav bar */
+        main { padding-bottom: calc(5rem + var(--sab)); }
         .active-zone { background-color: #1d4ed8 !important; color: white !important; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s; }
         
@@ -32,6 +33,10 @@
         .symptom-chip { border: 1px solid #e2e8f0; transition: all 0.2s; }
         .symptom-chip.active { background-color: #dbeafe; border-color: #2563eb; color: #1e40af; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Nav Bar Styles */
+        .nav-link.active { color: #1d4ed8; }
+        .nav-link.active i { color: #1d4ed8; fill: #dbeafe; }
     </style>
 </head>
 <body class="overflow-hidden">
@@ -231,6 +236,35 @@
                 </button>
             </div>
         </footer>
+
+        <!-- Barra de Navegação Padrão -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <a href="index.html" class="nav-link active flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="home" size="20"></i>
+                    <span>Início</span>
+                </a>
+                <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="message-square" size="20"></i>
+                    <span>Feed</span>
+                </a>
+                <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="bar-chart" size="20"></i>
+                    <span>Painel</span>
+                </a>
+                <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                    <i data-lucide="info" size="20"></i>
+                    <span>Sobre</span>
+                </a>
+            </div>
+        </nav>
+
+        <script>
+            // Script simples para garantir que os ícones da nav bar sejam renderizados
+            document.addEventListener('DOMContentLoaded', () => {
+                lucide.createIcons();
+            });
+        </script>
     </div>
 
     <!-- Firebase SDK -->
@@ -401,5 +435,6 @@
         document.getElementById('main-btn').onclick = start;
         document.getElementById('stop-btn').onclick = stop;
     </script>
+    <script src="version-display.js"></script>
 </body>
 </html>

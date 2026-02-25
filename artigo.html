@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinela STP - Notícia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; padding-bottom: calc(5rem + var(--sab)); }
+        
+        .nav-link.active { color: #1d4ed8; }
+        .nav-link.active i { color: #1d4ed8; fill: #dbeafe; }
+
+        /* Tipografia de Artigo */
+        article p { margin-bottom: 1.5rem; line-height: 1.8; color: #334155; font-size: 1.05rem; }
+        article h2 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-top: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+        article h3 { font-size: 1.25rem; font-weight: 700; color: #334155; margin-top: 2rem; margin-bottom: 0.75rem; }
+        article ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #334155; }
+        article li { margin-bottom: 0.5rem; }
+        article blockquote { border-left: 4px solid #3b82f6; padding-left: 1.5rem; font-style: italic; color: #475569; margin: 2rem 0; background: #eff6ff; padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
+        article img { width: 100%; height: auto; border-radius: 1rem; margin: 2rem 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        article a { color: #2563eb; text-decoration: underline; font-weight: 600; }
+
+        .header-gradient {
+            background: linear-gradient(to bottom, rgba(30, 58, 138, 0.95), rgba(30, 58, 138, 0.8)), url('https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?q=80&w=2072&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-white">
+
+    <!-- Header Fixo Transparente -->
+    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" id="main-header">
+        <div class="max-w-3xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="feed.html" class="bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 rounded-xl text-white transition-colors border border-white/10">
+                <i data-lucide="arrow-left" size="20"></i>
+            </a>
+            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                <span class="text-[10px] font-black uppercase text-white tracking-widest">Sentinela News</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section da Matéria -->
+    <div class="header-gradient pt-32 pb-12 px-6 text-white relative -mt-0">
+        <div class="max-w-2xl mx-auto relative z-10">
+            <div class="inline-flex items-center gap-2 bg-blue-500/30 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20 mb-6">
+                <i id="article-icon" data-lucide="file-text" size="14"></i>
+                <span id="article-category" class="text-[10px] font-black uppercase tracking-widest">Carregando...</span>
+            </div>
+            
+            <h1 id="article-title" class="text-3xl md:text-5xl font-black tracking-tighter leading-tight mb-6">
+                Carregando Matéria...
+            </h1>
+            
+            <div class="flex items-center gap-4 text-blue-100 text-xs font-bold uppercase tracking-widest border-t border-white/10 pt-6">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="calendar" size="14"></i>
+                    <span id="article-date">...</span>
+                </span>
+                <span class="w-1 h-1 rounded-full bg-blue-400"></span>
+                <span class="flex items-center gap-2">
+                    <i data-lucide="clock" size="14"></i>
+                    <span>Leitura: 3 min</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo da Matéria -->
+    <main class="max-w-2xl mx-auto px-6 py-12">
+        <!-- Lead / Resumo -->
+        <p id="article-lead" class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed mb-10 border-l-4 border-blue-600 pl-6">
+            ...
+        </p>
+
+        <!-- Corpo do Texto -->
+        <article id="article-body" class="prose prose-slate prose-lg max-w-none">
+            <div class="flex flex-col items-center justify-center py-20 text-slate-300">
+                <i data-lucide="loader-2" class="animate-spin mb-4" size="40"></i>
+                <p class="font-bold uppercase text-xs tracking-widest">Buscando conteúdo...</p>
+            </div>
+        </article>
+
+        <!-- Rodapé da Matéria -->
+        <div class="mt-16 pt-8 border-t border-slate-100 text-center">
+            <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Compartilhe esta denúncia</p>
+            <div class="flex justify-center gap-4">
+                <button class="p-3 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors">
+                    <i data-lucide="share-2" size="20"></i>
+                </button>
+                <button class="p-3 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                    <i data-lucide="copy" size="20"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Barra de Navegação Padrão -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="home" size="20"></i>
+                <span>Início</span>
+            </a>
+            <a href="feed.html" class="nav-link active flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="message-square" size="20"></i>
+                <span>Feed</span>
+            </a>
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="bar-chart" size="20"></i>
+                <span>Painel</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+                <i data-lucide="info" size="20"></i>
+                <span>Sobre</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
+          authDomain: "sentinela-stp.firebaseapp.com",
+          projectId: "sentinela-stp",
+          storageBucket: "sentinela-stp.firebasestorage.app",
+          messagingSenderId: "845865605498",
+          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
+          measurementId: "G-6DT4QG0RVT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Scroll Effect Header
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('main-header');
+            if (window.scrollY > 50) {
+                header.classList.add('bg-blue-900/90', 'backdrop-blur-md', 'shadow-lg');
+                header.classList.remove('bg-transparent');
+            } else {
+                header.classList.remove('bg-blue-900/90', 'backdrop-blur-md', 'shadow-lg');
+                header.classList.add('bg-transparent');
+            }
+        });
+
+        // Load Article
+        async function loadArticle() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const articleId = urlParams.get('id');
+
+            if (!articleId) {
+                document.getElementById('article-body').innerHTML = `
+                    <div class="text-center py-20 text-slate-400">
+                        <i data-lucide="alert-circle" class="mx-auto mb-4" size="48"></i>
+                        <p class="font-bold uppercase text-sm">Artigo não encontrado.</p>
+                        <a href="feed.html" class="text-blue-600 underline mt-4 block text-xs font-black uppercase tracking-widest">Voltar ao Feed</a>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            try {
+                await signInAnonymously(auth);
+                const docRef = doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', articleId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Preencher Hero
+                    document.title = `${data.titulo} - Sentinela STP`;
+                    document.getElementById('article-category').innerText = data.categoria || 'Notícia';
+                    document.getElementById('article-title').innerText = data.titulo;
+                    document.getElementById('article-date').innerText = data.data_str || 'Data desconhecida';
+                    
+                    // Ícone dinâmico
+                    const iconName = data.icone || 'file-text';
+                    const iconContainer = document.getElementById('article-icon').parentElement;
+                    iconContainer.innerHTML = `<i data-lucide="${iconName}" size="14"></i> <span class="text-[10px] font-black uppercase tracking-widest">${data.categoria}</span>`;
+
+                    // Preencher Conteúdo
+                    document.getElementById('article-lead').innerText = data.resumo;
+                    
+                    // Conteúdo HTML Rico ou Fallback
+                    if (data.conteudo_html) {
+                        document.getElementById('article-body').innerHTML = data.conteudo_html;
+                    } else {
+                        // Fallback se não tiver conteúdo rico
+                        document.getElementById('article-body').innerHTML = `<p class="italic text-slate-500">Conteúdo detalhado não disponível para visualização rápida. Consulte a fonte original.</p>`;
+                    }
+
+                    lucide.createIcons();
+                } else {
+                    throw new Error("Documento não existe");
+                }
+            } catch (e) {
+                console.error("Erro ao carregar:", e);
+                document.getElementById('article-body').innerHTML = `
+                    <div class="text-center py-20 text-red-500">
+                        <i data-lucide="wifi-off" class="mx-auto mb-4" size="48"></i>
+                        <p class="font-bold uppercase text-sm">Erro ao carregar a matéria.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        loadArticle();
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+    <script src="version-display.js"></script>
+</body>
+</html>
