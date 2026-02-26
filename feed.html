@@ -27,7 +27,6 @@
             color: white;
             border: none;
             box-shadow: 0 20px 25px -5px rgba(29, 78, 216, 0.2);
-            display: none; /* Escondido por padrão, aparece se houver artigo */
         }
 
         @keyframes fadeInScale {
@@ -50,7 +49,40 @@
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* Carousel Snap Styles */
+        .snap-x-mandatory {
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        .snap-center {
+            scroll-snap-align: center;
+        }
+
+        /* Animação do Ícone Flutuante */
+        @keyframes floatIcon {
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.15; }
+            50% { transform: translateY(-15px) scale(1.1) rotate(5deg); opacity: 0.3; }
+            100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.15; }
+        }
+
+        .animated-icon {
+            animation: floatIcon 6s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
+        }
+        
+        /* Ícone da Timeline */
+        @keyframes pulseIcon {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        
+        .timeline-icon {
+            animation: pulseIcon 3s ease-in-out infinite;
+        }
+
         .glass-header {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
@@ -86,13 +118,20 @@
         
         <!-- Área de Destaque Jornalístico (Dinâmica) -->
         <section id="editorial-section" class="mb-12">
-            <div class="flex items-center gap-2 mb-6">
-                <i data-lucide="search" class="text-blue-600" size="18"></i>
-                <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Investigação Sentinela</h3>
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="search" class="text-blue-600" size="18"></i>
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Investigação Sentinela</h3>
+                </div>
+                <!-- Indicadores do Carousel (opcional) -->
+                <div id="carousel-dots" class="flex gap-1"></div>
             </div>
             
-            <div id="editorial-content" class="editorial-card p-8 rounded-[2.5rem] relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.01]">
+            <div id="editorial-carousel" class="flex overflow-x-auto snap-x-mandatory no-scrollbar gap-4 pb-4 -mx-6 px-6 md:mx-0 md:px-0">
                 <!-- Conteúdo injetado via JS -->
+                <div class="w-full shrink-0 snap-center editorial-card p-8 rounded-[2.5rem] relative overflow-hidden min-h-[300px] flex items-center justify-center">
+                    <i data-lucide="loader-2" class="animate-spin text-white/50" size="32"></i>
+                </div>
             </div>
         </section>
 
@@ -191,7 +230,8 @@
         const container = document.getElementById('infinite-feed');
         const scrollAnchor = document.getElementById('scroll-anchor');
         const loadMoreLoader = document.getElementById('load-more-loader');
-        const editorialContent = document.getElementById('editorial-content');
+        const editorialCarousel = document.getElementById('editorial-carousel');
+        const carouselDots = document.getElementById('carousel-dots');
         
         // Filtros UI
         const filterZone = document.getElementById('filter-zone');
@@ -202,51 +242,245 @@
         let isLoadingMore = false;
         let hasMore = true;
         let unsubscribeLiveFeed = null;
+        let unsubscribeNewsFeed = null; // Listener para notícias na timeline
         let currentFilters = {};
 
-        // --- SISTEMA JORNALÍSTICO (ALIMENTAÇÃO DINÂMICA) ---
-        const loadLatestEditorial = () => {
+        // --- SISTEMA JORNALÍSTICO (CAROUSEL) ---
+        const loadEditorialCarousel = () => {
             const qArtigo = query(
                 collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'),
                 orderBy('timestamp', 'desc'),
-                limit(1)
+                limit(5)
             );
 
             onSnapshot(qArtigo, (snapshot) => {
-                if (!snapshot.empty) {
-                    const data = snapshot.docs[0].data();
-                    editorialContent.style.display = 'block';
-                    editorialContent.innerHTML = `
-                        <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-                            <i data-lucide="${data.icone || 'mic'}" size="120"></i>
-                        </div>
-                        <div class="relative z-10 max-w-2xl text-left">
-                            <span class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">${data.categoria || 'Reportagem Especial'}</span>
-                            <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-4 leading-tight">${data.titulo}</h2>
-                            <p class="text-blue-100 text-sm md:text-base font-medium leading-relaxed mb-6">
-                                ${data.resumo}
-                            </p>
-                            <div class="flex items-center gap-4">
-                                <a href="${data.link || '#'}" class="bg-white text-blue-700 px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-50 transition-all">Ler Matéria Completa</a>
-                                <span class="text-[10px] font-bold text-blue-200">Publicado em ${data.data_str || 'Recentemente'}</span>
+                editorialCarousel.innerHTML = '';
+                carouselDots.innerHTML = '';
+
+                if (snapshot.empty) {
+                    editorialCarousel.innerHTML = `
+                        <div class="w-full shrink-0 snap-center editorial-card p-8 rounded-[2.5rem] relative overflow-hidden group cursor-pointer">
+                            <div class="relative z-10 text-left">
+                                <span class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">Boas-vindas</span>
+                                <h2 class="text-3xl font-black tracking-tight mb-4">A Sentinela está nas ruas.</h2>
+                                <p class="text-blue-100 text-sm font-medium leading-relaxed">
+                                    Use o app para registrar ruído e calor. Em breve, traremos investigações profundas.
+                                </p>
                             </div>
                         </div>
                     `;
                     lucide.createIcons();
-                } else {
-                    editorialContent.style.display = 'block';
-                    editorialContent.innerHTML = `
-                        <div class="relative z-10 text-left">
-                            <span class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">Boas-vindas</span>
-                            <h2 class="text-3xl font-black tracking-tight mb-4">A Sentinela está nas ruas.</h2>
-                            <p class="text-blue-100 text-sm font-medium leading-relaxed">
-                                Use o app para registrar ruído e calor. Em breve, traremos investigações profundas sobre as linhas mais denunciadas pela população.
-                            </p>
+                    return;
+                }
+
+                snapshot.docs.forEach((doc, index) => {
+                    const data = doc.data();
+                    const card = document.createElement('div');
+                    // Removida a classe 'group-hover:scale-110' do ícone para evitar conflito com animação CSS
+                    card.className = "w-full shrink-0 snap-center editorial-card p-8 rounded-[2.5rem] relative overflow-hidden group cursor-pointer transition-all";
+                    
+                    // Ícone Maior e Animado
+                    card.innerHTML = `
+                        <div class="absolute -top-12 -right-12 p-0 z-0 pointer-events-none overflow-visible">
+                            <div class="animated-icon text-white">
+                                <i data-lucide="${data.icone || 'mic'}" width="280" height="280" stroke-width="0.8"></i>
+                            </div>
+                        </div>
+                        <div class="relative z-10 max-w-2xl text-left h-full flex flex-col justify-between">
+                            <div>
+                                <span class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block backdrop-blur-md">${data.categoria || 'Reportagem'}</span>
+                                <h2 class="text-2xl md:text-3xl font-black tracking-tight mb-2 leading-tight drop-shadow-sm line-clamp-2">${data.titulo}</h2>
+                                <p class="text-blue-100 text-xs md:text-sm font-medium leading-relaxed mb-4 line-clamp-3">
+                                    ${data.resumo}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-4 mt-auto">
+                                <a href="${data.link || '#'}" class="bg-white text-blue-700 px-5 py-2.5 rounded-2xl font-black uppercase text-[9px] tracking-widest hover:bg-blue-50 transition-all shadow-lg shadow-blue-900/20">Ler Tudo</a>
+                                <span class="text-[9px] font-bold text-blue-200">Publicado em ${data.data_str || 'Recentemente'}</span>
+                            </div>
                         </div>
                     `;
-                    lucide.createIcons();
-                }
+                    editorialCarousel.appendChild(card);
+
+                    // Indicador (Dot)
+                    const dot = document.createElement('div');
+                    dot.className = `w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${index === 0 ? 'bg-blue-600 w-3' : 'bg-slate-300'}`;
+                    // Permitir clique nos dots
+                    dot.onclick = () => {
+                        editorialCarousel.scrollTo({
+                            left: card.offsetLeft,
+                            behavior: 'smooth'
+                        });
+                        resetAutoScroll(); // Reinicia o timer ao interagir
+                    };
+                    carouselDots.appendChild(dot);
+                });
+
+                // --- Auto Scroll & Interatividade Desktop ---
+                let autoScrollInterval;
+                const scrollDelay = 5000; // 5 segundos por slide
+
+                const startAutoScroll = () => {
+                    clearInterval(autoScrollInterval);
+                    autoScrollInterval = setInterval(() => {
+                        const width = editorialCarousel.offsetWidth;
+                        const scrollLeft = editorialCarousel.scrollLeft;
+                        const maxScroll = editorialCarousel.scrollWidth - width;
+                        
+                        // Se chegou no fim, volta pro começo
+                        if (scrollLeft >= maxScroll - 10) { // -10 margem de erro
+                            editorialCarousel.scrollTo({ left: 0, behavior: 'smooth' });
+                        } else {
+                            editorialCarousel.scrollBy({ left: width, behavior: 'smooth' });
+                        }
+                    }, scrollDelay);
+                };
+
+                const stopAutoScroll = () => clearInterval(autoScrollInterval);
+                const resetAutoScroll = () => {
+                    stopAutoScroll();
+                    startAutoScroll();
+                };
+
+                // Iniciar Auto Scroll
+                startAutoScroll();
+
+                // Parar ao passar o mouse (Desktop) ou tocar (Mobile)
+                editorialCarousel.addEventListener('mouseenter', stopAutoScroll);
+                editorialCarousel.addEventListener('mouseleave', startAutoScroll);
+                editorialCarousel.addEventListener('touchstart', stopAutoScroll);
+                editorialCarousel.addEventListener('touchend', startAutoScroll);
+
+                // Lógica de Arrastar com Mouse (Desktop Drag-to-Scroll)
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                editorialCarousel.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    editorialCarousel.classList.add('cursor-grabbing');
+                    editorialCarousel.classList.remove('cursor-grab');
+                    startX = e.pageX - editorialCarousel.offsetLeft;
+                    scrollLeft = editorialCarousel.scrollLeft;
+                    stopAutoScroll(); // Para enquanto arrasta
+                });
+
+                editorialCarousel.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    editorialCarousel.classList.remove('cursor-grabbing');
+                    startAutoScroll(); // Retoma se sair
+                });
+
+                editorialCarousel.addEventListener('mouseup', () => {
+                    isDown = false;
+                    editorialCarousel.classList.remove('cursor-grabbing');
+                    startAutoScroll(); // Retoma ao soltar
+                });
+
+                editorialCarousel.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - editorialCarousel.offsetLeft;
+                    const walk = (x - startX) * 2; // Velocidade do scroll
+                    editorialCarousel.scrollLeft = scrollLeft - walk;
+                });
+
+                // Scroll Handler para atualizar Dots (Mantido)
+                editorialCarousel.onscroll = () => {
+                    const scrollLeft = editorialCarousel.scrollLeft;
+                    const width = editorialCarousel.offsetWidth;
+                    // Melhor precisão no cálculo do índice atual
+                    const index = Math.round(scrollLeft / width);
+                    
+                    Array.from(carouselDots.children).forEach((d, i) => {
+                        d.className = `w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${i === index ? 'bg-blue-600 w-3' : 'bg-slate-300'}`;
+                    });
+                };
+
+                lucide.createIcons();
             });
+        };
+
+        const createNewsFeedCard = (item) => {
+            const el = document.createElement('div');
+            el.className = "bg-slate-900 border-l-4 border-blue-500 rounded-xl p-4 mb-4 shadow-md relative overflow-hidden group";
+            
+            // Timestamp seguro
+            if (item.timestamp && item.timestamp.seconds) {
+                el.dataset.timestamp = item.timestamp.seconds * 1000;
+            } else if (item.timestamp) {
+                el.dataset.timestamp = item.timestamp;
+            } else {
+                el.dataset.timestamp = Date.now();
+            }
+            
+            // Fundo Sutil Animado
+            el.innerHTML = `
+                <div class="absolute -right-6 -bottom-6 text-blue-800/20 group-hover:text-blue-700/30 transition-all duration-500 timeline-icon">
+                    <i data-lucide="${item.icone || 'newspaper'}" width="120" height="120" stroke-width="1.5"></i>
+                </div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-blue-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">
+                            ${item.categoria || 'Notícia'}
+                        </span>
+                        <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                            <i data-lucide="clock" size="10"></i>
+                            ${item.data_str || 'Agora'}
+                        </span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 leading-tight">${item.titulo}</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed mb-3 line-clamp-3 w-[85%]">
+                        ${item.resumo}
+                    </p>
+                    <a href="${item.link || '#'}" class="inline-flex items-center gap-1 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:text-blue-300 transition-colors">
+                        Ler Reportagem <i data-lucide="arrow-right" size="10"></i>
+                    </a>
+                </div>
+            `;
+            return el;
+        };
+
+        const insertSorted = (container, element) => {
+            const timestamp = parseInt(element.dataset.timestamp || 0);
+            const children = Array.from(container.children);
+            
+            // Encontrar o primeiro filho com timestamp MENOR (mais antigo)
+            // Porque queremos ordem DECRESCENTE (Mais novo no topo)
+            const nextElement = children.find(child => {
+                // Ignorar elementos sem timestamp (loaders, mensagens de erro)
+                if (!child.dataset.timestamp) return false;
+                const childTs = parseInt(child.dataset.timestamp);
+                return childTs < timestamp;
+            });
+
+            if (nextElement) {
+                container.insertBefore(element, nextElement);
+            } else {
+                // Se não achou ninguém mais antigo, ou a lista acabou, ou todos são mais novos (o que seria estranho se appendChild for o padrão)
+                // Se todos são mais novos, appendChild coloca no fim? Não, se todos são mais novos, nextElement seria null.
+                // Mas queremos colocar ANTES de alguém MAIS ANTIGO.
+                // Se todos na lista são MAIS NOVOS (ts > timestamp), então este elemento é o mais antigo de todos -> appendChild.
+                // Se todos na lista são MAIS ANTIGOS (ts < timestamp), então este elemento é o mais novo -> insertBefore(firstChild).
+                
+                // Correção da lógica:
+                // Lista: [100, 90, 80]
+                // Novo: 95.
+                // child=100 (100 < 95? False)
+                // child=90 (90 < 95? True) -> InsertBefore 90. Result: [100, 95, 90]. Correto.
+                
+                // Novo: 110.
+                // child=100 (100 < 110? True) -> InsertBefore 100. Result: [110, 100, 90]. Correto.
+                
+                // Novo: 70.
+                // child=100 (False)
+                // child=90 (False)
+                // child=80 (False)
+                // nextElement = undefined.
+                // AppendChild. Result: [100, 90, 80, 70]. Correto.
+                
+                container.appendChild(element);
+            }
         };
 
         // Configuração de Reações
@@ -272,6 +506,18 @@
             const card = document.createElement('div');
             card.className = `feedback-card bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative ${isNew ? 'ring-2 ring-blue-500 ring-offset-4' : ''}`;
             
+            // Timestamp para ordenação
+            if (item.timestamp) {
+                // Normalizar para milissegundos
+                if (item.timestamp.seconds) {
+                    card.dataset.timestamp = item.timestamp.seconds * 1000;
+                } else {
+                    card.dataset.timestamp = item.timestamp;
+                }
+            } else {
+                card.dataset.timestamp = 0;
+            }
+
             const dbVal = parseInt(item.ruido_db) || 0;
             const noiseColor = dbVal >= 85 ? 'bg-red-500' : 'bg-blue-600';
             
@@ -447,6 +693,35 @@
             return query(baseCollection, ...constraints);
         };
 
+        const startNewsFeedIntegration = () => {
+            if (unsubscribeNewsFeed) {
+                unsubscribeNewsFeed();
+                unsubscribeNewsFeed = null;
+            }
+
+            const qNews = query(
+                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'),
+                orderBy('timestamp', 'desc'),
+                limit(10)
+            );
+
+            unsubscribeNewsFeed = onSnapshot(qNews, (snapshot) => {
+                let hasChanges = false;
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const data = change.doc.data();
+                        // Adicionar ID ao objeto
+                        const newsCard = createNewsFeedCard({ ...data, id: change.doc.id });
+                        insertSorted(container, newsCard);
+                        hasChanges = true;
+                    }
+                });
+                if (hasChanges) {
+                    lucide.createIcons();
+                }
+            });
+        };
+
         const startLiveFeed = () => {
             // Cancelar listener anterior se existir
             if (unsubscribeLiveFeed) {
@@ -461,6 +736,10 @@
                     <p class="font-bold uppercase text-xs tracking-widest">Conectando ao banco de dados...</p>
                 </div>
             `;
+            
+            // Iniciar também o feed de notícias para garantir sincronia
+            startNewsFeedIntegration();
+            
             lucide.createIcons();
             lastVisible = null;
             hasMore = true;
@@ -474,39 +753,44 @@
                     if (initialLoader) initialLoader.remove();
                     
                     if (snapshot.empty && isFirstLoad) {
-                        container.innerHTML = `
-                            <div class="text-center py-12 text-slate-400">
-                                <i data-lucide="inbox" class="mx-auto mb-2" size="32"></i>
-                                <p class="text-xs font-bold uppercase tracking-widest">Nenhum relato encontrado com este filtro.</p>
-                            </div>
-                        `;
-                        lucide.createIcons();
+                        // Se não tiver relatos, apenas removemos o loader. 
+                        // As notícias podem aparecer, então não mostramos "Nenhum relato" imediatamente se houver notícias.
+                        // Mas como notícias são assíncronas, talvez mostremos depois.
+                        // Vamos deixar o container limpo (exceto notícias que já chegaram)
+                        
+                        // Verificar se já tem notícias
+                        if (container.children.length === 0) {
+                             container.innerHTML = `
+                                <div class="text-center py-12 text-slate-400 empty-msg">
+                                    <i data-lucide="inbox" class="mx-auto mb-2" size="32"></i>
+                                    <p class="text-xs font-bold uppercase tracking-widest">Nenhum relato encontrado com este filtro.</p>
+                                </div>
+                            `;
+                            lucide.createIcons();
+                        }
                         isFirstLoad = false;
                         return;
                     }
 
                     if (isFirstLoad) {
-                        // Carga Inicial: Renderizar tudo mantendo a ordem da query (Descendente)
-                        // Usamos appendChild para manter a ordem [Mais Recente -> Mais Antigo]
+                        // Carga Inicial
                         snapshot.forEach((doc) => {
                             const data = doc.data();
                             const card = createCard({ id: doc.id, ...data });
-                            if (card) container.appendChild(card);
+                            if (card) insertSorted(container, card);
                         });
                         isFirstLoad = false;
                     } else {
-                        // Atualizações em Tempo Real: Novos itens vão para o topo
+                        // Atualizações em Tempo Real
                         snapshot.docChanges().forEach((change) => {
                             if (change.type === "added") {
                                 const data = change.doc.data();
                                 const card = createCard({ id: change.doc.id, ...data }, true);
                                 if (card) {
-                                    container.prepend(card);
-                                    // Remover o loader de "sem relatos" se ele estiver lá
-                                    if(container.innerText.includes("Nenhum relato")) {
-                                        const emptyMsg = container.querySelector('.text-center');
-                                        if(emptyMsg) emptyMsg.remove();
-                                    }
+                                    insertSorted(container, card);
+                                    // Remover mensagem de vazio
+                                    const emptyMsg = container.querySelector('.empty-msg');
+                                    if(emptyMsg) emptyMsg.remove();
                                 }
                             }
                         });
@@ -555,7 +839,7 @@
                 
                 snapshot.forEach(doc => {
                     const card = createCard({ id: doc.id, ...doc.data() });
-                    if (card) container.appendChild(card);
+                    if (card) insertSorted(container, card);
                 });
                 
                 lucide.createIcons();
@@ -586,7 +870,7 @@
 
         signInAnonymously(auth)
             .then(() => {
-                loadLatestEditorial();
+                loadEditorialCarousel();
                 startLiveFeed();
             })
             .catch(err => console.error("Erro Auth:", err));

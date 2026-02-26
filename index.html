@@ -579,16 +579,22 @@
 
                         // Compress to JPEG 60%
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-                        const base64Image = dataUrl.split(',')[1];
+                        const base64Image = dataUrl;
 
                         // Show uploading feedback
-                        window.showToast("Enviando foto para a nuvem...", 4000);
-                        
+                        const toast = document.getElementById('toast');
+                        const toastMsg = document.getElementById('toast-msg');
+                        toast.classList.remove('opacity-0', '-translate-y-4');
+                        toastMsg.innerText = "Enviando foto...";
+
                         // Upload to ImgBB
                         const formData = new FormData();
-                        formData.append('image', base64Image);
+                        formData.append('image', base64Image.split(',')[1]); // Send only the base64 data part
 
-                        fetch('https://api.imgbb.com/1/upload?key=d0a234b1b52906d4a518c8a0e8646c3a', {
+                        // API Key Padronizada
+                        const IMGBB_API_KEY = '5a004494191316c17430155a5b58390b';
+
+                        fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
                             method: 'POST',
                             body: formData
                         })

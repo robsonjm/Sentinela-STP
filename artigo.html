@@ -195,7 +195,24 @@
                     
                     // Conteúdo HTML Rico ou Fallback
                     if (data.conteudo_html) {
-                        document.getElementById('article-body').innerHTML = data.conteudo_html;
+                        const bodyEl = document.getElementById('article-body');
+                        bodyEl.innerHTML = data.conteudo_html;
+                        
+                        // Lazy Load Social Embeds
+                        // Só carrega os scripts se houver embeds na página
+                        if (bodyEl.querySelector('.instagram-media')) {
+                            const script = document.createElement('script');
+                            script.src = "//www.instagram.com/embed.js";
+                            script.async = true;
+                            document.body.appendChild(script);
+                        }
+                        
+                        if (bodyEl.querySelector('.tiktok-embed')) {
+                            const script = document.createElement('script');
+                            script.src = "https://www.tiktok.com/embed.js";
+                            script.async = true;
+                            document.body.appendChild(script);
+                        }
                     } else {
                         // Fallback se não tiver conteúdo rico
                         document.getElementById('article-body').innerHTML = `<p class="italic text-slate-500">Conteúdo detalhado não disponível para visualização rápida. Consulte a fonte original.</p>`;

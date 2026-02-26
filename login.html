@@ -61,7 +61,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
@@ -75,6 +75,15 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+
+        // Forçar persistência de SESSÃO (ao fechar aba, desloga)
+        setPersistence(auth, browserSessionPersistence)
+            .then(() => {
+                console.log("Persistência de sessão configurada: browserSessionPersistence");
+            })
+            .catch((error) => {
+                console.error("Erro ao configurar persistência:", error);
+            });
 
         const loginForm = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');

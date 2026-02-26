@@ -23,6 +23,21 @@
             border-radius: 2.5rem;
             box-shadow: 0 20px 25px -5px rgba(29, 78, 216, 0.2);
         }
+
+        /* Tipografia de Artigo (Preview) */
+        .article-preview p { margin-bottom: 1.5rem; line-height: 1.8; color: #334155; font-size: 1.05rem; }
+        .article-preview h2 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-top: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; }
+        .article-preview h3 { font-size: 1.25rem; font-weight: 700; color: #334155; margin-top: 2rem; margin-bottom: 0.75rem; }
+        .article-preview ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #334155; }
+        .article-preview li { margin-bottom: 0.5rem; }
+        .article-preview blockquote { border-left: 4px solid #3b82f6; padding-left: 1.5rem; font-style: italic; color: #475569; margin: 2rem 0; background: #eff6ff; padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
+        .article-preview img { width: 100%; height: auto; border-radius: 1rem; margin: 2rem 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .article-preview a { color: #2563eb; text-decoration: underline; font-weight: 600; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -45,10 +60,10 @@
         </div>
     </header>
 
-    <main class="max-w-md mx-auto p-6 space-y-8">
+    <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-8">
         
         <!-- Título da Seção -->
-        <div class="text-center space-y-2">
+        <div class="text-center space-y-2 max-w-lg mx-auto">
             <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-200">
                 <i data-lucide="file-plus" size="12"></i> Nova Publicação
             </div>
@@ -56,8 +71,11 @@
             <p class="text-sm text-slate-500 font-medium">Preencha os dados abaixo para atualizar o mural de notícias em tempo real.</p>
         </div>
 
-        <!-- Formulário -->
-        <form id="news-form" class="space-y-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+        <!-- Grid Layout -->
+        <div class="grid lg:grid-cols-2 gap-8 items-start">
+            
+            <!-- Formulário -->
+            <form id="news-form" class="space-y-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
             
             <!-- Título -->
             <div class="space-y-1">
@@ -101,31 +119,88 @@
 
         <!-- Conteúdo Completo (WYSIWYG Simplificado) -->
         <div class="space-y-2">
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conteúdo da Matéria (HTML)</label>
-            <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-                <div class="flex items-center gap-1 p-2 border-b border-slate-200 bg-slate-100">
-                    <button type="button" onclick="insertTag('<b>', '</b>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 font-bold" title="Negrito">B</button>
-                    <button type="button" onclick="insertTag('<i>', '</i>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 italic" title="Itálico">I</button>
-                    <button type="button" onclick="insertTag('<h2>', '</h2>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 font-bold text-xs" title="Subtítulo">H2</button>
-                    <button type="button" onclick="insertTag('<p>', '</p>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 text-xs" title="Parágrafo">P</button>
-                    <button type="button" onclick="insertTag('<ul>\n<li>', '</li>\n</ul>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 text-xs" title="Lista">List</button>
-                    <button type="button" onclick="insertTag('<blockquote>', '</blockquote>')" class="p-2 hover:bg-slate-200 rounded text-slate-600 text-xs" title="Citação">Quote</button>
-                    <div class="h-4 w-px bg-slate-300 mx-1"></div>
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Diagramação da Matéria</label>
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                
+                <!-- Toolbar Principal -->
+                <div class="flex flex-col border-b border-slate-100 bg-slate-50/50">
                     
-                    <!-- Botão de Upload -->
-                    <button type="button" onclick="triggerImageUpload()" class="p-2 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 text-[10px] font-bold uppercase" title="Enviar Imagem">
-                        <i data-lucide="upload-cloud" size="14"></i> Upload Foto
-                    </button>
-                    <input type="file" id="image-upload-input" accept="image/*" class="hidden">
-                    
-                    <button type="button" onclick="insertImage()" class="p-2 hover:bg-slate-200 rounded text-slate-600 flex items-center gap-1 text-[10px] font-bold uppercase ml-1 opacity-50 hover:opacity-100" title="Inserir URL Manualmente">
-                        <i data-lucide="link" size="14"></i> URL
-                    </button>
+                    <!-- Linha 1: Tipografia Básica -->
+                    <div class="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar">
+                        <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                            <button type="button" onclick="insertTag('<b>', '</b>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 font-bold" title="Negrito"><i data-lucide="bold" size="16"></i></button>
+                            <button type="button" onclick="insertTag('<i>', '</i>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 italic" title="Itálico"><i data-lucide="italic" size="16"></i></button>
+                            <button type="button" onclick="insertTag('<u>', '</u>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 underline" title="Sublinhado"><i data-lucide="underline" size="16"></i></button>
+                        </div>
+
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                        <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                            <button type="button" onclick="insertTag('<h2>', '</h2>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 font-bold text-xs" title="Título Principal">H2</button>
+                            <button type="button" onclick="insertTag('<h3>', '</h3>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 font-bold text-xs" title="Subtítulo">H3</button>
+                        </div>
+
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                        <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                            <button type="button" onclick="insertTag('<p>', '</p>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700" title="Parágrafo"><i data-lucide="pilcrow" size="16"></i></button>
+                            <button type="button" onclick="insertTag('<ul>\n<li>', '</li>\n</ul>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700" title="Lista com Marcadores"><i data-lucide="list" size="16"></i></button>
+                            <button type="button" onclick="insertTag('<ol>\n<li>', '</li>\n</ol>')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700" title="Lista Numerada"><i data-lucide="list-ordered" size="16"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Linha 2: Elementos Ricos e Mídia -->
+                    <div class="flex items-center gap-1 p-2 border-t border-slate-100 overflow-x-auto no-scrollbar bg-slate-100/50">
+                        
+                        <!-- Blocos Especiais -->
+                        <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm mr-2">
+                            <button type="button" onclick="insertBlock('quote')" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 flex items-center gap-2 text-[10px] font-bold uppercase" title="Citação em Destaque">
+                                <i data-lucide="quote" size="14"></i> <span class="hidden sm:inline">Citação</span>
+                            </button>
+                            <div class="w-px h-6 bg-slate-100 mx-1"></div>
+                            <button type="button" onclick="insertBlock('info')" class="p-2 hover:bg-blue-50 text-blue-600 rounded-md flex items-center gap-2 text-[10px] font-bold uppercase" title="Caixa de Informação">
+                                <i data-lucide="info" size="14"></i> <span class="hidden sm:inline">Info</span>
+                            </button>
+                            <button type="button" onclick="insertBlock('alert')" class="p-2 hover:bg-amber-50 text-amber-600 rounded-md flex items-center gap-2 text-[10px] font-bold uppercase" title="Caixa de Alerta">
+                                <i data-lucide="alert-triangle" size="14"></i> <span class="hidden sm:inline">Alerta</span>
+                            </button>
+                            <div class="w-px h-6 bg-slate-100 mx-1"></div>
+                            <button type="button" onclick="insertBlock('divider')" class="p-2 hover:bg-slate-100 text-slate-400 rounded-md flex items-center gap-2 text-[10px] font-bold uppercase" title="Divisor">
+                                <i data-lucide="minus" size="14"></i>
+                            </button>
+                            <button type="button" onclick="insertBlock('button')" class="p-2 hover:bg-slate-100 text-slate-700 rounded-md flex items-center gap-2 text-[10px] font-bold uppercase" title="Botão de Ação">
+                                <i data-lucide="mouse-pointer-2" size="14"></i> <span class="hidden sm:inline">Botão</span>
+                            </button>
+                        </div>
+
+                        <!-- Mídia -->
+                        <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm ml-auto">
+                            <button type="button" onclick="insertVideo()" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 flex items-center gap-1 text-[10px] font-bold uppercase" title="Inserir Vídeo">
+                                <i data-lucide="video" size="14"></i> <span class="hidden sm:inline">Vídeo</span>
+                            </button>
+                            <div class="w-px h-6 bg-slate-100 mx-1"></div>
+                            <button type="button" onclick="triggerImageUpload()" class="p-2 hover:bg-slate-100 rounded-md text-slate-700 flex items-center gap-1 text-[10px] font-bold uppercase" title="Enviar Imagem">
+                                <i data-lucide="image-plus" size="14"></i> <span class="hidden sm:inline">Foto</span>
+                            </button>
+                            <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                            
+                            <button type="button" onclick="insertImage()" class="p-2 hover:bg-slate-100 rounded-md text-slate-500 hover:text-blue-600 flex items-center gap-1 text-[10px] font-bold uppercase border-l border-slate-100" title="Inserir URL Manualmente">
+                                <i data-lucide="link" size="14"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <textarea id="conteudo_html" rows="12" placeholder="Escreva sua matéria aqui. Use os botões acima para formatar." 
-                    class="w-full bg-white p-4 text-sm font-mono text-slate-700 outline-none resize-y"></textarea>
+
+                <!-- Área de Edição -->
+                <textarea id="conteudo_html" rows="16" placeholder="Escreva sua matéria aqui..." 
+                    class="w-full bg-white p-6 text-sm font-mono text-slate-700 outline-none resize-y leading-relaxed selection:bg-blue-100 selection:text-blue-900"></textarea>
+                
+                <!-- Rodapé do Editor -->
+                <div class="bg-slate-50 border-t border-slate-200 p-2 flex justify-between items-center text-[10px] text-slate-400 font-medium px-4">
+                    <span>Use os botões acima para diagramar</span>
+                    <span class="opacity-50">HTML Mode</span>
+                </div>
             </div>
-            <p class="text-[10px] text-slate-400 italic pl-1">Dica: Use parágrafos &lt;p&gt; para separar blocos de texto.</p>
         </div>
 
         <!-- Link (Opcional / Automático) -->
@@ -157,25 +232,55 @@
         </form>
 
         <!-- Preview em Tempo Real -->
-        <div class="space-y-4 opacity-50 pointer-events-none" id="preview-container">
-            <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em] text-center">Prévia do Card</h3>
-            <div id="card-preview" class="preview-card p-8 relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-8 opacity-10">
-                    <i id="preview-icon" data-lucide="alert-triangle" size="120"></i>
+        <div class="lg:sticky lg:top-24 space-y-4 pt-4 border-t lg:border-t-0 border-slate-200">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">Visualização</h3>
+                <div class="flex bg-slate-100 p-1 rounded-lg">
+                    <button type="button" onclick="setPreviewMode('card')" id="btn-preview-card" class="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md bg-white text-blue-600 shadow-sm transition-all">
+                        Card
+                    </button>
+                    <button type="button" onclick="setPreviewMode('article')" id="btn-preview-article" class="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md text-slate-400 hover:text-slate-600 transition-all">
+                        Artigo
+                    </button>
                 </div>
-                <div class="relative z-10 text-left">
-                    <span id="preview-categoria" class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">Investigação</span>
-                    <h2 id="preview-titulo" class="text-2xl font-black tracking-tight mb-4 leading-tight">Título da Matéria</h2>
-                    <p id="preview-resumo" class="text-blue-100 text-sm font-medium leading-relaxed mb-6">
-                        Resumo da matéria aparecerá aqui...
-                    </p>
-                    <div class="flex items-center gap-4">
-                        <span class="bg-white text-blue-700 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-widest">Ler Matéria</span>
-                        <span id="preview-data" class="text-[9px] font-bold text-blue-200">Data Atual</span>
+            </div>
+
+            <!-- Container Card -->
+            <div id="preview-container-card" class="opacity-50 pointer-events-none transition-all duration-300">
+                <div id="card-preview" class="preview-card p-6 sm:p-8 relative overflow-hidden group transform transition-transform duration-500 hover:scale-[1.02]">
+                    <div class="absolute top-0 right-0 p-8 opacity-10">
+                        <i id="preview-icon" data-lucide="alert-triangle" size="120"></i>
+                    </div>
+                    <div class="relative z-10 text-left">
+                        <span id="preview-categoria" class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">Investigação</span>
+                        <h2 id="preview-titulo" class="text-2xl font-black tracking-tight mb-4 leading-tight">Título da Matéria</h2>
+                        <p id="preview-resumo" class="text-blue-100 text-sm font-medium leading-relaxed mb-6 line-clamp-3">
+                            Resumo da matéria aparecerá aqui...
+                        </p>
+                        <div class="flex items-center gap-4">
+                            <span class="bg-white text-blue-700 px-4 py-2 rounded-xl font-black uppercase text-[9px] tracking-widest">Ler Matéria</span>
+                            <span id="preview-data" class="text-[9px] font-bold text-blue-200">Data Atual</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Container Artigo Completo -->
+            <div id="preview-container-article" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm article-preview relative max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <div class="absolute top-4 right-4 opacity-10 text-slate-300">
+                    <i data-lucide="smartphone" size="24"></i>
+                </div>
+                <span id="preview-article-date" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Data</span>
+                <h1 id="preview-article-title" class="text-2xl font-black text-slate-900 mb-4 leading-tight tracking-tight">Título da Matéria</h1>
+                <p id="preview-article-lead" class="text-sm font-bold text-slate-600 mb-6 border-l-4 border-blue-500 pl-4 italic">
+                    Resumo (Lead) aparecerá aqui...
+                </p>
+                <div id="preview-article-body" class="text-sm text-slate-600">
+                    <p class="italic text-slate-400">Comece a escrever para ver o resultado...</p>
+                </div>
+            </div>
         </div>
+    </div> <!-- Fechando Grid -->
 
         <!-- Lista de Gerenciamento -->
         <div class="space-y-4 pt-8 border-t border-slate-200" id="manage-news-section">
@@ -308,7 +413,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, startAfter, where, doc, updateDoc, increment, getDoc, setDoc, deleteDoc, runTransaction, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
@@ -331,7 +436,7 @@
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         const newsListEl = document.getElementById('news-list');
         const newsCountEl = document.getElementById('news-count');
-        const previewContainer = document.getElementById('preview-container');
+        const previewContainer = document.getElementById('preview-container-card');
         const logoutBtn = document.getElementById('logout-btn');
 
         let editingId = null;
@@ -362,20 +467,62 @@
             });
         }
 
-        // Helper para inserir tags no Textarea
-        window.insertTag = (startTag, endTag) => {
+        // Helper para inserir tags no Textarea (Global)
+        window.insertTag = (openTag, closeTag) => {
             const textarea = document.getElementById('conteudo_html');
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
             const text = textarea.value;
+            
             const before = text.substring(0, start);
             const selection = text.substring(start, end);
             const after = text.substring(end);
             
-            textarea.value = before + startTag + selection + endTag + after;
+            textarea.value = before + openTag + selection + closeTag + after;
+            
+            // Reposicionar cursor após a tag de abertura e seleção
+            const newCursorPos = start + openTag.length + selection.length + closeTag.length;
             textarea.focus();
-            textarea.selectionStart = start + startTag.length;
-            textarea.selectionEnd = end + startTag.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            
+            updatePreview();
+        };
+
+        // Função para Inserir Blocos Inteligentes
+        window.insertBlock = (type) => {
+            let content = '';
+            
+            switch(type) {
+                case 'quote':
+                    content = `<blockquote class="border-l-4 border-blue-500 pl-4 italic text-slate-600 my-4 bg-slate-50 p-4 rounded-r-lg">\n    "Escreva a citação aqui..."\n    <footer class="text-xs font-bold text-slate-400 mt-2 not-italic">- Autor da Frase</footer>\n</blockquote>`;
+                    break;
+                case 'info':
+                    content = `<div class="bg-blue-50 border border-blue-100 rounded-xl p-4 my-4 flex gap-3">\n    <div class="text-blue-500"><i data-lucide="info" size="20"></i></div>\n    <div class="text-sm text-blue-900">\n        <strong class="block text-blue-700 mb-1">Informação Importante</strong>\n        Escreva o detalhe informativo aqui.\n    </div>\n</div>`;
+                    break;
+                case 'alert':
+                    content = `<div class="bg-amber-50 border border-amber-100 rounded-xl p-4 my-4 flex gap-3">\n    <div class="text-amber-500"><i data-lucide="alert-triangle" size="20"></i></div>\n    <div class="text-sm text-amber-900">\n        <strong class="block text-amber-700 mb-1">Atenção</strong>\n        Escreva o alerta aqui.\n    </div>\n</div>`;
+                    break;
+                case 'divider':
+                    content = `<hr class="my-8 border-slate-200" />`;
+                    break;
+                case 'button':
+                    const btnText = prompt("Texto do Botão:", "Clique Aqui");
+                    const btnUrl = prompt("Link do Botão:", "https://");
+                    if (btnText && btnUrl) {
+                        content = `<div class="my-6 text-center">\n    <a href="${btnUrl}" target="_blank" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-200">\n        ${btnText} <i data-lucide="arrow-right" size="16"></i>\n    </a>\n</div>`;
+                    }
+                    break;
+            }
+
+            const textarea = document.getElementById('conteudo_html');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            textarea.value = text.substring(0, start) + content + text.substring(end);
+            
+            updatePreview();
+            lucide.createIcons();
         };
 
         window.insertImage = () => {
@@ -385,22 +532,61 @@
             }
         };
 
+        window.insertVideo = () => {
+            const url = prompt("Cole o link do vídeo (YouTube, Instagram, TikTok):");
+            if (!url) return;
+
+            let embedCode = '';
+            
+            // YouTube
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                if (url.includes('youtu.be')) {
+                    videoId = url.split('/').pop().split('?')[0];
+                } else if (url.includes('v=')) {
+                    videoId = url.split('v=')[1].split('&')[0];
+                } else if (url.includes('/embed/')) {
+                    videoId = url.split('/embed/')[1].split('?')[0];
+                }
+                
+                if (videoId) {
+                    embedCode = `<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 12px; margin: 2rem 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">\n    <iframe src="https://www.youtube.com/embed/${videoId}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n</div>`;
+                }
+            } 
+            // Instagram
+            else if (url.includes('instagram.com')) {
+                const cleanUrl = url.split('?')[0];
+                embedCode = `<blockquote class="instagram-media" data-instgrm-permalink="${cleanUrl}" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">\n    <div style="padding:16px;">\n        <a href="${cleanUrl}" style="background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank">Ver no Instagram</a>\n    </div>\n</blockquote>`;
+            } 
+            // TikTok
+            else if (url.includes('tiktok.com')) {
+                const videoIdMatch = url.match(/video\/(\d+)/);
+                const videoId = videoIdMatch ? videoIdMatch[1] : '';
+                const cleanUrl = url.split('?')[0];
+                embedCode = `<blockquote class="tiktok-embed" cite="${cleanUrl}" data-video-id="${videoId}" style="max-width: 605px;min-width: 325px;">\n    <section>\n        <a target="_blank" href="${cleanUrl}">Ver no TikTok</a>\n    </section>\n</blockquote>`;
+            } 
+            else {
+                alert("Plataforma não suportada. Tente YouTube, Instagram ou TikTok.");
+                return;
+            }
+
+            if (embedCode) {
+                insertTag(embedCode, '');
+            }
+        };
+
         // ImgBB Upload & Cropper Logic
         // Tenta pegar a API Key do LocalStorage ou usa uma chave padrão (que pode estar inválida/expirada)
-        let IMGBB_API_KEY = localStorage.getItem('imgbb_api_key') || '5a004494191316c17430155a5b58390b'; 
+        const IMGBB_API_KEY = '5a004494191316c17430155a5b58390b'; 
         let cropper;
         const imageUploadInput = document.getElementById('image-upload-input');
         const cropperModal = document.getElementById('cropper-modal');
         const imageToCrop = document.getElementById('image-to-crop');
         const confirmCropBtn = document.getElementById('confirm-crop-btn');
         
-        // Elementos do Modal de API Key
+        // Elementos do Modal de API Key - REMOVIDOS
         const apiKeyModal = document.getElementById('api-key-modal');
-        const apiKeyInput = document.getElementById('imgbb-api-key-input');
-        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
-        const cancelApiKeyBtn = document.getElementById('cancel-api-key-btn');
-        const apiKeyModalContent = apiKeyModal.querySelector('div');
-
+        
         // Adicionar Listeners para os botões de Aspect Ratio
         document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -474,53 +660,8 @@
             }, 'image/jpeg', 0.8);
         };
 
-        // Função para abrir o modal de API Key e retornar uma Promise com a nova chave
-        function requestNewApiKey() {
-            return new Promise((resolve, reject) => {
-                apiKeyModal.classList.remove('hidden');
-                // Animação de entrada
-                setTimeout(() => {
-                    apiKeyModal.classList.remove('opacity-0');
-                    apiKeyModalContent.classList.remove('scale-95');
-                    apiKeyModalContent.classList.add('scale-100');
-                }, 10);
-
-                apiKeyInput.value = '';
-                apiKeyInput.focus();
-
-                const handleSave = () => {
-                    const newKey = apiKeyInput.value.trim();
-                    if (newKey) {
-                        cleanup();
-                        resolve(newKey);
-                    } else {
-                        alert("Por favor, insira uma chave válida.");
-                    }
-                };
-
-                const handleCancel = () => {
-                    cleanup();
-                    reject(new Error("Solicitação de API Key cancelada pelo usuário."));
-                };
-
-                const cleanup = () => {
-                    saveApiKeyBtn.removeEventListener('click', handleSave);
-                    cancelApiKeyBtn.removeEventListener('click', handleCancel);
-                    
-                    // Fechar modal
-                    apiKeyModal.classList.add('opacity-0');
-                    apiKeyModalContent.classList.remove('scale-100');
-                    apiKeyModalContent.classList.add('scale-95');
-                    setTimeout(() => {
-                        apiKeyModal.classList.add('hidden');
-                    }, 300);
-                };
-
-                saveApiKeyBtn.addEventListener('click', handleSave);
-                cancelApiKeyBtn.addEventListener('click', handleCancel);
-            });
-        }
-
+        // Função para abrir o modal de API Key e retornar uma Promise com a nova chave - REMOVIDA
+        
         function uploadToImgBB(imageBlob, originalBtnContent) {
             confirmCropBtn.innerHTML = `<i data-lucide="upload-cloud" class="animate-spin" size="18"></i> Enviando...`;
             lucide.createIcons();
@@ -539,32 +680,14 @@
                     insertTag(`<img src="${imageUrl}" alt="Imagem da matéria">`, '');
                     closeCropper();
                 } else {
-                    // Se o erro for de API Key inválida (código 400 ou mensagem específica)
-                    if (data.error && (data.error.message.includes('API key') || data.status_code === 400)) {
-                        // Substituindo prompt() por modal customizado
-                        return requestNewApiKey().then(newKey => {
-                            IMGBB_API_KEY = newKey;
-                            localStorage.setItem('imgbb_api_key', IMGBB_API_KEY);
-                            // Tentar novamente com a nova chave (retornando a promise para encadear)
-                            return uploadToImgBB(imageBlob, originalBtnContent); 
-                        });
-                    }
                     throw new Error(data.error ? data.error.message : 'Erro desconhecido no upload');
                 }
             })
             .catch(error => {
                 console.error('Erro no upload:', error);
-                // Se o erro não for de cancelamento (que já tratamos), mostra alerta
-                if (error.message !== "Solicitação de API Key cancelada pelo usuário.") {
-                    alert('Falha ao enviar imagem: ' + error.message);
-                }
+                alert('Falha ao enviar imagem: ' + error.message);
             })
             .finally(() => {
-                // Apenas restaura o botão se não estivermos no meio de uma nova tentativa (que seria assíncrona)
-                // Mas como o finally executa após a cadeia de promises...
-                // Se requestNewApiKey for chamado, ele retorna uma promise. 
-                // Se o usuário demorar 10 segundos, o finally só roda depois?
-                // Sim, porque retornamos a promise do requestNewApiKey dentro do .then
                 confirmCropBtn.disabled = false;
                 confirmCropBtn.innerHTML = originalBtnContent;
                 lucide.createIcons();
@@ -640,7 +763,7 @@
         });
 
         // Live Preview Logic
-        const inputs = ['titulo', 'resumo', 'categoria', 'icone', 'data_str'];
+        const inputs = ['titulo', 'resumo', 'categoria', 'icone', 'data_str', 'conteudo_html'];
         inputs.forEach(id => {
             document.getElementById(id).addEventListener('input', updatePreview);
         });
@@ -649,26 +772,95 @@
         const today = new Date();
         const options = { day: 'numeric', month: 'long', year: 'numeric' };
         document.getElementById('data_str').value = today.toLocaleDateString('pt-BR', options);
-        updatePreview();
+        
+        // Preview Mode Toggle
+        window.setPreviewMode = (mode) => {
+            const cardBtn = document.getElementById('btn-preview-card');
+            const articleBtn = document.getElementById('btn-preview-article');
+            const cardContainer = document.getElementById('preview-container-card');
+            const articleContainer = document.getElementById('preview-container-article');
+
+            if (mode === 'card') {
+                // Ativar Card
+                cardBtn.classList.remove('text-slate-400', 'hover:text-slate-600');
+                cardBtn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                
+                articleBtn.classList.add('text-slate-400', 'hover:text-slate-600');
+                articleBtn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+
+                cardContainer.classList.remove('hidden');
+                articleContainer.classList.add('hidden');
+            } else {
+                // Ativar Artigo
+                articleBtn.classList.remove('text-slate-400', 'hover:text-slate-600');
+                articleBtn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                
+                cardBtn.classList.add('text-slate-400', 'hover:text-slate-600');
+                cardBtn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+
+                articleContainer.classList.remove('hidden');
+                cardContainer.classList.add('hidden');
+            }
+        };
 
         function updatePreview() {
+            // Card Preview Data
             document.getElementById('preview-titulo').innerText = document.getElementById('titulo').value || 'Título da Matéria';
             document.getElementById('preview-resumo').innerText = document.getElementById('resumo').value || 'Resumo da matéria aparecerá aqui...';
             document.getElementById('preview-categoria').innerText = document.getElementById('categoria').value;
             document.getElementById('preview-data').innerText = document.getElementById('data_str').value;
             
-            // Atualizar ícone
+            // Article Preview Data
+            document.getElementById('preview-article-title').innerText = document.getElementById('titulo').value || 'Título da Matéria';
+            document.getElementById('preview-article-lead').innerText = document.getElementById('resumo').value || 'Resumo (Lead) aparecerá aqui...';
+            document.getElementById('preview-article-date').innerText = document.getElementById('data_str').value;
+            
+            const content = document.getElementById('conteudo_html').value;
+            const bodyContainer = document.getElementById('preview-article-body');
+            
+            if (content && content.trim() !== '') {
+                bodyContainer.innerHTML = content;
+            } else {
+                bodyContainer.innerHTML = '<p class="italic text-slate-400">Comece a escrever para ver o resultado...</p>';
+            }
+
+            // Atualizar ícone (Card Only)
             const iconName = document.getElementById('icone').value || 'alert-triangle';
             const iconContainer = document.querySelector('#card-preview .absolute');
-            iconContainer.innerHTML = `<i data-lucide="${iconName}" size="120"></i>`;
+            if (iconContainer) {
+                iconContainer.innerHTML = `<i data-lucide="${iconName}" size="120"></i>`;
+            }
+            
             lucide.createIcons();
+
+            // Re-process Instagram/TikTok Embeds
+            // Usa Lazy Loading para não travar o preview
+            const bodyContainer = document.getElementById('preview-article-body');
+            
+            if (bodyContainer.querySelector('.instagram-media') && !document.querySelector('script[src="//www.instagram.com/embed.js"]')) {
+                const script = document.createElement('script');
+                script.src = "//www.instagram.com/embed.js";
+                script.async = true;
+                document.body.appendChild(script);
+            } else if (window.instgrm) {
+                window.instgrm.Embeds.process();
+            }
+
+            if (bodyContainer.querySelector('.tiktok-embed') && !document.querySelector('script[src="https://www.tiktok.com/embed.js"]')) {
+                const script = document.createElement('script');
+                script.src = "https://www.tiktok.com/embed.js";
+                script.async = true;
+                document.body.appendChild(script);
+            }
         }
+
+        // Initialize
+        updatePreview();
 
         // Funções de Gerenciamento de Notícias
         function loadNewsList() {
             const q = query(
-                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'),
-                orderBy('timestamp', 'desc')
+                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos')
             );
 
             onSnapshot(q, (snapshot) => {
@@ -684,10 +876,22 @@
                     return;
                 }
 
-                let html = '';
+                const docs = [];
                 snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const id = doc.id;
+                    docs.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Ordenação Client-Side (timestamp desc)
+                // Garante que notícias sem timestamp apareçam (como antigas)
+                docs.sort((a, b) => {
+                    const tA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
+                    const tB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
+                    return tB - tA;
+                });
+
+                let html = '';
+                docs.forEach((data) => {
+                    const id = data.id;
                     const date = data.data_str || 'Sem data';
                     
                     html += `
@@ -826,12 +1030,25 @@
                     newsData.link = link;
                 } else if (!editingId) {
                     newsData.link = '#'; // Placeholder para criação
-                    newsData.timestamp = serverTimestamp(); // Apenas na criação
+                }
+
+                // Garantir timestamp na criação (Independentemente do link)
+                if (!editingId) {
+                    newsData.timestamp = serverTimestamp();
                 }
 
                 if (editingId) {
                     // Atualizar Existente
-                    await updateDoc(doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', editingId), newsData);
+                    const docRef = doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', editingId);
+                    
+                    // Verificar se já tem timestamp (correção para notícias legadas)
+                    // Se não tiver, adiciona o timestamp atual para que apareça no feed ordenado
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists() && !docSnap.data().timestamp) {
+                        newsData.timestamp = serverTimestamp();
+                    }
+
+                    await updateDoc(docRef, newsData);
                     submitBtn.innerHTML = `<i data-lucide="check-circle" size="16"></i> Atualizado!`;
                 } else {
                     // Criar Novo
