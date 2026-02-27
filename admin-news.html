@@ -101,6 +101,7 @@
                         <option value="Urgente">Urgente</option>
                         <option value="Legislativo">Legislativo</option>
                         <option value="Vitória Popular">Vitória Popular</option>
+                        <option value="Interessante">Interessante</option>
                     </select>
                 </div>
 
@@ -389,23 +390,31 @@
     </div>
 
     <!-- Barra de Navegação Padrão (para facilitar o retorno) -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
                 <i data-lucide="home" size="20"></i>
-                <span>Início</span>
+                <span class="text-[9px] font-black uppercase">Início</span>
             </a>
-            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
-                <i data-lucide="message-square" size="20"></i>
-                <span>Feed</span>
+            <a href="feed.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="message-square" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Feed</span>
             </a>
-            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
                 <i data-lucide="bar-chart" size="20"></i>
-                <span>Painel</span>
+                <span class="text-[9px] font-black uppercase">Painel</span>
             </a>
-            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+            <a href="ferramentas.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="calculator" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Ferramentas</span>
+            </a>
+            <a href="dossie.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="book-open" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Dossiê</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
                 <i data-lucide="info" size="20"></i>
-                <span>Sobre</span>
+                <span class="text-[9px] font-black uppercase">Sobre</span>
             </a>
         </div>
     </nav>
@@ -576,16 +585,12 @@
         };
 
         // ImgBB Upload & Cropper Logic
-        // Tenta pegar a API Key do LocalStorage ou usa uma chave padrão (que pode estar inválida/expirada)
         const IMGBB_API_KEY = '5a004494191316c17430155a5b58390b'; 
         let cropper;
         const imageUploadInput = document.getElementById('image-upload-input');
         const cropperModal = document.getElementById('cropper-modal');
         const imageToCrop = document.getElementById('image-to-crop');
         const confirmCropBtn = document.getElementById('confirm-crop-btn');
-        
-        // Elementos do Modal de API Key - REMOVIDOS
-        const apiKeyModal = document.getElementById('api-key-modal');
         
         // Adicionar Listeners para os botões de Aspect Ratio
         document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
@@ -660,8 +665,6 @@
             }, 'image/jpeg', 0.8);
         };
 
-        // Função para abrir o modal de API Key e retornar uma Promise com a nova chave - REMOVIDA
-        
         function uploadToImgBB(imageBlob, originalBtnContent) {
             confirmCropBtn.innerHTML = `<i data-lucide="upload-cloud" class="animate-spin" size="18"></i> Enviando...`;
             lucide.createIcons();
@@ -737,7 +740,6 @@
         function openIconPicker() {
             renderIconGrid();
             iconPickerModal.classList.remove('hidden');
-            // Timeout para permitir a transição CSS
             setTimeout(() => {
                 iconPickerModal.classList.remove('opacity-0');
                 modalContent.classList.remove('scale-95');
@@ -751,15 +753,23 @@
             modalContent.classList.add('scale-95');
             setTimeout(() => {
                 iconPickerModal.classList.add('hidden');
-            }, 300); // Tempo da transição
+            }, 300);
         }
 
+        // Exportando para o escopo global para garantir que onclick funcione
+        window.closeIconPicker = closeIconPicker;
+
         openIconPickerBtn.addEventListener('click', openIconPicker);
-        closeIconPickerBtn.addEventListener('click', closeIconPicker);
+        
+        if (closeIconPickerBtn) {
+            closeIconPickerBtn.addEventListener('click', closeIconPicker);
+        }
         
         // Fechar ao clicar fora
         iconPickerModal.addEventListener('click', (e) => {
-            if (e.target === iconPickerModal) closeIconPicker();
+            if (e.target === iconPickerModal) {
+                closeIconPicker();
+            }
         });
 
         // Live Preview Logic
@@ -834,9 +844,6 @@
             lucide.createIcons();
 
             // Re-process Instagram/TikTok Embeds
-            // Usa Lazy Loading para não travar o preview
-            const bodyContainer = document.getElementById('preview-article-body');
-            
             if (bodyContainer.querySelector('.instagram-media') && !document.querySelector('script[src="//www.instagram.com/embed.js"]')) {
                 const script = document.createElement('script');
                 script.src = "//www.instagram.com/embed.js";
@@ -859,71 +866,77 @@
 
         // Funções de Gerenciamento de Notícias
         function loadNewsList() {
-            const q = query(
-                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos')
-            );
+            try {
+                const q = query(
+                    collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos')
+                );
 
-            onSnapshot(q, (snapshot) => {
-                newsCountEl.innerText = snapshot.size;
-                
-                if (snapshot.empty) {
-                    newsListEl.innerHTML = `
-                        <div class="text-center py-8 text-slate-400">
-                            <i data-lucide="inbox" class="mx-auto mb-2" size="24"></i>
-                            <p class="text-xs font-medium">Nenhuma notícia publicada ainda.</p>
-                        </div>`;
-                    lucide.createIcons();
-                    return;
-                }
-
-                const docs = [];
-                snapshot.forEach((doc) => {
-                    docs.push({ id: doc.id, ...doc.data() });
-                });
-
-                // Ordenação Client-Side (timestamp desc)
-                // Garante que notícias sem timestamp apareçam (como antigas)
-                docs.sort((a, b) => {
-                    const tA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
-                    const tB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
-                    return tB - tA;
-                });
-
-                let html = '';
-                docs.forEach((data) => {
-                    const id = data.id;
-                    const date = data.data_str || 'Sem data';
+                onSnapshot(q, (snapshot) => {
+                    newsCountEl.innerText = snapshot.size;
                     
-                    html += `
-                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between gap-4 hover:shadow-md transition-shadow group">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <div class="bg-blue-50 p-2 rounded-lg text-blue-600 flex-shrink-0">
-                                    <i data-lucide="${data.icone || 'file-text'}" size="18"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <h4 class="text-sm font-bold text-slate-800 truncate">${data.titulo}</h4>
-                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
-                                        <span>${data.categoria}</span>
-                                        <span>•</span>
-                                        <span>${date}</span>
+                    if (snapshot.empty) {
+                        newsListEl.innerHTML = `
+                            <div class="text-center py-8 text-slate-400">
+                                <i data-lucide="inbox" class="mx-auto mb-2" size="24"></i>
+                                <p class="text-xs font-medium">Nenhuma notícia publicada ainda.</p>
+                            </div>`;
+                        lucide.createIcons();
+                        return;
+                    }
+
+                    const docs = [];
+                    snapshot.forEach((doc) => {
+                        docs.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // Ordenação Client-Side (timestamp desc)
+                    docs.sort((a, b) => {
+                        const tA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
+                        const tB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
+                        return tB - tA;
+                    });
+
+                    let html = '';
+                    docs.forEach((data) => {
+                        const id = data.id;
+                        const date = data.data_str || 'Sem data';
+                        
+                        html += `
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between gap-4 hover:shadow-md transition-shadow group">
+                                <div class="flex items-center gap-3 overflow-hidden">
+                                    <div class="bg-blue-50 p-2 rounded-lg text-blue-600 flex-shrink-0">
+                                        <i data-lucide="${data.icone || 'file-text'}" size="18"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h4 class="text-sm font-bold text-slate-800 truncate">${data.titulo}</h4>
+                                        <div class="flex items-center gap-2 text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                                            <span>${data.categoria}</span>
+                                            <span>•</span>
+                                            <span>${date}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="window.editNews('${id}')" class="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors" title="Editar">
+                                        <i data-lucide="edit-2" size="16"></i>
+                                    </button>
+                                    <button onclick="window.deleteNews('${id}')" class="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors" title="Excluir">
+                                        <i data-lucide="trash-2" size="16"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="window.editNews('${id}')" class="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors" title="Editar">
-                                    <i data-lucide="edit-2" size="16"></i>
-                                </button>
-                                <button onclick="window.deleteNews('${id}')" class="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors" title="Excluir">
-                                    <i data-lucide="trash-2" size="16"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    });
+                    
+                    newsListEl.innerHTML = html;
+                    lucide.createIcons();
+                }, (error) => {
+                    console.error("Erro ao carregar notícias (onSnapshot):", error);
+                    newsListEl.innerHTML = `<p class="text-red-500 text-xs p-4 text-center">Erro ao carregar notícias: ${error.message}</p>`;
                 });
-                
-                newsListEl.innerHTML = html;
-                lucide.createIcons();
-            });
+            } catch (err) {
+                console.error("Erro ao configurar listener de notícias:", err);
+            }
         }
 
         window.editNews = async (id) => {
@@ -935,12 +948,12 @@
                     const data = docSnap.data();
                     
                     // Preencher formulário
-                    document.getElementById('titulo').value = data.titulo;
-                    document.getElementById('resumo').value = data.resumo;
-                    document.getElementById('categoria').value = data.categoria;
-                    document.getElementById('icone').value = data.icone;
+                    document.getElementById('titulo').value = data.titulo || '';
+                    document.getElementById('resumo').value = data.resumo || '';
+                    document.getElementById('categoria').value = data.categoria || 'Investigação';
+                    document.getElementById('icone').value = data.icone || 'alert-triangle';
                     document.getElementById('link').value = (data.link && !data.link.includes('artigo.html')) ? data.link : '';
-                    document.getElementById('data_str').value = data.data_str;
+                    document.getElementById('data_str').value = data.data_str || '';
                     document.getElementById('conteudo_html').value = data.conteudo_html || '';
 
                     // Atualizar preview
@@ -951,7 +964,10 @@
                     submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                     submitBtn.classList.add('bg-amber-500', 'hover:bg-amber-600');
                     submitBtnText.innerText = "Salvar Alterações";
-                    cancelEditBtn.classList.remove('hidden');
+                    
+                    if (cancelEditBtn) {
+                        cancelEditBtn.classList.remove('hidden');
+                    }
                     
                     // Rolar para o topo
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -986,13 +1002,21 @@
             updatePreview();
 
             // Restaurar botões
-            submitBtn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            submitBtn.classList.remove('bg-amber-500', 'hover:bg-amber-600', 'bg-green-600', 'hover:bg-green-700');
             submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
             submitBtnText.innerText = "Publicar Notícia";
-            cancelEditBtn.classList.add('hidden');
+            
+            if (cancelEditBtn) {
+                cancelEditBtn.classList.add('hidden');
+            }
         };
 
-        cancelEditBtn.addEventListener('click', window.cancelEdit);
+        // Verifica se o botão existe antes de adicionar o listener
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', window.cancelEdit);
+        } else {
+            console.warn("Botão 'cancel-edit-btn' não encontrado no DOM.");
+        }
 
         // Submit Handler
         form.addEventListener('submit', async (e) => {
@@ -1000,7 +1024,6 @@
             
             // Estado de Loading
             const originalBtnContent = submitBtn.innerHTML;
-            // Salvar classes originais (se não estiver editando, assume blue)
             const isEditing = editingId !== null;
             
             submitBtn.disabled = true;
@@ -1042,7 +1065,6 @@
                     const docRef = doc(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos', editingId);
                     
                     // Verificar se já tem timestamp (correção para notícias legadas)
-                    // Se não tiver, adiciona o timestamp atual para que apareça no feed ordenado
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists() && !docSnap.data().timestamp) {
                         newsData.timestamp = serverTimestamp();

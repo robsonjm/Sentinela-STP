@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinela STP - Dossiê</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: calc(5rem + var(--sab)); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-enter { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        
+        .chapter-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            transition: all 0.3s ease;
+        }
+        .chapter-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .highlight-text {
+            background: linear-gradient(120deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 100%);
+            padding: 0 4px;
+            border-radius: 4px;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 pt-[calc(0.5rem+var(--sat))] pb-2 px-4 sticky top-0 z-40 shadow-xl shrink-0">
+        <div class="max-w-md mx-auto flex justify-between items-center w-full">
+            <h1 class="text-sm md:text-lg font-black tracking-tighter uppercase flex items-center gap-2">
+                <i data-lucide="book-open" class="text-blue-500" size="18"></i>
+                Manual da <span class="text-blue-500">Soberania</span>
+            </h1>
+            <span class="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">V1.0</span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col max-w-md mx-auto w-full p-4 gap-6 overflow-y-auto">
+        
+        <!-- Intro Hero -->
+        <div class="animate-enter text-center py-6">
+            <div class="inline-flex items-center justify-center p-4 bg-blue-500/10 rounded-full mb-4 ring-1 ring-blue-500/30">
+                <i data-lucide="shield" class="text-blue-400" size="48"></i>
+            </div>
+            <h2 class="text-2xl font-black uppercase text-white mb-2 leading-none">Sentinela STP</h2>
+            <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">O Manual da Soberania Urbana</p>
+            <div class="text-[10px] text-slate-400 font-mono bg-slate-900/50 p-2 rounded-lg inline-block border border-slate-800">
+                <p>Idealizador: Robson Jorge de Matos</p>
+                <p>Base: Lei 8.080/90 & CF/88</p>
+                <p>Local: Florianópolis, SC</p>
+            </div>
+        </div>
+
+        <!-- Introduction -->
+        <section class="animate-enter delay-100">
+            <div class="chapter-card rounded-2xl p-5 border-l-4 border-l-blue-500">
+                <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="text-blue-400" size="20"></i>
+                    O que é Transporte Coletivo?
+                </h3>
+                <p class="text-sm text-slate-300 leading-relaxed mb-3">
+                    O transporte público <span class="text-white font-bold">não é um negócio privado</span>; é o sangue que corre nas veias da cidade. Hoje, esse sangue está doente.
+                </p>
+                <div class="bg-red-500/10 p-3 rounded-xl border border-red-500/20 mb-3">
+                    <p class="text-xs text-red-200 font-medium">
+                        <i data-lucide="alert-triangle" class="inline mb-1 mr-1" size="12"></i>
+                        <strong>Ciclo da Extração:</strong> Empresas economizam na manutenção (calor/barulho) → Lucro Máximo. Prefeitura injeta subsídio → Lucro Garantido.
+                    </p>
+                </div>
+                <p class="text-xs text-blue-200 font-medium italic border-t border-slate-700 pt-3">
+                    Este manual ensina o cidadão a romper esse ciclo usando a tecnologia como arma de auditoria e a lei como escudo de proteção.
+                </p>
+            </div>
+        </section>
+
+        <!-- Chapter 1 -->
+        <section class="animate-enter delay-200">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-sm">1</div>
+                <h3 class="text-xl font-black text-white uppercase tracking-tight">O Direito à Vida</h3>
+            </div>
+            
+            <div class="chapter-card rounded-2xl p-5 mb-4">
+                <h4 class="text-sm font-bold text-blue-400 uppercase mb-2">Fundamentação Sanitária</h4>
+                <p class="text-sm text-slate-300 mb-2">
+                    Baseado na <strong>Lei Federal nº 8.080/1990</strong> (SUS). O Artigo 3º afirma: transporte é determinante de saúde.
+                </p>
+                <p class="text-xs text-white font-bold bg-slate-800 p-2 rounded mb-4 border-l-2 border-yellow-500">
+                    "Um ônibus quente e barulhento não é um problema de conforto, é uma agressão sanitária."
+                </p>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-2 mb-2 text-yellow-500">
+                            <i data-lucide="ear" size="18"></i>
+                            <span class="text-xs font-black uppercase">Ruído > 85dB</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 leading-tight">
+                            Estresse, cortisol, perda auditiva. Tortura sensorial para autistas.
+                        </p>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-2 mb-2 text-orange-500">
+                            <i data-lucide="thermometer" size="18"></i>
+                            <span class="text-xs font-black uppercase">Calor > 30°C</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 leading-tight">
+                            Estufas metálicas. Risco de desmaios e hipertensão.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 2 -->
+        <section class="animate-enter delay-300">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-black text-white text-sm">2</div>
+                <h3 class="text-xl font-black text-white uppercase tracking-tight">Ciência da Auditoria</h3>
+            </div>
+
+            <div class="chapter-card rounded-2xl p-5 mb-4">
+                <div class="flex items-start gap-3 mb-4">
+                    <i data-lucide="calculator" class="text-emerald-400 shrink-0 mt-1" size="24"></i>
+                    <div>
+                        <h4 class="text-sm font-bold text-white uppercase">Calculadora GEIPOT</h4>
+                        <p class="text-xs text-slate-400">Desmascarando onde o dinheiro "some".</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="relative pl-4 border-l-2 border-slate-700">
+                        <p class="text-xs font-bold text-slate-200">Custos Variáveis</p>
+                        <p class="text-[10px] text-slate-400">Dizem pagar preço de bomba, mas compram diesel em atacado.</p>
+                    </div>
+                    <div class="relative pl-4 border-l-2 border-slate-700">
+                        <p class="text-xs font-bold text-slate-200">Custos Fixos</p>
+                        <p class="text-[10px] text-slate-400">Inflam custo de pessoal. Motorista paga seu dia em tempo recorde.</p>
+                    </div>
+                    <div class="relative pl-4 border-l-2 border-slate-700">
+                        <p class="text-xs font-bold text-slate-200">Custos de Capital</p>
+                        <p class="text-[10px] text-slate-400">Lucro garantido (~10%) sobre ônibus já pagos pelo povo.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 bg-emerald-900/20 p-3 rounded-xl border border-emerald-500/20">
+                    <h5 class="text-xs font-bold text-emerald-400 mb-2 uppercase flex items-center gap-2">
+                        <i data-lucide="swords" size="14"></i> Como Contra-atacar
+                    </h5>
+                    <ul class="text-[10px] text-emerald-100 space-y-2 list-disc list-inside">
+                        <li><strong>IPK Médio:</strong> "Média é mentira. Ônibus lotado gera lucro obsceno."</li>
+                        <li><strong>Manutenção:</strong> "Se gastam X, por que o ônibus faz barulho? Dinheiro virou lucro."</li>
+                        <li><strong>Déficit Social:</strong> "Subsídio paga mais por idoso do que a tarifa social."</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 3 -->
+        <section class="animate-enter delay-300">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center font-black text-white text-sm">3</div>
+                <h3 class="text-xl font-black text-white uppercase tracking-tight">Retomada Legal</h3>
+            </div>
+            
+            <div class="chapter-card rounded-2xl p-5">
+                <h4 class="text-sm font-bold text-purple-400 uppercase mb-2">Lei 8.987/95 (Art. 35)</h4>
+                <p class="text-sm text-slate-300 mb-3">
+                    Ônibus e garagens são <strong>Bens Reversíveis</strong>.
+                </p>
+                <div class="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center">
+                    <p class="text-xs text-purple-200 font-medium">
+                        "O povo pagou, o povo leva. Retomada sem indenização se o serviço for insalubre."
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Diagnosis Insight -->
+        <section class="animate-enter delay-300">
+            <div class="chapter-card rounded-2xl p-5 border border-red-500/30 bg-red-900/10 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-red-500">
+                    <i data-lucide="alert-octagon" size="64"></i>
+                </div>
+                <div class="relative z-10">
+                    <h3 class="text-lg font-black text-white uppercase italic tracking-tight mb-4 flex items-center gap-2">
+                        <i data-lucide="search" class="text-red-500" size="20"></i>
+                        Diagnóstico Final
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-xs font-black text-red-400 uppercase mb-1">Garantia de Lucro</h4>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">
+                                O subsídio atual é uma <span class="text-white font-bold">apólice de seguro</span>. Independente da qualidade, o lucro é garantido pelo cofre público.
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-xs font-black text-red-400 uppercase mb-1">Sistema Híbrido</h4>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">
+                                Custo Público + Gestão Privada = <span class="text-white font-bold">Lucro Privatizado</span>.
+                            </p>
+                        </div>
+
+                        <div class="pt-3 border-t border-red-500/20">
+                            <p class="text-[10px] text-red-300 font-medium italic">
+                                <i data-lucide="info" size="12" class="inline mr-1"></i>
+                                A única vitória possível é via auditoria técnica permanente e pressão popular.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 4 -->
+        <section class="animate-enter delay-300">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white text-sm">4</div>
+                <h3 class="text-xl font-black text-white uppercase tracking-tight">Minuta de Lei</h3>
+            </div>
+            
+            <div class="chapter-card rounded-2xl p-5">
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="check-square" class="text-indigo-400 shrink-0 mt-0.5" size="16"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white">Isonomia de Frota</p>
+                            <p class="text-[10px] text-slate-400">Idade igual para Centro e Periferia.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="check-square" class="text-indigo-400 shrink-0 mt-0.5" size="16"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white">Sensores de Salubridade</p>
+                            <p class="text-[10px] text-slate-400">Dados de dB e Calor abertos.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="check-square" class="text-indigo-400 shrink-0 mt-0.5" size="16"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white">Hidratação Ativa</p>
+                            <p class="text-[10px] text-slate-400">Água grátis nos terminais.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="check-square" class="text-indigo-400 shrink-0 mt-0.5" size="16"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white">Cesta Social</p>
+                            <p class="text-[10px] text-slate-400">Preços regulados pelo PROCON.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="check-square" class="text-indigo-400 shrink-0 mt-0.5" size="16"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white">Gatilho Tarifa Zero</p>
+                            <p class="text-[10px] text-slate-400">Subsídio > 75% custo = Fim da roleta.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Chapter 5 & 6 -->
+        <section class="animate-enter delay-300">
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Ch 5 -->
+                <div class="chapter-card rounded-2xl p-5 border-t-4 border-t-red-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-sm font-black text-white uppercase">Roteiro da Vitória</h4>
+                        <span class="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">CAP 5</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mb-2">
+                        Tornar o lobby "tóxico". Denunciar o sofrimento (88dB) torna a defesa das empresas um suicídio eleitoral.
+                    </p>
+                    <p class="text-xs font-bold text-red-400">O App Sentinela é o voto de protesto técnico.</p>
+                </div>
+
+                <!-- Ch 6 -->
+                <div class="chapter-card rounded-2xl p-5 border-t-4 border-t-cyan-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-sm font-black text-white uppercase">Soberania do Debate</h4>
+                        <span class="text-[10px] font-bold bg-cyan-500 text-white px-2 py-0.5 rounded-full">CAP 6</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mb-2">
+                        Fim dos gabinetes fechados. Audiências nos terminais com a Calculadora GEIPOT no telão.
+                    </p>
+                    <p class="text-xs font-bold text-cyan-400">Municipalização = Fim da Mais-Valia = Qualidade.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="animate-enter delay-300 pb-8">
+            <div class="bg-gradient-to-br from-blue-600 to-blue-900 rounded-2xl p-6 text-center shadow-lg shadow-blue-900/50">
+                <i data-lucide="flag" class="text-white mx-auto mb-3" size="32"></i>
+                <h3 class="text-xl font-black text-white uppercase mb-2">O Futuro é Nosso</h3>
+                <p class="text-sm text-blue-100 font-medium leading-relaxed mb-4">
+                    O transporte deve ser controlado por quem o usa. O Sentinela STP é a lanterna que ilumina a caixa-preta.
+                </p>
+                <div class="inline-block bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                    <p class="text-xs font-black text-white uppercase tracking-wider">Pela Tarifa Zero e Salubridade Total!</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Nav Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="home" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Início</span>
+            </a>
+            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="message-square" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Feed</span>
+            </a>
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="bar-chart" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Painel</span>
+            </a>
+            <a href="ferramentas.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="calculator" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Ferramentas</span>
+            </a>
+            <a href="dossie.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="book-open" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Dossiê</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="info" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Sobre</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

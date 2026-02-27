@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinela STP - Ferramentas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: calc(5rem + var(--sab)); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Range Input Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+        input[type=range]:hover::-webkit-slider-thumb {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.4);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 2px;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        
+        .animate-enter { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        
+        .transition-numbers { transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        /* Modal Animation */
+        dialog::backdrop { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(4px); }
+        dialog[open] { animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen overflow-hidden flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 pt-[calc(0.5rem+var(--sat))] pb-2 px-4 sticky top-0 z-40 shadow-xl shrink-0">
+        <div class="max-w-[1600px] mx-auto flex justify-between items-center w-full">
+            <h1 class="text-sm md:text-lg font-black tracking-tighter uppercase flex items-center gap-2">
+                <i data-lucide="scale" class="text-blue-500" size="18"></i>
+                Auditoria de <span class="text-blue-500">Soberania</span>
+            </h1>
+            <span class="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">V6.5</span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col relative overflow-hidden max-w-md mx-auto w-full">
+            
+        <!-- Navigation Header (Mobile-like) -->
+        <div class="flex items-center justify-between p-4 pb-0 shrink-0">
+            <button id="prev-slide-btn" class="p-2 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors" onclick="changeSlide(-1)">
+                <i data-lucide="chevron-left" size="24"></i>
+            </button>
+            
+            <div class="flex gap-1.5" id="slide-indicators">
+                <!-- Indicators injected by JS -->
+            </div>
+
+            <button id="next-slide-btn" class="p-2 text-blue-500 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" onclick="changeSlide(1)">
+                <i data-lucide="chevron-right" size="24"></i>
+            </button>
+        </div>
+
+        <!-- Slides Container -->
+        <div class="flex-1 relative overflow-hidden" id="slides-container">
+            
+            <!-- Slide 0: Parameters & Costs -->
+            <div class="slide absolute inset-0 p-4 overflow-y-auto space-y-4 transition-all duration-300 ease-out" id="slide-0">
+                <div class="text-center space-y-1 mb-4">
+                    <h2 class="text-lg font-black uppercase italic tracking-tight text-white">Configurar <span class="text-blue-500">Cenário</span></h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Defina os parâmetros da simulação</p>
+                </div>
+
+                <!-- Input Group -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-5">
+                    
+                    <!-- Gratuity Percent -->
+                    <div class="group">
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-400 transition-colors">
+                                % Gratuidades
+                            </label>
+                            <span class="text-lg font-black text-white transition-numbers" id="val-gratuity">30%</span>
+                        </div>
+                        <input type="range" id="gratuity" min="10" max="50" value="30" oninput="updateCalc()" class="accent-blue-600 h-1 w-full">
+                    </div>
+
+                    <!-- Passengers -->
+                    <div class="group">
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-400 transition-colors">
+                                Ocupação (Pax)
+                            </label>
+                            <span class="text-lg font-black text-white transition-numbers" id="val-passengers">85</span>
+                        </div>
+                        <input type="range" id="passengers" min="10" max="120" value="85" oninput="updateCalc()" class="h-1 w-full">
+                    </div>
+
+                    <!-- Technical Params Grid -->
+                    <div class="pt-4 border-t border-slate-800 grid grid-cols-2 gap-4">
+                        <!-- Trips -->
+                        <div class="group">
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Viagens</label>
+                                <span class="text-sm font-black text-white" id="val-trips">12</span>
+                            </div>
+                            <input type="range" id="trips" min="4" max="20" value="12" oninput="updateCalc()" class="h-1 w-full">
+                        </div>
+
+                        <!-- Fare -->
+                        <div class="group">
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Tarifa</label>
+                                <span class="text-sm font-black text-white" id="val-fare">R$ 6,00</span>
+                            </div>
+                            <input type="range" id="fare" min="2" max="10" step="0.10" value="6.00" oninput="updateCalc()" class="h-1 w-full">
+                        </div>
+
+                        <!-- Subsidy -->
+                        <div class="group col-span-2">
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Subsídio Anual</label>
+                                <span class="text-sm font-black text-white" id="val-subsidy">R$ 118 mi</span>
+                            </div>
+                            <input type="range" id="subsidy" min="0" max="200000000" step="1000000" value="118000000" oninput="updateCalc()" class="h-1 w-full">
+                        </div>
+
+                        <!-- Bus Count -->
+                        <div class="group col-span-2">
+                            <div class="flex justify-between items-end mb-1">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Frota Total</label>
+                                <span class="text-sm font-black text-white" id="val-bus-count">524</span>
+                            </div>
+                            <input type="range" id="bus-count" min="100" max="1000" step="1" value="524" oninput="updateCalc()" class="h-1 w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Costs Summary -->
+                <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Custo Real / Ônibus</p>
+                        <h3 class="text-xl font-black text-white mt-1" id="display-total-cost">R$ 41.500</h3>
+                    </div>
+                    <button onclick="document.getElementById('cost-modal').showModal()" class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-colors" title="Ver Detalhes">
+                        <i data-lucide="pie-chart" size="20"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Slide 1: Pago por Estudante -->
+            <div class="slide absolute inset-0 p-4 flex flex-col items-center justify-center text-center opacity-0 pointer-events-none transition-all duration-300 ease-out translate-x-full" id="slide-1">
+                <div class="w-full max-w-sm space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-xl font-black uppercase italic tracking-tight text-white">Destino do <span class="text-blue-500">Subsídio</span></h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Análise por Passageiro Gratuito</p>
+                    </div>
+
+                    <div class="bg-blue-600/10 rounded-[2.5rem] p-8 border border-blue-600/20 relative overflow-hidden shadow-2xl">
+                        <div class="relative z-10 space-y-8">
+                            <!-- Custo Pago -->
+                            <div>
+                                <p class="text-[10px] font-black text-blue-400 uppercase mb-2 tracking-widest">Pago pela Prefeitura</p>
+                                <h3 class="text-5xl font-black text-white italic transition-numbers" id="res-subsidy-per-gratuity">R$ 0,00</h3>
+                                <p class="text-[9px] text-blue-300/60 font-bold uppercase leading-tight mt-2">Valor repassado por estudante</p>
+                            </div>
+                            
+                            <div class="w-16 h-1 bg-blue-500/20 mx-auto rounded-full"></div>
+
+                            <!-- Superávit -->
+                            <div>
+                                <p class="text-[10px] font-black text-green-400 uppercase mb-2 tracking-widest">Superávit Real</p>
+                                <h3 class="text-5xl font-black text-green-400 italic transition-numbers" id="res-surplus-per-gratuity">R$ 0,00</h3>
+                                <p class="text-[9px] text-green-300/60 font-bold uppercase leading-tight mt-2">Lucro sobre cada gratuidade</p>
+                            </div>
+                        </div>
+                        <!-- Background Icon -->
+                        <i data-lucide="search-check" class="absolute -right-10 -bottom-10 text-blue-600/5 w-64 h-64 rotate-12"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Mais Valia + Sobra -->
+            <div class="slide absolute inset-0 p-4 flex flex-col items-center justify-center text-center opacity-0 pointer-events-none transition-all duration-300 ease-out translate-x-full" id="slide-2">
+                <div class="w-full max-w-sm space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-xl font-black uppercase italic tracking-tight text-white">Lucro & <span class="text-green-500">Excedente</span></h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Resultados Financeiros Mensais</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Mais Valia -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 opacity-5">
+                                <i data-lucide="coins" size="60"></i>
+                            </div>
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Mais Valia Mensal</p>
+                            <h3 class="text-4xl font-black text-white tracking-tighter transition-numbers" id="res-surplus">R$ 0</h3>
+                            <p class="text-[9px] text-blue-400 font-bold mt-2 uppercase tracking-widest italic">Lucro Líquido Total</p>
+                        </div>
+
+                        <!-- Sobra do Subsídio -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 opacity-5">
+                                <i data-lucide="piggy-bank" size="60"></i>
+                            </div>
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Sobra do Subsídio</p>
+                            <h3 class="text-4xl font-black text-green-400 tracking-tighter transition-numbers" id="res-subsidy-surplus">R$ 0</h3>
+                            <div class="flex items-center justify-center gap-2 mt-2">
+                                <span class="text-[9px] font-black bg-green-900/50 text-green-400 px-2 py-1 rounded uppercase" id="res-efficiency-percent">0% Margem</span>
+                                <p class="text-[9px] text-green-600 font-bold uppercase tracking-widest italic">Lucro Extra</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Impacto (Pax, Bus, Cestas) -->
+            <div class="slide absolute inset-0 p-4 flex flex-col items-center justify-center text-center opacity-0 pointer-events-none transition-all duration-300 ease-out translate-x-full" id="slide-3">
+                <div class="w-full max-w-sm space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-xl font-black uppercase italic tracking-tight text-white">Impacto <span class="text-orange-500">Social</span></h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Equivalências e Poder de Compra</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Pax to Pay Trip -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                            <div class="bg-slate-800 p-3 rounded-xl text-slate-400">
+                                <i data-lucide="users-2" size="24"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-3xl font-black text-white leading-none transition-numbers" id="res-break-even">0</h4>
+                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Pax p/ Pagar a Viagem</p>
+                            </div>
+                        </div>
+
+                        <!-- New Buses -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                            <div class="bg-blue-900/30 p-3 rounded-xl text-blue-500">
+                                <i data-lucide="bus" size="24"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="flex items-baseline gap-2">
+                                    <h4 class="text-3xl font-black text-blue-400 leading-none transition-numbers" id="res-buses">0</h4>
+                                    <span class="text-[10px] font-bold text-blue-300/70" id="res-buses-single">(0/bus)</span>
+                                </div>
+                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Novos Ônibus/Ano</p>
+                            </div>
+                        </div>
+
+                        <!-- Baskets -->
+                        <div class="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden">
+                            <div class="absolute -top-3 right-0 left-0 mx-auto w-max bg-green-900 border border-green-500 text-green-400 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                                <span id="res-subsidy-baskets">0</span> do Subs.
+                            </div>
+                            
+                            <div class="mt-2">
+                                <i data-lucide="shopping-basket" size="32" class="text-orange-500 mx-auto mb-2"></i>
+                                <h4 class="text-5xl font-black text-orange-400 transition-numbers leading-tight" id="res-baskets">0</h4>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">Cestas Básicas / Mês</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Conclusão -->
+            <div class="slide absolute inset-0 p-4 flex flex-col items-center justify-center text-center opacity-0 pointer-events-none transition-all duration-300 ease-out translate-x-full" id="slide-4">
+                <div class="w-full max-w-sm space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-xl font-black uppercase italic tracking-tight text-white">Diagnóstico <span class="text-red-500">Final</span></h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">O Real Beneficiário</p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 text-red-500">
+                            <i data-lucide="alert-octagon" size="80"></i>
+                        </div>
+                        
+                        <div class="relative z-10 text-left space-y-4">
+                            <div>
+                                <h3 class="text-lg font-black text-white leading-tight mb-1">Garantia de Lucro</h3>
+                                <p class="text-[11px] text-slate-400 leading-relaxed font-medium">
+                                    O subsídio atual funciona como uma <span class="text-blue-400">apólice de seguro</span> para o consórcio. Independente da qualidade ou demanda, o lucro é garantido pelo cofre público.
+                                </p>
+                            </div>
+
+                            <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                <h4 class="text-xs font-black text-red-400 uppercase tracking-wide mb-1 flex items-center gap-2">
+                                    <i data-lucide="lock" size="12"></i> Sistema Híbrido
+                                </h4>
+                                <p class="text-[10px] text-slate-300 leading-relaxed">
+                                    Opera com <span class="text-white font-bold">Custo Público</span> + <span class="text-white font-bold">Gestão Privada</span> = <span class="text-white font-bold">Lucro Privatizado</span>. O único beneficiário real é a empresa privada.
+                                </p>
+                            </div>
+
+                            <div class="pt-2 border-t border-slate-800">
+                                <p class="text-[10px] text-slate-500 italic">
+                                    <i data-lucide="info" size="10" class="inline mr-1"></i>
+                                    A única forma de vencer este lobby é através de auditoria técnica permanente e pressão popular baseada em dados consolidados.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal: Cost Breakdown -->
+    <dialog id="cost-modal" class="p-0 bg-transparent w-full max-w-2xl m-auto backdrop:bg-slate-950/90 shadow-none border-0">
+        <div class="bg-slate-900 border border-slate-700 w-full rounded-[2rem] shadow-2xl overflow-hidden text-left relative">
+             <button onclick="document.getElementById('cost-modal').close()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors p-2 bg-slate-800 rounded-full z-10">
+                <i data-lucide="x" size="20"></i>
+            </button>
+
+            <div class="p-6 md:p-8">
+                <div class="mb-8 pr-10">
+                    <h2 class="text-2xl font-black uppercase tracking-tighter text-blue-400">Transparência Geipot</h2>
+                    <p class="text-xs font-bold text-slate-500 uppercase">Detalhamento Mensal de Custos por Ônibus</p>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Dynamic Costs -->
+                    <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-700 p-2 rounded-lg text-slate-300"><i data-lucide="fuel" size="16"></i></div>
+                            <span class="text-xs font-bold text-slate-300 uppercase">Combustível (S10)</span>
+                        </div>
+                        <span class="text-sm font-black text-white" id="cost-diesel">R$ 14.500</span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-700 p-2 rounded-lg text-slate-300"><i data-lucide="users" size="16"></i></div>
+                            <span class="text-xs font-bold text-slate-300 uppercase">Pessoal (+80% Encargos)</span>
+                        </div>
+                        <span class="text-sm font-black text-white" id="cost-personnel">R$ 16.500</span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-700 p-2 rounded-lg text-slate-300"><i data-lucide="wrench" size="16"></i></div>
+                            <span class="text-xs font-bold text-slate-300 uppercase">Manutenção (Pneus/Peças)</span>
+                        </div>
+                        <span class="text-sm font-black text-white" id="cost-maintenance">R$ 4.200</span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-700 p-2 rounded-lg text-slate-300"><i data-lucide="building-2" size="16"></i></div>
+                            <span class="text-xs font-bold text-slate-300 uppercase">Admin e Taxas</span>
+                        </div>
+                        <span class="text-sm font-black text-white" id="cost-admin">R$ 2.800</span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-700 p-2 rounded-lg text-slate-300"><i data-lucide="trending-down" size="16"></i></div>
+                            <span class="text-xs font-bold text-slate-300 uppercase">Depreciação de Capital</span>
+                        </div>
+                        <span class="text-sm font-black text-white" id="cost-depreciation">R$ 3.500</span>
+                    </div>
+                </div>
+
+                <div class="pt-6 mt-6 border-t border-slate-700 flex justify-between items-center">
+                    <span class="text-lg font-black uppercase text-blue-500 italic">Custo Total Real</span>
+                    <span class="text-2xl font-black text-white" id="modal-total-cost">R$ 41.500</span>
+                </div>
+                <p class="text-[10px] text-slate-500 italic mt-4">
+                  *Valores baseados em médias de mercado de capitais para ônibus urbanos de motor dianteiro.
+                </p>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Nav Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="home" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Início</span>
+            </a>
+            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="message-square" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Feed</span>
+            </a>
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="bar-chart" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Painel</span>
+            </a>
+            <a href="ferramentas.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="calculator" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Ferramentas</span>
+            </a>
+            <a href="dossie.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="book-open" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Dossiê</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="info" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Sobre</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Constants (Custos Geipot V6.2 - Baseados em 12 viagens/dia)
+        const BASE_COSTS = {
+            diesel: 15200,
+            personnel: 17800,
+            maintenance: 4500,
+            admin_taxes: 3100,
+            depreciation: 3800
+        };
+
+        const BASE_TRIPS_PER_DAY = 12;
+        const COST_NEW_BUS = 900000; // Custo médio ônibus urbano
+        const COST_BASIC_BASKET = 800; // Custo médio Cesta Básica
+
+        // Animation Helper Class
+        class CountUp {
+            constructor(elId, isCurrency = true, suffix = '') {
+                this.el = document.getElementById(elId);
+                this.currentVal = 0;
+                this.targetVal = 0;
+                this.isCurrency = isCurrency;
+                this.suffix = suffix;
+                this.frame = null;
+            }
+
+            update(newVal) {
+                if (!this.el) return; // Safety check
+                this.targetVal = newVal;
+                if (!this.frame) {
+                    this.loop();
+                }
+            }
+
+            loop() {
+                const diff = this.targetVal - this.currentVal;
+                
+                // Snap if close enough
+                if (Math.abs(diff) < (Math.abs(this.targetVal) * 0.005) || Math.abs(diff) < 0.01) {
+                    this.currentVal = this.targetVal;
+                    this.render();
+                    this.frame = null;
+                    return;
+                }
+
+                // Smooth interpolation (ease-out)
+                this.currentVal += diff * 0.15;
+                this.render();
+                this.frame = requestAnimationFrame(() => this.loop());
+            }
+
+            render() {
+                if (!this.el) return;
+                if (this.isCurrency) {
+                    this.el.innerText = this.currentVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                } else {
+                    this.el.innerText = this.currentVal.toFixed(1) + this.suffix;
+                }
+            }
+        }
+
+        // Initialize Animators
+        const animSubsidy = new CountUp('res-subsidy-per-gratuity', true);
+        const animSurplusPerGratuity = new CountUp('res-surplus-per-gratuity', true);
+        const animSurplus = new CountUp('res-surplus', true);
+        const animSubsidySurplus = new CountUp('res-subsidy-surplus', true);
+        // Removed Justice Animator
+        
+        // New Impact Animators
+        const animBreakEven = new CountUp('res-break-even', false);
+        const animBuses = new CountUp('res-buses', false, ' Ônibus');
+        const animBaskets = new CountUp('res-baskets', false, ' Cestas');
+        const animSubsidyBaskets = new CountUp('res-subsidy-baskets', false, ' Cestas');
+
+        function formatCurrency(val) {
+            return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function updateCalc() {
+            // Get Values
+            const gratuityPercent = parseInt(document.getElementById('gratuity').value);
+            const passengersPerTrip = parseInt(document.getElementById('passengers').value);
+            const tripsPerDay = parseInt(document.getElementById('trips').value);
+            const farePrice = parseFloat(document.getElementById('fare').value);
+            const annualSubsidy = parseInt(document.getElementById('subsidy').value);
+            const busCount = parseInt(document.getElementById('bus-count').value);
+
+            // Update Labels (Inputs)
+            document.getElementById('val-gratuity').innerText = gratuityPercent + '%';
+            document.getElementById('val-passengers').innerText = passengersPerTrip;
+            document.getElementById('val-trips').innerText = tripsPerDay;
+            document.getElementById('val-fare').innerText = formatCurrency(farePrice);
+            document.getElementById('val-subsidy').innerText = 'R$ ' + (annualSubsidy / 1000000).toFixed(0) + ' mi';
+            document.getElementById('val-bus-count').innerText = busCount;
+
+            // Calculations - Simulation
+            const monthlySubsidyTotal = annualSubsidy / 12;
+            const dailyTripsFactor = tripsPerDay / BASE_TRIPS_PER_DAY;
+
+            // Costs - Variable based on Trips (Diesel, Maintenance)
+            const COSTS = {
+                diesel: BASE_COSTS.diesel * dailyTripsFactor,
+                personnel: BASE_COSTS.personnel, // Assume fixed shifts for simplicity or step function? Keep fixed for now.
+                maintenance: BASE_COSTS.maintenance * dailyTripsFactor,
+                admin_taxes: BASE_COSTS.admin_taxes,
+                depreciation: BASE_COSTS.depreciation
+            };
+            const totalRealCostPerBus = Object.values(COSTS).reduce((a, b) => a + b, 0);
+
+            // Passengers & Gratuities (System Wide Simulation)
+            // Total Pax = Pax/Trip * Trips/Day * BusCount * 26 Days
+            const totalSystemMonthlyPax = passengersPerTrip * tripsPerDay * busCount * 26;
+            const totalGratuities = (totalSystemMonthlyPax * gratuityPercent) / 100;
+            
+            // Custo Real por Passageiro (Total Cost / Total Pax)
+            // Total Pax per Bus = Pax/Trip * Trips/Day * 26 Days
+            const totalMonthlyPaxPerBus = passengersPerTrip * tripsPerDay * 26;
+            const costPerPax = totalMonthlyPaxPerBus > 0 ? (totalRealCostPerBus / totalMonthlyPaxPerBus) : 0;
+
+            // Gratuidades por Ônibus
+            const gratuityPaxPerBus = totalMonthlyPaxPerBus * (gratuityPercent / 100);
+            const costOfGratuitiesPerBus = costPerPax * gratuityPaxPerBus;
+
+            // Receita (Micro - Per Bus)
+            // Paying Passengers = Total Pax/Trip * (1 - Gratuity%)
+            const payingPassengersPerTrip = passengersPerTrip * (1 - (gratuityPercent / 100));
+            
+            const dailyFareRevenueSim = payingPassengersPerTrip * tripsPerDay * farePrice;
+            const monthlyFareRevenueSim = dailyFareRevenueSim * 26; // 26 dias úteis média
+            const monthlySubsidyPerBus = (annualSubsidy / busCount) / 12;
+            
+            // Total Revenue
+            const totalRevenueSim = monthlyFareRevenueSim + monthlySubsidyPerBus;
+
+            // Resultados Finais
+            const surplusValuePerBus = totalRevenueSim - totalRealCostPerBus;
+            const subsidyPercentageOfCost = (monthlySubsidyPerBus / totalRealCostPerBus) * 100;
+
+            // Sobra do Subsídio (Lucro sobre Gratuidades)
+            // Subsidy Revenue - Cost of Gratuities
+            const subsidySurplusPerBus = monthlySubsidyPerBus - costOfGratuitiesPerBus;
+
+            // Superávit por Passageiro Gratuito
+            const surplusPerGratuityPax = gratuityPaxPerBus > 0 ? (subsidySurplusPerBus / gratuityPaxPerBus) : 0;
+            
+            // Subsidy Revenue per Gratuity (Quanto a pref paga por cada um)
+            const subsidyRevenuePerGratuity = gratuityPaxPerBus > 0 ? (monthlySubsidyPerBus / gratuityPaxPerBus) : 0;
+
+            // Eficiência do Subsídio (Margem de Lucro)
+            const subsidyMarginPercent = monthlySubsidyPerBus > 0 ? ((subsidySurplusPerBus / monthlySubsidyPerBus) * 100) : 0;
+
+            // --- Impact Metrics ---
+            // 1. Break-even Passengers per Trip (Assuming no subsidy, how many pax needed to cover costs?)
+            // Break-even = Total Cost / (Trips * Days * Fare)
+            const breakEvenPax = (totalRealCostPerBus / (tripsPerDay * 26 * farePrice));
+            
+            // 2. Buses purchasable with Surplus (Annual Surplus of ALL fleet / Cost of Bus) -> Or per bus? 
+            // Request: "1 ano de lucro extra compra quantos onibus?" -> Usually implies total system impact
+            // Let's calculate per bus surplus * fleet size * 12 months
+            const totalAnnualSystemSurplus = surplusValuePerBus * busCount * 12;
+            const busesPurchasable = totalAnnualSystemSurplus > 0 ? (totalAnnualSystemSurplus / COST_NEW_BUS) : 0;
+            
+            // Single Bus Impact (How much of a new bus does 1 bus profit buy?)
+            const singleBusPurchasable = totalAnnualSystemSurplus > 0 ? (busesPurchasable / busCount) : 0;
+
+            // 3. Basic Baskets (Cestas Básicas)
+            // "Quantas cestas básicas o lucro de 1 onibus pode comprar" -> Monthly Surplus / Basket Cost
+            const basketsPerBus = surplusValuePerBus > 0 ? (surplusValuePerBus / COST_BASIC_BASKET) : 0;
+            
+            // "Quantas delas estão sendo pagas por subsidio?" -> Subsidy Surplus / Basket Cost
+            const basketsBySubsidy = subsidySurplusPerBus > 0 ? (subsidySurplusPerBus / COST_BASIC_BASKET) : 0;
+
+
+            // Update DOM Results with Animation
+            animSubsidy.update(subsidyRevenuePerGratuity);
+            animSurplusPerGratuity.update(surplusPerGratuityPax);
+            animSurplus.update(surplusValuePerBus);
+            animSubsidySurplus.update(subsidySurplusPerBus);
+            
+            // Impact Updates
+            animBreakEven.update(breakEvenPax);
+            animBuses.update(busesPurchasable);
+            
+            // Single Bus Impact Text
+            const singleBusEl = document.getElementById('res-buses-single');
+            if (singleBusPurchasable < 1) {
+                singleBusEl.innerText = `(${ (singleBusPurchasable * 100).toFixed(1) }% de 1)`;
+            } else {
+                singleBusEl.innerText = `(${ singleBusPurchasable.toFixed(1) } / bus)`;
+            }
+            
+            animBaskets.update(basketsPerBus);
+            
+            // Update Subsidy Baskets Badge Text
+            const subsidyBasketsBadge = document.getElementById('res-subsidy-baskets');
+            subsidyBasketsBadge.innerText = basketsBySubsidy.toFixed(0);
+            subsidyBasketsBadge.className = basketsBySubsidy > 0 ? 'text-green-400 font-black' : 'text-slate-500 font-bold';
+            
+            // Highlight Baskets Container if Subsidy is used
+            const basketsContainer = document.getElementById('res-baskets').parentElement;
+            if (basketsBySubsidy > 0) {
+                basketsContainer.classList.add('bg-green-900/10', 'border', 'border-green-500/20');
+                basketsContainer.classList.remove('bg-slate-800/30');
+            } else {
+                basketsContainer.classList.remove('bg-green-900/10', 'border', 'border-green-500/20');
+                basketsContainer.classList.add('bg-slate-800/30');
+            }
+
+            const surplusEl = document.getElementById('res-surplus');
+            surplusEl.className = `text-4xl font-black tracking-tighter truncate transition-numbers transition-colors duration-500 ${surplusValuePerBus >= 0 ? 'text-white' : 'text-red-400'}`;
+            
+            // Efficiency Label Color
+            const efficiencyEl = document.getElementById('res-efficiency-percent');
+            efficiencyEl.innerText = `${subsidyMarginPercent.toFixed(0)}% Margem`;
+            efficiencyEl.className = `text-[9px] font-black px-2 py-1 rounded uppercase ${subsidyMarginPercent >= 0 ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`;
+            
+            // Subsidy Surplus Color
+            const subsidySurplusEl = document.getElementById('res-subsidy-surplus');
+            subsidySurplusEl.className = `text-4xl font-black tracking-tighter transition-numbers ${subsidySurplusPerBus >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+            // Removed Justice Logic
+            
+            // Modal Costs Update
+            document.getElementById('cost-diesel').innerText = formatCurrency(COSTS.diesel);
+            document.getElementById('cost-personnel').innerText = formatCurrency(COSTS.personnel);
+            document.getElementById('cost-maintenance').innerText = formatCurrency(COSTS.maintenance);
+            document.getElementById('cost-admin').innerText = formatCurrency(COSTS.admin_taxes);
+            document.getElementById('cost-depreciation').innerText = formatCurrency(COSTS.depreciation);
+            document.getElementById('modal-total-cost').innerText = formatCurrency(totalRealCostPerBus);
+            
+            // New Main Screen Cost Display
+            const displayTotalCost = document.getElementById('display-total-cost');
+            if(displayTotalCost) {
+                displayTotalCost.innerText = formatCurrency(totalRealCostPerBus);
+            }
+        }
+
+        // Slide Navigation Logic
+        let currentSlide = 0;
+        const totalSlides = 5;
+
+        function updateSlideUI() {
+            // Update Slides Visibility
+            for (let i = 0; i < totalSlides; i++) {
+                const slide = document.getElementById(`slide-${i}`);
+                if (!slide) continue;
+
+                if (i === currentSlide) {
+                    slide.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-full', '-translate-x-full');
+                    slide.classList.add('opacity-100', 'pointer-events-auto', 'translate-x-0');
+                } else {
+                    slide.classList.remove('opacity-100', 'pointer-events-auto', 'translate-x-0');
+                    slide.classList.add('opacity-0', 'pointer-events-none');
+                    // Directional exit
+                    if (i < currentSlide) {
+                         slide.classList.add('-translate-x-full');
+                         slide.classList.remove('translate-x-full');
+                    } else {
+                         slide.classList.add('translate-x-full');
+                         slide.classList.remove('-translate-x-full');
+                    }
+                }
+            }
+
+            // Update Indicators
+            const indicatorsContainer = document.getElementById('slide-indicators');
+            if (indicatorsContainer) {
+                indicatorsContainer.innerHTML = '';
+                for (let i = 0; i < totalSlides; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = `w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'bg-blue-500 w-4' : 'bg-slate-700'}`;
+                    indicatorsContainer.appendChild(dot);
+                }
+            }
+
+            // Update Buttons
+            const prevBtn = document.getElementById('prev-slide-btn');
+            const nextBtn = document.getElementById('next-slide-btn');
+            
+            if(prevBtn) prevBtn.disabled = currentSlide === 0;
+            if(nextBtn) nextBtn.disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 0 && newSlide < totalSlides) {
+                currentSlide = newSlide;
+                updateSlideUI();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCalc();
+            updateSlideUI();
+        });
+
+    </script>
+</body>
+</html>

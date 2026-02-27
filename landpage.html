@@ -12,9 +12,6 @@
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; padding-bottom: calc(5rem + var(--sab)); }
         
         /* Nav Bar Styles */
-        .nav-link.active { color: #1d4ed8; }
-        .nav-link.active i { color: #1d4ed8; fill: #dbeafe; }
-
         .gradient-bg { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); }
         
         .feedback-card {
@@ -170,8 +167,9 @@
             <p class="text-slate-400 mb-12 max-w-2xl mx-auto">Buscamos parceria técnica e fomento parlamentar para tornar esta auditoria um patrimônio público e gratuito da nossa cidade.</p>
             
             <div class="flex flex-wrap justify-center gap-4 mb-16">
-                <a href="https://robsonjm.github.io/Sentinela-STP/" class="bg-blue-600 hover:bg-blue-700 px-10 py-5 rounded-2xl font-black uppercase text-xs transition-all shadow-lg shadow-blue-900/40">Testar o Aplicativo</a>
-                <a href="https://robsonjm.github.io/Sentinela-STP/painel.html" class="bg-slate-800 hover:bg-slate-700 px-10 py-5 rounded-2xl font-black uppercase text-xs border border-slate-700 transition-all">Ver Painel de Auditoria</a>
+                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-2xl font-black uppercase text-xs transition-all shadow-lg shadow-blue-900/40 text-white">Testar App</a>
+                <a href="painel.html" class="bg-slate-800 hover:bg-slate-700 px-8 py-4 rounded-2xl font-black uppercase text-xs border border-slate-700 transition-all text-white">Ver Painel</a>
+                <a href="ferramentas.html" class="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-2xl font-black uppercase text-xs border border-blue-100 transition-all shadow-sm">Ferramentas</a>
             </div>
 
             <div class="pt-12 border-t border-slate-800 text-center">
@@ -187,23 +185,31 @@
     </footer>
 
     <!-- Barra de Navegação Padrão -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-3 px-6 z-50" style="padding-bottom: calc(1rem + var(--sab));">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
                 <i data-lucide="home" size="20"></i>
-                <span>Início</span>
+                <span class="text-[9px] font-black uppercase">Início</span>
             </a>
-            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
                 <i data-lucide="message-square" size="20"></i>
-                <span>Feed</span>
+                <span class="text-[9px] font-black uppercase">Feed</span>
             </a>
-            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
                 <i data-lucide="bar-chart" size="20"></i>
-                <span>Painel</span>
+                <span class="text-[9px] font-black uppercase">Painel</span>
             </a>
-            <a href="landpage.html" class="nav-link active flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px] uppercase transition-colors">
-                <i data-lucide="info" size="20"></i>
-                <span>Sobre</span>
+            <a href="ferramentas.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="calculator" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Ferramentas</span>
+            </a>
+            <a href="dossie.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="book-open" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Dossiê</span>
+            </a>
+            <a href="landpage.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="info" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Sobre</span>
             </a>
         </div>
     </nav>
