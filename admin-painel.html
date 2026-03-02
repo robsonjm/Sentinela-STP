@@ -323,11 +323,21 @@
 
         // Auth Check
         onAuthStateChanged(auth, (user) => {
-            if (!user) {
+            if (!user || user.isAnonymous) {
+                // Se for usuário anônimo tentando acessar admin, força o logout
+                if (user) signOut(auth);
                 window.location.href = 'login.html';
             } else {
                 const syncStatus = document.getElementById('sync-status');
-                syncStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Admin Conectado';
+                syncStatus.innerHTML = `
+                    <div class="flex flex-col items-end">
+                        <span class="flex items-center gap-1 text-green-400">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> 
+                            Admin Conectado
+                        </span>
+                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">${user.email}</span>
+                    </div>
+                `;
                 loadData();
             }
         });

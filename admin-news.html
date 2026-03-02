@@ -452,14 +452,26 @@
 
         // Verificar Autenticação
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Usuário está logado
+            if (user && !user.isAnonymous) {
+                // Usuário está logado e NÃO é anônimo
                 console.log("Usuário autenticado:", user.email);
+                
+                // Exibir quem está logado
+                const headerTitle = document.querySelector('header h1');
+                if(headerTitle) {
+                    const userBadge = document.createElement('div');
+                    userBadge.className = 'text-[10px] bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full inline-flex items-center gap-1 mt-1 border border-blue-500/30';
+                    userBadge.innerHTML = `<i data-lucide="user" size="10"></i> ${user.email}`;
+                    headerTitle.parentNode.appendChild(userBadge);
+                    lucide.createIcons();
+                }
+
                 previewContainer.classList.remove('opacity-50', 'pointer-events-none');
                 loadNewsList();
             } else {
-                // Usuário não está logado
-                console.log("Usuário não autenticado. Redirecionando...");
+                // Usuário não está logado ou é anônimo
+                console.log("Acesso negado: Usuário anônimo ou não autenticado.");
+                if (user) signOut(auth); // Forçar logout se for anônimo
                 window.location.href = "login.html";
             }
         });
