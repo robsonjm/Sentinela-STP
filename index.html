@@ -325,6 +325,9 @@
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig, imgbbConfig } from "./js/config.js";
 
+        // Expose to global scope for non-module scripts
+        window.imgbbConfig = imgbbConfig;
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -591,7 +594,7 @@
                         formData.append('image', base64Image.split(',')[1]); // Send only the base64 data part
 
                         // API Key Centralizada
-                        const IMGBB_API_KEY = imgbbConfig.apiKey;
+                        const IMGBB_API_KEY = window.imgbbConfig.apiKey;
 
                         fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
                             method: 'POST',
