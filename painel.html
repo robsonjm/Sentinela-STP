@@ -343,7 +343,24 @@
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
             const filteredLogs = allLogs.filter(log => {
-                const logDate = new Date(log.data.split('/').reverse().join('-') + 'T00:00:00');
+                let logDate;
+                
+                // Prioritize Firestore Timestamp for accuracy
+                if (log.timestamp && log.timestamp.seconds) {
+                    logDate = new Date(log.timestamp.seconds * 1000);
+                } else if (log.data) {
+                    // Fallback: try parsing DD/MM/YYYY
+                    const parts = log.data.split('/');
+                    if (parts.length === 3) {
+                        logDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+                    } else {
+                        // Try standard parsing
+                        logDate = new Date(log.data);
+                    }
+                }
+
+                if (!logDate || isNaN(logDate.getTime())) return false;
+
                 if (currentPeriod === 'hoje') return logDate >= startOfDay;
                 if (currentPeriod === 'semana') return logDate >= startOfWeek;
                 if (currentPeriod === 'mes') return logDate >= startOfMonth;
