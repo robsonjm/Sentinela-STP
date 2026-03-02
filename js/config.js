@@ -11,5 +11,5 @@ export const firebaseConfig = {
 
 // ImgBB Configuration (Only used in index.html for photo uploads)
 export const imgbbConfig = {
-    apiKey: "5a004494191316c17430155a5b58390b"
+    apiKey: "d0a234b1b52906d4a518c8a0e8646c3a"
 };
