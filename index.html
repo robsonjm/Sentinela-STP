@@ -323,16 +323,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
-          authDomain: "sentinela-stp.firebaseapp.com",
-          projectId: "sentinela-stp",
-          storageBucket: "sentinela-stp.firebasestorage.app",
-          messagingSenderId: "845865605498",
-          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
-          measurementId: "G-6DT4QG0RVT"
-        };
+        import { firebaseConfig, imgbbConfig } from "./js/config.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -599,8 +590,8 @@
                         const formData = new FormData();
                         formData.append('image', base64Image.split(',')[1]); // Send only the base64 data part
 
-                        // API Key Padronizada
-                        const IMGBB_API_KEY = '5a004494191316c17430155a5b58390b';
+                        // API Key Centralizada
+                        const IMGBB_API_KEY = imgbbConfig.apiKey;
 
                         fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
                             method: 'POST',

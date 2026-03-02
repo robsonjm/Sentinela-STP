@@ -268,8 +268,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js";
 
         // Expose functions to global scope
         window.openImageModal = (src) => {
@@ -287,16 +288,6 @@
             modal.classList.remove('flex');
             document.body.style.overflow = '';
             setTimeout(() => { document.getElementById('modal-img').src = ''; }, 200);
-        };
-
-        const firebaseConfig = {
-          apiKey: "AIzaSyBwXw-f03A0mEfw3-RHc5A-1paido_ZDhM",
-          authDomain: "sentinela-stp.firebaseapp.com",
-          projectId: "sentinela-stp",
-          storageBucket: "sentinela-stp.firebasestorage.app",
-          messagingSenderId: "845865605498",
-          appId: "1:845865605498:web:f4823825b7114d08dcdec3",
-          measurementId: "G-6DT4QG0RVT"
         };
 
         const app = initializeApp(firebaseConfig);
