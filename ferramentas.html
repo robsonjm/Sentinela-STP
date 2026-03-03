@@ -64,9 +64,52 @@
         dialog::backdrop { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(4px); }
         dialog[open] { animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Formula Styles */
+        .formula-box {
+            display: none;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px dashed rgba(51, 65, 85, 0.6);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            font-size: 0.65rem;
+            color: #94a3b8;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .formula-box.open { display: block; animation: fadeIn 0.3s ease-out; }
+        .formula-trigger {
+            cursor: pointer;
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+            display: inline-flex;
+            items-align: center;
+            gap: 0.25rem;
+            transition: color 0.2s;
+        }
+        .formula-trigger:hover { color: #3b82f6; }
+        .formula-code {
+            font-family: monospace;
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-screen overflow-hidden flex flex-col">
+
+    <script>
+        function toggleFormula(id) {
+            const el = document.getElementById(id);
+            if(el) el.classList.toggle('open');
+        }
+    </script>
 
     <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-800 pt-[calc(0.5rem+var(--sat))] pb-2 px-4 sticky top-0 z-40 shadow-xl shrink-0">
@@ -198,6 +241,11 @@
                                 <p class="text-[10px] font-black text-blue-400 uppercase mb-2 tracking-widest">Pago pela Prefeitura</p>
                                 <h3 class="text-5xl font-black text-white italic transition-numbers" id="res-subsidy-per-gratuity">R$ 0,00</h3>
                                 <p class="text-[9px] text-blue-300/60 font-bold uppercase leading-tight mt-2">Valor repassado por estudante</p>
+                                <div onclick="toggleFormula('f-subsidy')" class="formula-trigger"><i data-lucide="info" size="10"></i> Cálculo</div>
+                                <div id="f-subsidy" class="formula-box">
+                                    <span class="formula-code">(Subsídio / Ônibus) ÷ (Total Pax × %Gratuidade)</span>
+                                    Divide-se o subsídio mensal recebido por ônibus pelo número total de gratuidades transportadas no mesmo período.
+                                </div>
                             </div>
                             
                             <div class="w-16 h-1 bg-blue-500/20 mx-auto rounded-full"></div>
@@ -207,6 +255,11 @@
                                 <p class="text-[10px] font-black text-green-400 uppercase mb-2 tracking-widest">Superávit Real</p>
                                 <h3 class="text-5xl font-black text-green-400 italic transition-numbers" id="res-surplus-per-gratuity">R$ 0,00</h3>
                                 <p class="text-[9px] text-green-300/60 font-bold uppercase leading-tight mt-2">Lucro sobre cada gratuidade</p>
+                                <div onclick="toggleFormula('f-surplus-grat')" class="formula-trigger"><i data-lucide="info" size="10"></i> Cálculo</div>
+                                <div id="f-surplus-grat" class="formula-box">
+                                    <span class="formula-code">(Subsídio Recebido - Custo Real das Gratuidades) ÷ Total Gratuidades</span>
+                                    Mostra quanto "sobra" de lucro limpo para a empresa de cada passagem paga pela prefeitura, descontando o custo real de transportar o estudante.
+                                </div>
                             </div>
                         </div>
                         <!-- Background Icon -->
@@ -232,6 +285,11 @@
                             <p class="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Mais Valia Mensal</p>
                             <h3 class="text-4xl font-black text-white tracking-tighter transition-numbers" id="res-surplus">R$ 0</h3>
                             <p class="text-[9px] text-blue-400 font-bold mt-2 uppercase tracking-widest italic">Lucro Líquido Total</p>
+                            <div onclick="toggleFormula('f-mais-valia')" class="formula-trigger"><i data-lucide="info" size="10"></i> Cálculo</div>
+                            <div id="f-mais-valia" class="formula-box">
+                                <span class="formula-code">(Receita Tarifária + Subsídio) - Custo Operacional Total</span>
+                                É o lucro líquido mensal por ônibus, subtraindo todos os custos reais (incluindo depreciação e manutenção) da receita total.
+                            </div>
                         </div>
 
                         <!-- Sobra do Subsídio -->
@@ -244,6 +302,11 @@
                             <div class="flex items-center justify-center gap-2 mt-2">
                                 <span class="text-[9px] font-black bg-green-900/50 text-green-400 px-2 py-1 rounded uppercase" id="res-efficiency-percent">0% Margem</span>
                                 <p class="text-[9px] text-green-600 font-bold uppercase tracking-widest italic">Lucro Extra</p>
+                            </div>
+                            <div onclick="toggleFormula('f-subsidy-surplus')" class="formula-trigger"><i data-lucide="info" size="10"></i> Cálculo</div>
+                            <div id="f-subsidy-surplus" class="formula-box">
+                                <span class="formula-code">Subsídio Recebido - Custo Real das Gratuidades</span>
+                                O quanto sobra do dinheiro público após pagar o custo real do transporte dos estudantes/idosos. Se positivo, é lucro direto do subsídio.
                             </div>
                         </div>
                     </div>
@@ -260,27 +323,41 @@
 
                     <div class="grid grid-cols-1 gap-4">
                         <!-- Pax to Pay Trip -->
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
-                            <div class="bg-slate-800 p-3 rounded-xl text-slate-400">
-                                <i data-lucide="users-2" size="24"></i>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-2">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-slate-800 p-3 rounded-xl text-slate-400">
+                                    <i data-lucide="users-2" size="24"></i>
+                                </div>
+                                <div class="text-left">
+                                    <h4 class="text-3xl font-black text-white leading-none transition-numbers" id="res-break-even">0</h4>
+                                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Pax p/ Pagar a Viagem</p>
+                                </div>
                             </div>
-                            <div class="text-left">
-                                <h4 class="text-3xl font-black text-white leading-none transition-numbers" id="res-break-even">0</h4>
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Pax p/ Pagar a Viagem</p>
+                            <div onclick="toggleFormula('f-pax-trip')" class="formula-trigger pl-2"><i data-lucide="info" size="10"></i> Cálculo</div>
+                            <div id="f-pax-trip" class="formula-box">
+                                <span class="formula-code">Custo Total ÷ (Viagens × Dias × Tarifa)</span>
+                                Quantos passageiros pagantes são necessários por viagem para cobrir 100% dos custos, sem precisar de subsídio.
                             </div>
                         </div>
 
                         <!-- New Buses -->
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
-                            <div class="bg-blue-900/30 p-3 rounded-xl text-blue-500">
-                                <i data-lucide="bus" size="24"></i>
-                            </div>
-                            <div class="text-left">
-                                <div class="flex items-baseline gap-2">
-                                    <h4 class="text-3xl font-black text-blue-400 leading-none transition-numbers" id="res-buses">0</h4>
-                                    <span class="text-[10px] font-bold text-blue-300/70" id="res-buses-single">(0/bus)</span>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-2">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-blue-900/30 p-3 rounded-xl text-blue-500">
+                                    <i data-lucide="bus" size="24"></i>
                                 </div>
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Novos Ônibus/Ano</p>
+                                <div class="text-left">
+                                    <div class="flex items-baseline gap-2">
+                                        <h4 class="text-3xl font-black text-blue-400 leading-none transition-numbers" id="res-buses">0</h4>
+                                        <span class="text-[10px] font-bold text-blue-300/70" id="res-buses-single">(0/bus)</span>
+                                    </div>
+                                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Novos Ônibus/Ano</p>
+                                </div>
+                            </div>
+                            <div onclick="toggleFormula('f-new-bus')" class="formula-trigger pl-2"><i data-lucide="info" size="10"></i> Cálculo</div>
+                            <div id="f-new-bus" class="formula-box">
+                                <span class="formula-code">(Lucro Mensal × Frota × 12) ÷ Custo Ônibus Novo</span>
+                                Quantos ônibus 0km poderiam ser comprados à vista com o lucro líquido anual de toda a frota (após pagar todos os custos e impostos).
                             </div>
                         </div>
 
@@ -294,6 +371,11 @@
                                 <i data-lucide="shopping-basket" size="32" class="text-orange-500 mx-auto mb-2"></i>
                                 <h4 class="text-5xl font-black text-orange-400 transition-numbers leading-tight" id="res-baskets">0</h4>
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">Cestas Básicas / Mês</p>
+                            </div>
+                            <div onclick="toggleFormula('f-baskets')" class="formula-trigger text-center w-full justify-center"><i data-lucide="info" size="10"></i> Cálculo</div>
+                            <div id="f-baskets" class="formula-box">
+                                <span class="formula-code">Lucro Mensal ÷ Custo Cesta Básica</span>
+                                Equivalência do lucro líquido mensal de 1 ônibus em poder de compra de alimentos (Cesta Básica R$ 800,00).
                             </div>
                         </div>
                     </div>
