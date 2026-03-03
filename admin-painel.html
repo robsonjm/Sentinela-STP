@@ -110,28 +110,18 @@
         }
     </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="min-h-screen pb-12 opacity-0 transition-opacity duration-500">
 
     <!-- Header -->
-    <header class="bg-slate-900 text-white p-6 shadow-xl sticky top-0 z-[100]">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/10 p-2 rounded-xl text-white backdrop-blur-sm">
-                    <i data-lucide="shield-alert"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-black tracking-tighter uppercase">Sentinela Admin</h1>
-                    <p class="text-[10px] font-bold opacity-75 uppercase tracking-widest text-red-400">Gerenciamento de Denúncias</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <div id="sync-status" class="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase tracking-widest">
-                    <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Verificando Acesso...
-                </div>
-                <button id="logout-btn" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 p-2 rounded-lg transition-colors" title="Sair">
-                    <i data-lucide="log-out" size="18"></i>
-                </button>
-            </div>
+    <header class="bg-slate-800 text-white p-4 shadow-lg flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-black tracking-tighter uppercase text-yellow-400 flex items-center gap-2">
+            <i data-lucide="shield-alert"></i> Sentinela Admin
+        </h1>
+        <div class="flex items-center gap-4">
+            <span id="user-email" class="text-[10px] font-mono text-slate-400 hidden md:inline-block"></span>
+            <a href="login.html" class="text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                <i data-lucide="log-out" size="14"></i> Sair
+            </a>
         </div>
     </header>
 
@@ -319,6 +309,7 @@
                 if (user) signOut(auth);
                 window.location.href = 'login.html';
             } else {
+                document.body.classList.remove('opacity-0');
                 const syncStatus = document.getElementById('sync-status');
                 syncStatus.innerHTML = `
                     <div class="flex flex-col items-end">

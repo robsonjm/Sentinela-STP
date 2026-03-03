@@ -215,14 +215,21 @@
                 </div>
 
                 <!-- Costs Summary -->
-                <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex items-center justify-between">
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Custo Real / Ônibus</p>
-                        <h3 class="text-xl font-black text-white mt-1" id="display-total-cost">R$ 41.500</h3>
+                <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Custo Real / Ônibus</p>
+                            <h3 class="text-xl font-black text-white mt-1" id="display-total-cost">R$ 41.500</h3>
+                        </div>
+                        <button onclick="document.getElementById('cost-modal').showModal()" class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-colors" title="Ver Detalhes">
+                            <i data-lucide="pie-chart" size="20"></i>
+                        </button>
                     </div>
-                    <button onclick="document.getElementById('cost-modal').showModal()" class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-colors" title="Ver Detalhes">
-                        <i data-lucide="pie-chart" size="20"></i>
-                    </button>
+                    <div onclick="toggleFormula('f-cost')" class="formula-trigger mt-2"><i data-lucide="info" size="10"></i> Cálculo</div>
+                    <div id="f-cost" class="formula-box">
+                        <span class="formula-code">Σ (Combustível + Pessoal + Manutenção + Admin + Depreciação)</span>
+                        Soma de todos os custos operacionais mensais por veículo. Baseado na planilha Geipot.
+                    </div>
                 </div>
             </div>
 
@@ -376,6 +383,10 @@
                             <div id="f-baskets" class="formula-box">
                                 <span class="formula-code">Lucro Mensal ÷ Custo Cesta Básica</span>
                                 Equivalência do lucro líquido mensal de 1 ônibus em poder de compra de alimentos (Cesta Básica R$ 800,00).
+                                <div class="mt-2 border-t border-slate-700/50 pt-2">
+                                    <span class="formula-code text-green-400">Do Subsídio:</span> 
+                                    (Sobra do Subsídio ÷ Custo Cesta Básica). Mostra quantas cestas poderiam ser compradas apenas com o dinheiro que sobra do subsídio.
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -40,7 +40,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen opacity-0 transition-opacity duration-500">
 
     <!-- Header -->
     <header class="bg-slate-900 text-white px-6 py-4 shadow-lg sticky top-0 z-[100]">
@@ -54,9 +54,12 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">Painel Administrativo</p>
                 </div>
             </div>
-            <button id="logout-btn" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 p-2 rounded-lg transition-colors" title="Sair">
-                <i data-lucide="log-out" size="18"></i>
-            </button>
+            <div class="flex items-center gap-3">
+                <span id="user-email" class="text-[10px] font-mono text-slate-400 hidden sm:inline-block"></span>
+                <button id="logout-btn" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 p-2 rounded-lg transition-colors" title="Sair">
+                    <i data-lucide="log-out" size="18"></i>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -448,14 +451,10 @@
                 console.log("Usuário autenticado:", user.email);
                 
                 // Exibir quem está logado
-                const headerTitle = document.querySelector('header h1');
-                if(headerTitle) {
-                    const userBadge = document.createElement('div');
-                    userBadge.className = 'text-[10px] bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full inline-flex items-center gap-1 mt-1 border border-blue-500/30';
-                    userBadge.innerHTML = `<i data-lucide="user" size="10"></i> ${user.email}`;
-                    headerTitle.parentNode.appendChild(userBadge);
-                    lucide.createIcons();
-                }
+                document.body.classList.remove('opacity-0');
+                
+                const userEmailEl = document.getElementById('user-email');
+                if (userEmailEl) userEmailEl.textContent = user.email;
 
                 previewContainer.classList.remove('opacity-50', 'pointer-events-none');
                 loadNewsList();
