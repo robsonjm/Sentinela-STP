@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria Sentinela - O Fator Topázio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700;900&display=swap');
+        body { font-family: 'Urbanist', sans-serif; background-color: #020617; color: white; }
+        .money-card { background: linear-gradient(135deg, #0f172a 0%, #020617 100%); }
+        .glow-green { box-shadow: 0 0 30px rgba(34, 197, 94, 0.2); }
+        .glow-blue { box-shadow: 0 0 30px rgba(59, 130, 246, 0.2); }
+        .glow-purple { box-shadow: 0 0 30px rgba(168, 85, 247, 0.2); }
+        .bar-container { height: 12px; background: #1e293b; border-radius: 6px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 6px; }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+
+    <div class="max-w-6xl mx-auto space-y-12">
+        <!-- HEADER -->
+        <header class="text-center space-y-4">
+            <div class="inline-flex items-center gap-2 bg-blue-600/20 text-blue-400 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/30">
+                <i data-lucide="microscope"></i> Auditoria de Fluxo de Capital - Sentinela STP
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black tracking-tighter italic leading-none">
+                A FARSA DO <span class="text-blue-500">INVESTIMENTO</span>
+            </h1>
+            <p class="text-slate-400 font-medium max-w-3xl mx-auto">
+                Análise da injeção de R$ 90 Mi (Frota) + R$ 118 Mi (Subsídio) sobre um sistema que já se paga sozinho.
+            </p>
+        </header>
+
+        <!-- GRÁFICO DE BARRAS COMPARATIVO -->
+        <section class="bg-slate-900 border border-slate-800 rounded-[3rem] p-8 md:p-12 space-y-10 shadow-2xl">
+            <h2 class="text-xl font-black uppercase italic text-slate-500">Fluxo Anual de Dinheiro (R$ Milhões)</h2>
+            
+            <div class="space-y-8">
+                <!-- CUSTO OPERACIONAL -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Custo de Operar o Sistema (O Gasto)</span>
+                        <span class="text-2xl font-black italic">R$ 258,5 Mi</span>
+                    </div>
+                    <div class="bar-container"><div class="bar-fill bg-slate-600" style="width: 54%"></div></div>
+                </div>
+
+                <!-- ARRECADAÇÃO -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-green-500">Receita da Roleta (O que o Povo paga na mão)</span>
+                        <span class="text-2xl font-black text-green-500 italic">R$ 268,8 Mi</span>
+                    </div>
+                    <div class="bar-container"><div class="bar-fill bg-green-500" style="width: 56%"></div></div>
+                    <p class="text-[9px] font-bold text-green-900 uppercase">Resultado: O sistema já dá lucro de R$ 10 Mi sem ajuda externa.</p>
+                </div>
+
+                <!-- INJEÇÃO PÚBLICA TOTAL -->
+                <div class="space-y-2 pt-4 border-t border-slate-800">
+                    <div class="flex justify-between items-end">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-blue-400">Injeção Pública Total (O Povo paga de novo via Imposto)</span>
+                        <span class="text-3xl font-black text-blue-400 italic">R$ 208,0 Mi</span>
+                    </div>
+                    <div class="flex h-6 gap-1">
+                        <div class="h-full bg-blue-600 rounded-l-md" style="width: 57%" title="Subsídio Anual"></div>
+                        <div class="h-full bg-purple-500 rounded-r-md shadow-[0_0_20px_rgba(168,85,247,0.4)]" style="width: 43%" title="Investimento Frota (Topázio)"></div>
+                    </div>
+                    <div class="flex gap-4 text-[9px] font-black uppercase tracking-tighter">
+                        <span class="text-blue-400">● R$ 118 Mi (Subsídio)</span>
+                        <span class="text-purple-400">● R$ 90 Mi (Frota - "Fator Topázio")</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CARDS DE IMPACTO -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] glow-green space-y-4">
+                <i data-lucide="trending-up" class="text-green-500" size="32"></i>
+                <h3 class="text-xs font-black uppercase text-slate-500">Lucro Líquido Real</h3>
+                <p class="text-4xl font-black italic">R$ 128 Mi</p>
+                <p class="text-[10px] text-slate-400 leading-tight uppercase font-bold">Considerando Roleta + Subsídio e abatendo o custo operacional.</p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] glow-purple space-y-4">
+                <i data-lucide="bus" class="text-purple-500" size="32"></i>
+                <h3 class="text-xs font-black uppercase text-slate-500">Investimento Externo</h3>
+                <p class="text-4xl font-black italic text-purple-400">R$ 90 Mi</p>
+                <p class="text-[10px] text-slate-400 leading-tight uppercase font-bold">Patrimônio privado (Ônibus) comprado com dinheiro público extra.</p>
+            </div>
+
+            <div class="bg-red-600 p-8 rounded-[2.5rem] space-y-4 shadow-xl shadow-red-900/20">
+                <i data-lucide="alert-circle" class="text-red-200" size="32"></i>
+                <h3 class="text-xs font-black uppercase text-red-100 tracking-widest">Saldo do Privado</h3>
+                <p class="text-4xl font-black italic text-white">R$ 218 Mi</p>
+                <p class="text-[10px] text-red-100 leading-tight uppercase font-black italic">Benefício financeiro total anual para as 5 famílias.</p>
+            </div>
+
+        </div>
+
+        <!-- CONCLUSÃO DIDÁTICA -->
+        <footer class="bg-white p-10 rounded-[4rem] text-slate-950 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            <div class="space-y-4">
+                <h2 class="text-4xl font-black tracking-tighter uppercase italic leading-none">O Povo compra <br>o Almoço e a <span class="text-blue-600">Cozinha.</span></h2>
+                <p class="text-sm font-bold text-slate-600 leading-relaxed uppercase">
+                    Se a prefeitura paga R$ 118M de subsídio e ainda dá R$ 90M para renovar a frota, o Município está pagando <span class="text-black font-black">80% do custo total de existir do sistema.</span>
+                </p>
+                <p class="text-sm font-bold text-slate-600 leading-relaxed uppercase">
+                    No entanto, as empresas ficam com <span class="text-blue-600 font-black">100% da arrecadação da roleta</span> e ainda são donas dos veículos (Bens Reversíveis que elas nunca devolvem).
+                </p>
+            </div>
+            <div class="bg-slate-100 p-8 rounded-[3rem] border-2 border-slate-200 text-center space-y-4">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Veredito Sentinela</p>
+                <p class="text-2xl font-black italic text-red-600 leading-tight">
+                    ESTAMOS FINANCIANDO A RIQUEZA DELES, <br>ENQUANTO ELES FINANCIAM O NOSSO ADOECIMENTO.
+                </p>
+                <div class="pt-4 flex justify-center gap-2">
+                    <div class="w-12 h-1 bg-red-600 rounded-full"></div>
+                    <div class="w-4 h-1 bg-red-600 rounded-full"></div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
