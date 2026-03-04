@@ -217,51 +217,94 @@
         // Estilo Dark para o Mapa
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // --- DEFINIÇÃO DAS ÁREAS DE INFLUÊNCIA (Polígonos aproximados) ---
+        // --- DEFINIÇÃO DAS ÁREAS DE INFLUÊNCIA (Polígonos baseados na geografia real) ---
+        
+        // Coordenadas aproximadas para contorno realista
+        const coords = {
+            continente: [
+                [-27.560, -48.620], [-27.555, -48.600], [-27.570, -48.580], 
+                [-27.610, -48.570], [-27.620, -48.620], [-27.560, -48.620]
+            ],
+            norte: [
+                [-27.395, -48.430], [-27.410, -48.390], [-27.450, -48.370], 
+                [-27.490, -48.380], [-27.510, -48.450], [-27.500, -48.510], 
+                [-27.480, -48.540], [-27.440, -48.530], [-27.410, -48.500]
+            ],
+            centro: [
+                [-27.480, -48.540], [-27.500, -48.510], [-27.510, -48.450], 
+                [-27.490, -48.380], [-27.540, -48.400], [-27.600, -48.410], 
+                [-27.630, -48.460], [-27.660, -48.500], [-27.630, -48.530], 
+                [-27.600, -48.560], [-27.580, -48.560], [-27.550, -48.530]
+            ],
+            sul: [
+                [-27.630, -48.530], [-27.660, -48.500], [-27.630, -48.460], 
+                [-27.680, -48.470], [-27.730, -48.500], [-27.840, -48.560], 
+                [-27.790, -48.580], [-27.720, -48.570]
+            ]
+        };
+
         const zones = [
             {
                 name: "GOMES (Centro/Trindade)",
-                coords: [
-                    [-27.575, -48.557], [-27.595, -48.567], [-27.615, -48.547], [-27.595, -48.517], [-27.575, -48.527]
-                ],
+                coords: coords.centro,
                 color: "#3b82f6"
             },
             {
                 name: "SARDA (Norte da Ilha)",
-                coords: [
-                    [-27.425, -48.517], [-27.445, -48.407], [-27.515, -48.427], [-27.495, -48.537]
-                ],
+                coords: coords.norte,
                 color: "#ef4444"
             },
             {
                 name: "PASSOS (Sul da Ilha)",
-                coords: [
-                    [-27.655, -48.557], [-27.675, -48.457], [-27.805, -48.507], [-27.755, -48.587]
-                ],
+                coords: coords.sul,
                 color: "#f97316"
             },
             {
                 name: "VALENTE (Continente)",
-                coords: [
-                    [-27.585, -48.587], [-27.605, -48.627], [-27.635, -48.597], [-27.615, -48.577]
-                ],
+                coords: coords.continente,
                 color: "#a855f7"
             }
         ];
 
         let layers = [];
+        let outlineLayer = null;
+
+        function drawCityOutline() {
+            // Desenha um contorno geral para o município (união visual das áreas)
+            // Aqui simplificamos desenhando todos os polígonos com apenas borda
+            const allCoords = [coords.continente, coords.norte, coords.centro, coords.sul];
+            
+            // Grupo para o contorno
+            if(outlineLayer) map.removeLayer(outlineLayer);
+            
+            const group = L.featureGroup();
+            
+            allCoords.forEach(c => {
+                L.polygon(c, {
+                    color: '#ffffff',
+                    weight: 3,
+                    opacity: 0.3,
+                    fill: false,
+                    dashArray: '5, 5'
+                }).addTo(group);
+            });
+            
+            outlineLayer = group;
+            outlineLayer.addTo(map);
+        }
 
         function updateMap(powerLevel) {
-            // Remove camadas antigas
+            // Remove camadas antigas de preenchimento
             layers.forEach(l => map.removeLayer(l));
             layers = [];
 
             zones.forEach(z => {
                 const poly = L.polygon(z.coords, {
                     color: z.color,
-                    weight: 2,
+                    weight: 1,
+                    opacity: 0.8,
                     fillColor: z.color,
-                    fillOpacity: 0.1 + (powerLevel * 0.5) // A opacidade aumenta conforme o lobby fica mais forte
+                    fillOpacity: 0.2 + (powerLevel * 0.5) // A opacidade aumenta conforme o lobby fica mais forte
                 }).addTo(map);
                 
                 // Tooltip fixo para nomes
@@ -295,6 +338,7 @@
         // Inicializar
         window.onload = () => {
             lucide.createIcons();
+            drawCityOutline(); // Desenha o contorno fixo do município
             updateMap(0.2);
         };
     </script>
