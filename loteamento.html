@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa do Lobby - Sentinela STP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Urbanist', sans-serif;
+            background-color: #020617;
+            color: white;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+            z-index: 1;
+        }
+
+        .custom-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .timeline-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border: 2px solid white;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        /* Estilo para labels do mapa */
+        .area-label {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOOLS NAV -->
+    <div class="fixed top-6 right-6 z-[100] no-print flex gap-2 p-1.5 bg-slate-900/30 backdrop-blur-sm rounded-xl border border-slate-800/30 hover:bg-slate-900/80 transition-all duration-300 group">
+        <a href="ferramentas.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-white transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 -translate-y-2 group-hover:translate-y-0 duration-300 delay-100">
+            Calculadora
+        </a>
+        <a href="auditoria-visual.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-white transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 -translate-y-2 group-hover:translate-y-0 duration-300">
+            Auditoria
+        </a>
+        <div class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white shadow-lg shadow-blue-900/50 whitespace-nowrap cursor-default">
+            Loteamento
+        </div>
+        <a href="camasao.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-white transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 -translate-y-2 group-hover:translate-y-0 duration-300">
+            Apresentação
+        </a>
+    </div>
+
+    <!-- MAPA -->
+    <div id="map"></div>
+
+    <!-- PAINEL LATERAL DE INFORMAÇÕES -->
+    <aside class="fixed top-6 left-6 z-[100] w-80 custom-panel p-6 rounded-[2.5rem] shadow-2xl space-y-6 hidden md:block">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-600 rounded-xl">
+                <i data-lucide="map-pin" class="text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black uppercase tracking-tighter leading-none">O Loteamento</h1>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Divisão Geográfica do Lobby</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800 pb-2">Famílias no Poder</h2>
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                    <span class="legend-dot bg-blue-500"></span>
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase">Família Gomes</p>
+                        <p class="text-[9px] text-slate-400">Transol / Emflotur (Centro & Trindade)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="legend-dot bg-red-500"></span>
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase">Família Sarda</p>
+                        <p class="text-[9px] text-slate-400">Canasvieiras (Norte da Ilha)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="legend-dot bg-orange-500"></span>
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase">Família Passos</p>
+                        <p class="text-[9px] text-slate-400">Insular (Sul da Ilha)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="legend-dot bg-purple-500"></span>
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase">Família Valente</p>
+                        <p class="text-[9px] text-slate-400">Estrela (Continente / Metropolitano)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="year-details" class="bg-white/5 p-5 rounded-3xl border border-white/10 space-y-3 animate-in fade-in duration-500">
+            <p id="detail-year" class="text-3xl font-black text-blue-400 italic">1999</p>
+            <p id="detail-context" class="text-[10px] font-bold text-slate-300 leading-relaxed uppercase">Era Analógica: Lei 34/99. O transporte era visto apenas como logística mecânica.</p>
+            <div class="pt-2 border-t border-white/5">
+                <p class="text-[9px] font-black text-slate-500 uppercase">Gestão:</p>
+                <p id="detail-mayor" class="text-xs font-bold text-white">Angela Amin</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTROLES DA TIMELINE (BOTTOM) -->
+    <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-3xl custom-panel px-8 py-6 rounded-[3rem] shadow-2xl space-y-6">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Evolução do Captura Orçamentária</span>
+            <div id="subsidy-badge" class="bg-red-600/20 text-red-400 px-3 py-1 rounded-full text-[9px] font-black uppercase border border-red-500/30">
+                Subsídio: R$ 0,00
+            </div>
+        </div>
+        
+        <input type="range" id="year-slider" min="0" max="4" value="0" class="timeline-slider">
+        
+        <div class="flex justify-between text-[10px] font-black text-slate-500 uppercase px-1">
+            <span>1999</span>
+            <span>2014</span>
+            <span>2020</span>
+            <span>2024</span>
+            <span>2026</span>
+        </div>
+    </div>
+
+    <script>
+        // --- DADOS DA LINHA DO TEMPO ---
+        const timeline = [
+            {
+                year: "1999",
+                context: "Lei 34/99 sancionada. Era pré-digital. O foco era na mecânica, ignorando critérios de saúde sensorial (dB e Calor).",
+                mayor: "Angela Amin",
+                subsidy: "Zero / Baixo",
+                lobbyPower: 0.2
+            },
+            {
+                year: "2014",
+                context: "Decreto 13.219: O Marco Zero da Captura. Licitação de 20 anos assinada. As empresas ganham o direito de 'se autogerirem'.",
+                mayor: "Cesar Souza Jr.",
+                subsidy: "R$ 20 Mi / Ano",
+                lobbyPower: 0.5
+            },
+            {
+                year: "2020",
+                context: "Decreto 21.145 (Pandemia): O risco do negócio é transferido 100% para o povo sob a justificativa de socorro.",
+                mayor: "Gean Loureiro",
+                subsidy: "R$ 60 Mi / Ano",
+                lobbyPower: 0.7
+            },
+            {
+                year: "2024",
+                context: "Decreto 27.313: Recorde Histórico. O subsídio atinge R$ 118 Milhões enquanto a tarifa é a mais cara do país.",
+                mayor: "Topázio Neto",
+                subsidy: "R$ 118 Mi / Ano",
+                lobbyPower: 0.9
+            },
+            {
+                year: "2026",
+                context: "Capitalização Privada: R$ 90 Mi extras para frota. O lobby atinge soberania total sobre o orçamento municipal.",
+                mayor: "Topázio Neto",
+                subsidy: "R$ 118 Mi + R$ 90 Mi (Frota)",
+                lobbyPower: 1.0
+            }
+        ];
+
+        // --- INICIALIZAÇÃO DO MAPA ---
+        const map = L.map('map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([-27.5945, -48.5477], 11);
+
+        // Estilo Dark para o Mapa
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // --- DEFINIÇÃO DAS ÁREAS DE INFLUÊNCIA (Polígonos aproximados) ---
+        const zones = [
+            {
+                name: "GOMES (Centro/Trindade)",
+                coords: [
+                    [-27.575, -48.557], [-27.595, -48.567], [-27.615, -48.547], [-27.595, -48.517], [-27.575, -48.527]
+                ],
+                color: "#3b82f6"
+            },
+            {
+                name: "SARDA (Norte da Ilha)",
+                coords: [
+                    [-27.425, -48.517], [-27.445, -48.407], [-27.515, -48.427], [-27.495, -48.537]
+                ],
+                color: "#ef4444"
+            },
+            {
+                name: "PASSOS (Sul da Ilha)",
+                coords: [
+                    [-27.655, -48.557], [-27.675, -48.457], [-27.805, -48.507], [-27.755, -48.587]
+                ],
+                color: "#f97316"
+            },
+            {
+                name: "VALENTE (Continente)",
+                coords: [
+                    [-27.585, -48.587], [-27.605, -48.627], [-27.635, -48.597], [-27.615, -48.577]
+                ],
+                color: "#a855f7"
+            }
+        ];
+
+        let layers = [];
+
+        function updateMap(powerLevel) {
+            // Remove camadas antigas
+            layers.forEach(l => map.removeLayer(l));
+            layers = [];
+
+            zones.forEach(z => {
+                const poly = L.polygon(z.coords, {
+                    color: z.color,
+                    weight: 2,
+                    fillColor: z.color,
+                    fillOpacity: 0.1 + (powerLevel * 0.5) // A opacidade aumenta conforme o lobby fica mais forte
+                }).addTo(map);
+                
+                // Tooltip fixo para nomes
+                poly.bindTooltip(z.name, {
+                    permanent: true,
+                    direction: 'center',
+                    className: 'area-label'
+                });
+
+                layers.push(poly);
+            });
+        }
+
+        // --- LÓGICA DO SLIDER ---
+        const slider = document.getElementById('year-slider');
+        const detailYear = document.getElementById('detail-year');
+        const detailContext = document.getElementById('detail-context');
+        const detailMayor = document.getElementById('detail-mayor');
+        const subsidyBadge = document.getElementById('subsidy-badge');
+
+        slider.addEventListener('input', (e) => {
+            const data = timeline[e.target.value];
+            detailYear.innerText = data.year;
+            detailContext.innerText = data.context;
+            detailMayor.innerText = data.mayor;
+            subsidyBadge.innerText = `Subsídio: ${data.subsidy}`;
+            
+            updateMap(data.lobbyPower);
+        });
+
+        // Inicializar
+        window.onload = () => {
+            lucide.createIcons();
+            updateMap(0.2);
+        };
+    </script>
+</body>
+</html>
