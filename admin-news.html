@@ -425,12 +425,17 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { firebaseConfig } from "./js/config.js";
+        import { 
+            getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, onSnapshot as firestoreOnSnapshot 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig, imgbbConfig } from "./js/config.js?v=4";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // Debug: Check onSnapshot
+        console.log("Firestore initialized. onSnapshot type:", typeof firestoreOnSnapshot);
 
         // Elementos do DOM
         const form = document.getElementById('news-form');
@@ -457,7 +462,7 @@
                 if (userEmailEl) userEmailEl.textContent = user.email;
 
                 previewContainer.classList.remove('opacity-50', 'pointer-events-none');
-                loadNewsList();
+                fetchNewsData();
             } else {
                 // Usuário não está logado ou é anônimo
                 console.log("Acesso negado: Usuário anônimo ou não autenticado.");
@@ -587,8 +592,8 @@
         };
 
         // ImgBB Upload & Cropper Logic
-        const IMGBB_API_KEY = '5a004494191316c17430155a5b58390b'; 
-        let cropper;
+    const IMGBB_API_KEY = imgbbConfig.apiKey; 
+    let cropper;
         const imageUploadInput = document.getElementById('image-upload-input');
         const cropperModal = document.getElementById('cropper-modal');
         const imageToCrop = document.getElementById('image-to-crop');
@@ -867,13 +872,16 @@
         updatePreview();
 
         // Funções de Gerenciamento de Notícias
-        function loadNewsList() {
+        function fetchNewsData() {
+            console.log("Iniciando fetchNewsData...");
             try {
                 const q = query(
                     collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos')
                 );
+                
+                console.log("Query criada, configurando snapshot...");
 
-                onSnapshot(q, (snapshot) => {
+                firestoreOnSnapshot(q, (snapshot) => {
                     newsCountEl.innerText = snapshot.size;
                     
                     if (snapshot.empty) {
@@ -937,7 +945,7 @@
                     newsListEl.innerHTML = `<p class="text-red-500 text-xs p-4 text-center">Erro ao carregar notícias: ${error.message}</p>`;
                 });
             } catch (err) {
-                console.error("Erro ao configurar listener de notícias:", err);
+                console.error("Erro ao configurar listener de notícias (fetchNewsData):", err);
             }
         }
 
