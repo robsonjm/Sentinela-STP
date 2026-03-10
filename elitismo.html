@@ -12,9 +12,39 @@
         .bg-pattern { background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px; }
         .text-glow { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
         .highlight-red { border-left: 8px solid #ef4444; }
+        
+        @keyframes busFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        .animate-bus { animation: busFloat 3s ease-in-out infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 md:p-12">
+<body class="flex flex-col items-center justify-center min-h-screen p-4 md:p-12 gap-8">
+
+    <!-- HEADER -->
+    <header class="text-center space-y-4 w-full max-w-4xl">
+        <!-- Tools Navigation Tabs -->
+        <div class="flex justify-center items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+            <a href="ferramentas.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors whitespace-nowrap">
+                Calculadora
+            </a>
+            <a href="auditoria-visual.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors whitespace-nowrap">
+                Auditoria
+            </a>
+            <a href="loteamento.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors whitespace-nowrap">
+                Loteamento
+            </a>
+            <a href="camasao.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors whitespace-nowrap">
+                Apresentação
+            </a>
+            <a href="elitismo.html" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white shadow-lg shadow-blue-900/50 whitespace-nowrap transition-transform active:scale-95">
+                Elitismo
+            </a>
+        </div>
+    </header>
 
     <div class="max-w-4xl w-full bg-slate-900 rounded-[3rem] overflow-hidden border border-slate-800 shadow-2xl relative bg-pattern">
         
@@ -52,11 +82,14 @@
 
             <!-- Imagem/Gráfico Direita -->
             <div class="bg-blue-600 p-12 flex flex-col items-center justify-center text-center space-y-8 relative overflow-hidden">
-                <div class="absolute inset-0 opacity-20"><i data-lucide="bus" size="300" class="text-white -rotate-12 translate-x-20"></i></div>
-                
-                <div class="relative z-10 space-y-2">
-                    <p class="text-[10px] font-black text-blue-950 uppercase tracking-[0.4em]">Visão Sentinela</p>
-                    <h2 class="text-4xl font-black text-white italic leading-tight uppercase">O TRANSPORTE <br>É A CURA DA <br>CIDADE.</h2>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div class="animate-bus text-white/90 mb-4">
+                        <i data-lucide="bus" size="120" stroke-width="2.5"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-black text-blue-950 uppercase tracking-[0.4em]">Visão Sentinela</p>
+                        <h2 class="text-4xl font-black text-white italic leading-tight uppercase">O TRANSPORTE <br>É A CURA DA <br>CIDADE.</h2>
+                    </div>
                 </div>
 
                 <div class="relative z-10 bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 w-full">
