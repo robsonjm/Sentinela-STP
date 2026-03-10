@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Conscientização - Sentinela STP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700;900&display=swap');
+        body { font-family: 'Urbanist', sans-serif; background-color: #020617; }
+        .bg-pattern { background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px; }
+        .text-glow { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .highlight-red { border-left: 8px solid #ef4444; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 md:p-12">
+
+    <div class="max-w-4xl w-full bg-slate-900 rounded-[3rem] overflow-hidden border border-slate-800 shadow-2xl relative bg-pattern">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2">
+            
+            <!-- Conteúdo Esquerda -->
+            <div class="p-10 md:p-16 space-y-8 flex flex-col justify-center">
+                <div class="inline-flex items-center gap-2 bg-blue-600/20 text-blue-400 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/30">
+                    <i data-lucide="shield"></i> Pilar: Combate ao Elitismo
+                </div>
+                
+                <h1 class="text-4xl md:text-5xl font-black text-white leading-none tracking-tighter uppercase italic">
+                    TER VERGONHA DO ÔNIBUS <br>É O <span class="text-blue-500">LUCRO</span> DELES.
+                </h1>
+
+                <div class="space-y-4 highlight-red pl-6">
+                    <p class="text-lg font-bold text-slate-300 leading-tight">
+                        Eles querem que você se sinta "pobre" para que você não reclame do calor e do barulho.
+                    </p>
+                    <p class="text-sm text-slate-500 font-medium leading-relaxed">
+                        Enquanto você sonha com um carro, eles lucram R$ 118 milhões do seu imposto entregando sucatas de 90dB.
+                    </p>
+                </div>
+
+                <div class="pt-6 border-t border-slate-800 flex items-center gap-4">
+                    <div class="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-500/20">
+                        <i data-lucide="smartphone"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs font-black text-white uppercase tracking-widest">Seja um Auditor</p>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase">Transforme vergonha em dado técnico.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Imagem/Gráfico Direita -->
+            <div class="bg-blue-600 p-12 flex flex-col items-center justify-center text-center space-y-8 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20"><i data-lucide="bus" size="300" class="text-white -rotate-12 translate-x-20"></i></div>
+                
+                <div class="relative z-10 space-y-2">
+                    <p class="text-[10px] font-black text-blue-950 uppercase tracking-[0.4em]">Visão Sentinela</p>
+                    <h2 class="text-4xl font-black text-white italic leading-tight uppercase">O TRANSPORTE <br>É A CURA DA <br>CIDADE.</h2>
+                </div>
+
+                <div class="relative z-10 bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 w-full">
+                    <p class="text-xs font-bold text-blue-100 italic leading-relaxed">
+                        "Cidade rica não é onde o pobre tem carro, mas onde o rico usa o ônibus."
+                    </p>
+                </div>
+
+                <div class="relative z-10 pt-4 flex gap-4">
+                    <div class="text-center">
+                        <p class="text-[9px] font-black text-blue-950 uppercase">Ruído Alvo</p>
+                        <p class="text-2xl font-black text-white leading-none">78dB</p>
+                    </div>
+                    <div class="w-px h-10 bg-blue-400"></div>
+                    <div class="text-center">
+                        <p class="text-[9px] font-black text-blue-950 uppercase">Temp. Alvo</p>
+                        <p class="text-2xl font-black text-white leading-none">23ºC</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-slate-950 p-4 text-center border-t border-slate-800">
+            <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.8em]">#FimDoElitismo #SentinelaSTP #FloripaSoberana</p>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <!-- Barra de Navegação Padrão -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="home" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Início</span>
+            </a>
+            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="message-square" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Feed</span>
+            </a>
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="bar-chart" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Painel</span>
+            </a>
+            <a href="ferramentas.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="calculator" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Ferramentas</span>
+            </a>
+            <a href="dossie.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="book-open" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Dossiê</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="info" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Sobre</span>
+            </a>
+            <a href="elitismo.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="swords" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Elitismo</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>
