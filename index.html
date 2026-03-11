@@ -87,6 +87,8 @@
                 <div class="w-px h-2 bg-white/20"></div>
                 <div class="flex items-center gap-1"><span id="geo-dot" class="status-dot bg-slate-400"></span><span id="gps-label" class="text-[7px] font-black uppercase opacity-80">GPS OFF</span></div>
                 <div class="w-px h-2 bg-white/20"></div>
+                <div class="flex items-center gap-1"><span id="mov-dot" class="status-dot bg-slate-400"></span><span class="text-[7px] font-black uppercase opacity-80">MOV</span></div>
+                <div class="w-px h-2 bg-white/20"></div>
                 <div class="flex items-center gap-1"><span id="cloud-dot" class="status-dot bg-slate-400"></span><span class="text-[7px] font-black uppercase opacity-80">Nuvem</span></div>
             </div>
         </header>
@@ -377,11 +379,30 @@
     <script>
         lucide.createIcons();
         let audioCtx, analyser, mic, dataArr, animId, isActive = false, lastLog = 0, currentZone = "Meio", activeSymptoms = [], userStream = null;
+        let currentMotion = { x: 0, y: 0, z: 0, magnitude: 0 };
 
         const dbDisplay = document.getElementById('db-display');
         const dbBar = document.getElementById('db-progress');
         const tempSlider = document.getElementById('temp-input');
         const tempLabel = document.getElementById('temp-val');
+
+        function setupMotionListener() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    const acc = event.acceleration || event.accelerationIncludingGravity;
+                    if (acc) {
+                        currentMotion.x = acc.x || 0;
+                        currentMotion.y = acc.y || 0;
+                        currentMotion.z = acc.z || 0;
+                        // Calculate magnitude: sqrt(x^2 + y^2 + z^2)
+                        currentMotion.magnitude = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2).toFixed(2);
+                        
+                        const movDot = document.getElementById('mov-dot');
+                        if (movDot) movDot.className = "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]";
+                    }
+                }, true);
+            }
+        }
 
         // Initial Setup
         document.addEventListener('DOMContentLoaded', () => {
@@ -411,6 +432,16 @@
                 userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 console.log("Áudio permitido");
                 
+                // Motion Permission (iOS specific)
+                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                    const response = await DeviceMotionEvent.requestPermission();
+                    if (response === 'granted') {
+                        setupMotionListener();
+                    }
+                } else {
+                    setupMotionListener();
+                }
+
                 // Mark Permissions as Granted
                 localStorage.setItem('permissions_granted', 'true');
                 
@@ -493,6 +524,13 @@
             dbDisplay.innerText = Math.max(db, 30);
             dbBar.style.width = `${Math.min((db/110)*100, 100)}%`;
             if(db >= 85) addRecord(db);
+            
+            // Check for sudden vibration (Accelerometer)
+            // Magnitude includes gravity (~9.8). Values > 20 indicate strong bump/vibration
+            if (currentMotion.magnitude > 20) {
+                addRecord(db, "Vibração/Impacto");
+            }
+
             animId = requestAnimationFrame(loop);
         }
 
@@ -500,6 +538,7 @@
             const now = Date.now(); if(now - lastLog < 15000) return; lastLog = now;
             const rec = {
                 tipo_evento: tipo, ruido_db: db, temp_interna: tempSlider.value, sintomas: activeSymptoms.join(', '),
+                acelerometro: currentMotion.magnitude,
                 linha: document.getElementById('bus-line').value, prefixo: document.getElementById('bus-number').value || "S/N",
                 zona: currentZone, hora: new Date().toLocaleTimeString(), data: new Date().toLocaleDateString(),
                 foto_evidencia: foto
