@@ -385,16 +385,15 @@
                                 const target = new Date(ms.targetDate + "T00:00:00");
                                 const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
                                 
-                                // idx 0: white
-                                // idx 1: slate-200 (light gray)
-                                // idx 2+: slate-400 (medium gray)
-                                const textColor = idx === 0 ? 'text-white' : (idx === 1 ? 'text-slate-200' : 'text-slate-400');
-                                const labelColor = idx === 0 ? 'text-blue-200' : 'text-slate-500';
+                                // idx 0 (Closest): Blue background, white text
+                                // idx > 0 (Future): Dark background (parent), white text
+                                const itemBg = idx === 0 ? 'bg-blue-600 shadow-inner' : 'bg-slate-900/60';
+                                const labelColor = idx === 0 ? 'text-blue-100/70' : 'text-slate-500';
 
                                 return `
-                                    <div class="dday-item">
+                                    <div class="dday-item w-full ${itemBg}">
                                         <p class="text-[10px] font-black ${labelColor} uppercase mb-1 italic">D-Day (${ms.date})</p>
-                                        <p class="text-2xl font-black ${textColor} italic">${diffDays > 0 ? diffDays + ' DIAS' : (diffDays === 0 ? 'É HOJE' : 'CONCLUÍDO')}</p>
+                                        <p class="text-2xl font-black text-white italic">${diffDays > 0 ? diffDays + ' DIAS' : (diffDays === 0 ? 'É HOJE' : 'CONCLUÍDO')}</p>
                                         <p class="text-[9px] font-bold ${labelColor} uppercase mt-1 italic">${ms.title}</p>
                                     </div>
                                 `;
@@ -404,7 +403,7 @@
                 `;
             } else {
                 ddayHTML = `
-                    <div class="dday-item">
+                    <div class="dday-item w-full bg-blue-600">
                         <p class="text-[10px] font-black text-white/70 uppercase mb-1 italic">D-Day</p>
                         <p class="text-2xl font-black text-white italic">CONCLUÍDO</p>
                         <p class="text-[9px] font-bold text-white/50 uppercase mt-1 italic">Todos os Alvos</p>
@@ -458,7 +457,7 @@
                                 <div class="bg-green-500 h-full transition-all duration-1000" style="width: ${appData.progress}%"></div>
                             </div>
                         </div>
-                        <div class="bg-blue-600 p-0 rounded-3xl text-center flex-1 shadow-lg shadow-blue-900/20 min-w-[160px] flex items-center justify-center overflow-hidden">
+                        <div class="bg-slate-950 p-0 rounded-3xl text-center flex-1 shadow-lg shadow-black/40 min-w-[160px] flex items-center justify-center overflow-hidden border border-slate-800">
                             ${ddayHTML}
                         </div>
                     </div>
