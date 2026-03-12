@@ -549,7 +549,7 @@
                              ondrop="onDrop(${i})">
                             <!-- Lado Esquerdo -->
                             <div class="md:w-[45%] ${isEven ? 'text-right order-2 md:order-1' : 'flex justify-center md:justify-end order-1'}">
-                                ${isEven ? renderMilestoneCard(ms, i) : renderMilestoneIcon(ms)}
+                                ${isEven ? renderMilestoneCard(ms, i) : renderMilestoneIcon(ms, i)}
                             </div>
                             
                             <!-- Dot Central -->
@@ -557,7 +557,7 @@
                             
                             <!-- Lado Direito -->
                             <div class="md:w-[45%] ${isEven ? 'order-1 md:order-2 flex justify-center md:justify-start' : 'text-left order-2'}">
-                                ${isEven ? renderMilestoneIcon(ms) : renderMilestoneCard(ms, i)}
+                                ${isEven ? renderMilestoneIcon(ms, i) : renderMilestoneCard(ms, i)}
                             </div>
 
                             ${isEditMode ? `<button onclick="removeMilestone(${i})" class="absolute top-0 right-0 text-red-500 p-2 bg-slate-900 rounded-full border border-slate-800 z-50"><i data-lucide="trash-2"></i></button>` : ''}
@@ -613,10 +613,24 @@
             `;
         }
 
-        function renderMilestoneIcon(ms) {
+        function renderMilestoneIcon(ms, i) {
+            const icons = [
+                'check-circle', 'brain', 'landmark', 'shield', 'rocket', 'flag', 
+                'activity', 'zap', 'target', 'users', 'star', 'alert-circle', 
+                'clock', 'calendar', 'file-text', 'map', 'camera', 'bus', 'settings'
+            ];
+            
             return `
-                <div class="p-4 ${ms.status === 'completed' ? 'bg-green-600/10 text-green-500 border-green-600/20' : ms.status === 'in-progress' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 'bg-slate-800 text-slate-500 border-slate-700'} rounded-full border">
-                    <i data-lucide="${ms.icon}" size="32"></i>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="p-4 ${ms.status === 'completed' ? 'bg-green-600/10 text-green-500 border-green-600/20' : ms.status === 'in-progress' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 'bg-slate-800 text-slate-500 border-slate-700'} rounded-full border">
+                        <i data-lucide="${ms.icon || 'circle'}" size="32"></i>
+                    </div>
+                    ${isEditMode ? `
+                        <select class="bg-slate-900 text-[10px] border border-slate-700 rounded px-1 py-0.5 text-slate-400 outline-none focus:border-blue-500" 
+                                onchange="appData.milestones[${i}].icon=this.value; render()">
+                            ${icons.map(icon => `<option value="${icon}" ${ms.icon === icon ? 'selected' : ''}>${icon}</option>`).join('')}
+                        </select>
+                    ` : ''}
                 </div>
             `;
         }
