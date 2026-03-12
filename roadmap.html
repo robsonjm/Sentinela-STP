@@ -21,6 +21,23 @@
             scroll-behavior: smooth;
         }
 
+        /* D-Day Slider */
+        .dday-slider-container {
+            height: 80px;
+            overflow: hidden;
+            position: relative;
+        }
+        .dday-slide {
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dday-item {
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
         .roadmap-line { 
             position: absolute; 
             left: 50%; 
@@ -222,16 +239,18 @@
                 { label: "Operação & Jornalismo (6 meses)", value: 25000 }
             ],
             milestones: [
-                { id: 1, date: "Jan - Fev 2026", title: "A Fagulha Técnica", desc: "Desenvolvimento do App Beta e Dashboard de Transparência.", tags: ["Core 1.0", "Backend"], status: "completed", icon: "check-circle" },
-                { id: 2, date: "11 de Março 2026", title: "Dossiê e Alianças", desc: "Consolidação do histórico do Lobby e entrada de Rafael Marinho.", tags: ["Dossiê OK", "Equipe OK"], status: "in-progress", icon: "brain" },
-                { id: 3, date: "17 de Março 2026", title: "Mesa Parlamentar", desc: "Apresentação do pleito de R$ 185k e protocolo da Minuta de Lei.", tags: ["Apresentação"], status: "future", icon: "landmark" },
-                { id: 4, date: "Abril - Maio 2026", title: "Formalização e Expansão", desc: "Execução do Plano de Expansão V1 e aquisição das Workstations TI.", tags: ["Protocolo CNP", "Plano Expansão"], status: "future", icon: "shield" },
-                { id: 5, date: "Agosto 2026", title: "Soberania IoT", desc: "Implantação de 50 unidades 'Caixa Preta'.", tags: ["Sentinela News"], status: "future", icon: "rocket" }
+                { id: 1, date: "Jan - Fev 2026", targetDate: "2026-02-28", title: "A Fagulha Técnica", desc: "Desenvolvimento do App Beta e Dashboard de Transparência.", tags: ["Core 1.0", "Backend"], status: "completed", icon: "check-circle" },
+                { id: 2, date: "11 de Março 2026", targetDate: "2026-03-11", title: "Dossiê e Alianças", desc: "Consolidação do histórico do Lobby e entrada de Rafael Marinho.", tags: ["Dossiê OK", "Equipe OK"], status: "in-progress", icon: "brain" },
+                { id: 3, date: "17 de Março 2026", targetDate: "2026-03-17", title: "Mesa Parlamentar", desc: "Apresentação do pleito de R$ 185k e protocolo da Minuta de Lei.", tags: ["Apresentação"], status: "future", icon: "landmark" },
+                { id: 4, date: "Abril - Maio 2026", targetDate: "2026-05-31", title: "Formalização e Expansão", desc: "Execução do Plano de Expansão V1 e aquisição das Workstations TI.", tags: ["Protocolo CNP", "Plano Expansão"], status: "future", icon: "shield" },
+                { id: 5, date: "Agosto 2026", targetDate: "2026-08-31", title: "Soberania IoT", desc: "Implantação de 50 unidades 'Caixa Preta'.", tags: ["Sentinela News"], status: "future", icon: "rocket" }
             ]
         };
 
         window.appData = window.defaultData; // Inicia com default até carregar do Firebase
         let isEditMode = false;
+        let currentDDaySlide = 0;
+        let ddayInterval = null;
 
         function saveData() {
             if (window.saveDataToFirebase) {
@@ -275,9 +294,11 @@
 
         function addMilestone() {
             const newId = appData.milestones.length + 1;
+            const todayStr = new Date().toISOString().split('T')[0];
             appData.milestones.push({
                 id: newId,
                 date: "Nova Data",
+                targetDate: todayStr,
                 title: "Novo Marco",
                 desc: "Descrição aqui...",
                 tags: ["Tag"],
@@ -346,10 +367,64 @@
             const container = document.getElementById('app');
             const totalBudget = appData.budget.reduce((acc, curr) => acc + curr.value, 0);
             
-            // Cálculo Countdown
-            const today = new Date("2026-03-11");
-            const target = new Date(appData.targetDate);
-            const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+            // Cálculo Countdown Dinâmico (D-Days Futuros)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const futureMilestones = appData.milestones
+                .filter(ms => ms.targetDate && new Date(ms.targetDate + "T00:00:00") >= today)
+                .sort((a, b) => new Date(a.targetDate) - new Date(b.targetDate));
+
+            // Slider Logic
+            let ddayHTML = '';
+            if (futureMilestones.length > 0) {
+                ddayHTML = `
+                    <div class="dday-slider-container w-full">
+                        <div id="dday-slide" class="dday-slide" style="transform: translateY(-${currentDDaySlide * 80}px)">
+                            ${futureMilestones.map((ms, idx) => {
+                                const target = new Date(ms.targetDate + "T00:00:00");
+                                const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+                                
+                                // Color Aging: closest is white/blue, further is gray
+                                // idx 0: full opacity, white
+                                // idx 1: 0.7 opacity, slate-300
+                                // idx 2+: 0.4 opacity, slate-500
+                                const opacity = Math.max(0.3, 1 - (idx * 0.25));
+                                const textColor = idx === 0 ? 'text-white' : (idx === 1 ? 'text-slate-300' : 'text-slate-500');
+                                const labelColor = idx === 0 ? 'text-white/70' : 'text-white/30';
+
+                                return `
+                                    <div class="dday-item" style="opacity: ${opacity}">
+                                        <p class="text-[10px] font-black ${labelColor} uppercase mb-1 italic">D-Day (${ms.date})</p>
+                                        <p class="text-2xl font-black ${textColor} italic">${diffDays > 0 ? diffDays + ' DIAS' : (diffDays === 0 ? 'É HOJE' : 'CONCLUÍDO')}</p>
+                                        <p class="text-[9px] font-bold ${labelColor} uppercase mt-1 italic">${ms.title}</p>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                ddayHTML = `
+                    <div class="dday-item">
+                        <p class="text-[10px] font-black text-white/70 uppercase mb-1 italic">D-Day</p>
+                        <p class="text-2xl font-black text-white italic">CONCLUÍDO</p>
+                        <p class="text-[9px] font-bold text-white/50 uppercase mt-1 italic">Todos os Alvos</p>
+                    </div>
+                `;
+            }
+
+            // Restart Interval if not already running or milestones changed
+            if (futureMilestones.length > 1) {
+                if (ddayInterval) clearInterval(ddayInterval);
+                ddayInterval = setInterval(() => {
+                    currentDDaySlide = (currentDDaySlide + 1) % futureMilestones.length;
+                    const slider = document.getElementById('dday-slide');
+                    if (slider) {
+                        slider.style.transform = `translateY(-${currentDDaySlide * 80}px)`;
+                    }
+                }, 4000);
+            }
 
             container.innerHTML = `
                 <!-- Admin Top Bar (Simulada para Roadmap) -->
@@ -378,17 +453,15 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
-                        <div class="bg-slate-950/80 p-6 rounded-3xl border border-slate-800 text-center flex-1">
+                        <div class="bg-slate-950/80 p-6 rounded-3xl border border-slate-800 text-center flex-1 min-w-[160px]">
                             <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Status Geral</p>
                             ${isEditMode ? `<input type="number" class="edit-input text-center text-green-500 font-black" value="${appData.progress}" onchange="appData.progress=this.value; render()">` : `<p class="text-2xl font-black text-green-500 italic">${appData.progress}%</p>`}
                             <div class="w-full bg-slate-800 h-1.5 mt-2 rounded-full overflow-hidden">
                                 <div class="bg-green-500 h-full transition-all duration-1000" style="width: ${appData.progress}%"></div>
                             </div>
                         </div>
-                        <div class="bg-blue-600 p-6 rounded-3xl text-center flex-1 shadow-lg shadow-blue-900/20">
-                            <p class="text-[10px] font-black text-white/70 uppercase mb-1 italic">D-Day (17 Mar)</p>
-                            <p class="text-2xl font-black text-white italic">${diffDays > 0 ? diffDays + ' DIAS' : (diffDays === 0 ? 'É HOJE' : 'CONCLUÍDO')}</p>
-                            <p class="text-[9px] font-bold text-white/50 uppercase mt-1 italic">Próximo Alvo</p>
+                        <div class="bg-blue-600 p-0 rounded-3xl text-center flex-1 shadow-lg shadow-blue-900/20 min-w-[160px] flex items-center justify-center overflow-hidden">
+                            ${ddayHTML}
                         </div>
                     </div>
                 </header>
@@ -518,7 +591,12 @@
         function renderMilestoneCard(ms, i) {
             return `
                 <div class="milestone-card bg-slate-900/40 p-8 rounded-[2.5rem] space-y-4">
-                    ${isEditMode ? `<input class="edit-input text-[10px] font-black text-blue-400" value="${ms.date}" onchange="appData.milestones[${i}].date=this.value">` : `<span class="text-[10px] font-black ${ms.status === 'completed' ? 'text-green-500' : 'text-blue-400'} uppercase tracking-widest">${ms.date}</span>`}
+                    ${isEditMode ? `
+                        <div class="flex flex-col gap-2">
+                            <input class="edit-input text-[10px] font-black text-blue-400" value="${ms.date}" onchange="appData.milestones[${i}].date=this.value" placeholder="Texto da Data (Ex: 17 de Março)">
+                            <input type="date" class="edit-input text-[10px] font-black text-slate-400" value="${ms.targetDate || ''}" onchange="appData.milestones[${i}].targetDate=this.value">
+                        </div>
+                    ` : `<span class="text-[10px] font-black ${ms.status === 'completed' ? 'text-green-500' : 'text-blue-400'} uppercase tracking-widest">${ms.date}</span>`}
                     ${isEditMode ? `<input class="edit-input text-2xl font-black italic" value="${ms.title}" onchange="appData.milestones[${i}].title=this.value">` : `<h3 class="text-2xl font-black italic uppercase">${ms.title}</h3>`}
                     ${isEditMode ? `<textarea class="edit-input text-sm text-slate-400" onchange="appData.milestones[${i}].desc=this.value">${ms.desc}</textarea>` : `<p class="text-sm text-slate-400 leading-relaxed">${ms.desc}</p>`}
                     
