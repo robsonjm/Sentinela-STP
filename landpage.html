@@ -42,6 +42,19 @@
             background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
             background-size: 40px 40px;
         }
+
+        /* Admin Panel */
+        #admin-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            display: none; /* Hidden by default */
+        }
+        #admin-panel-header {
+            cursor: move;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -176,13 +189,43 @@
                 <div class="inline-flex items-center gap-3 mb-6 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
                     <div class="text-left">
                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Idealizador e Coordenação</p>
-                        <p class="text-lg font-black text-blue-300">Robson Jorge de Matos</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-lg font-black text-blue-300">Robson Jorge de Matos</p>
+                            <button onclick="toggleAdminPanel()" class="text-slate-700 hover:text-blue-400 transition-colors p-1" title="Acesso Restrito">
+                                <i data-lucide="lock" size="12"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <p class="text-xl font-black opacity-80 tracking-tighter">48 9 8496 8927</p>
             </div>
         </div>
     </footer>
+
+    <!-- Admin Panel (Floating & Draggable) -->
+    <div id="admin-panel" class="w-72 bg-slate-900/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+        <div id="admin-panel-header" class="flex items-center justify-between p-3 border-b border-white/10">
+            <div class="flex items-center gap-2">
+                <i data-lucide="shield-check" class="text-blue-500" size="16"></i>
+                <h3 class="text-xs font-black uppercase tracking-widest text-white">Acesso Rápido</h3>
+            </div>
+            <button onclick="toggleAdminPanel()" class="text-slate-500 hover:text-white"><i data-lucide="x" size="14"></i></button>
+        </div>
+        <div class="p-3 space-y-2">
+            <a href="admin-news.html" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <i data-lucide="newspaper" class="text-slate-400" size="18"></i>
+                <span class="text-sm font-bold text-slate-200">Gestor de Notícias</span>
+            </a>
+            <a href="roadmap.html" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <i data-lucide="map" class="text-slate-400" size="18"></i>
+                <span class="text-sm font-bold text-slate-200">Roadmap do Projeto</span>
+            </a>
+            <a href="admin-painel.html" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <i data-lucide="layout-dashboard" class="text-slate-400" size="18"></i>
+                <span class="text-sm font-bold text-slate-200">Painel de Evidências</span>
+            </a>
+        </div>
+    </div>
 
     <!-- Barra de Navegação Padrão -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
@@ -288,7 +331,39 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            makeDraggable();
         });
+
+        function toggleAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            const isHidden = panel.style.display === 'none' || panel.style.display === '';
+            panel.style.display = isHidden ? 'block' : 'none';
+        }
+
+        function makeDraggable() {
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+            let isDragging = false;
+            let offsetX, offsetY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - panel.offsetLeft;
+                offsetY = e.clientY - panel.offsetTop;
+                panel.style.transition = 'none'; // Disable transition while dragging
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                panel.style.left = `${e.clientX - offsetX}px`;
+                panel.style.top = `${e.clientY - offsetY}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                panel.style.transition = ''; // Re-enable transition
+            });
+        }
     </script>
     <script src="version-display.js"></script>
 </body>
