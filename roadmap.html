@@ -385,16 +385,14 @@
                                 const target = new Date(ms.targetDate + "T00:00:00");
                                 const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
                                 
-                                // Color Aging: closest is white/blue, further is gray
-                                // idx 0: full opacity, white
-                                // idx 1: 0.7 opacity, slate-300
-                                // idx 2+: 0.4 opacity, slate-500
-                                const opacity = Math.max(0.3, 1 - (idx * 0.25));
-                                const textColor = idx === 0 ? 'text-white' : (idx === 1 ? 'text-slate-300' : 'text-slate-500');
-                                const labelColor = idx === 0 ? 'text-white/70' : 'text-white/30';
+                                // idx 0: white
+                                // idx 1: slate-200 (light gray)
+                                // idx 2+: slate-400 (medium gray)
+                                const textColor = idx === 0 ? 'text-white' : (idx === 1 ? 'text-slate-200' : 'text-slate-400');
+                                const labelColor = idx === 0 ? 'text-blue-200' : 'text-slate-500';
 
                                 return `
-                                    <div class="dday-item" style="opacity: ${opacity}">
+                                    <div class="dday-item">
                                         <p class="text-[10px] font-black ${labelColor} uppercase mb-1 italic">D-Day (${ms.date})</p>
                                         <p class="text-2xl font-black ${textColor} italic">${diffDays > 0 ? diffDays + ' DIAS' : (diffDays === 0 ? 'É HOJE' : 'CONCLUÍDO')}</p>
                                         <p class="text-[9px] font-bold ${labelColor} uppercase mt-1 italic">${ms.title}</p>
