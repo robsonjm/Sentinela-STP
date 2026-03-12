@@ -103,6 +103,25 @@
             right: 2rem;
             z-index: 100;
         }
+
+        /* Drag and Drop Styles */
+        .milestone-row.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        .milestone-row.drag-over {
+            border-top: 4px solid var(--accent-blue);
+            padding-top: 1rem;
+        }
+
+        body.edit-mode .milestone-row {
+            cursor: grab;
+        }
+
+        body.edit-mode .milestone-row:active {
+            cursor: grabbing;
+        }
     </style>
 </head>
 <body class="p-4 md:p-12 overflow-x-hidden opacity-0 transition-opacity duration-500">
@@ -278,6 +297,50 @@
             // No render here to avoid losing focus during typing if we used inputs
         }
 
+        // Funções de Drag and Drop
+        let draggedItemIndex = null;
+
+        function onDragStart(index) {
+            if (!isEditMode) return;
+            draggedItemIndex = index;
+            event.target.closest('.milestone-row').classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onDragOver(index) {
+            if (!isEditMode) return;
+            event.preventDefault();
+            const row = event.target.closest('.milestone-row');
+            if (row && index !== draggedItemIndex) {
+                row.classList.add('drag-over');
+            }
+        }
+
+        function onDragLeave(index) {
+            const row = event.target.closest('.milestone-row');
+            if (row) {
+                row.classList.remove('drag-over');
+            }
+        }
+
+        function onDrop(targetIndex) {
+            if (!isEditMode) return;
+            event.preventDefault();
+            const row = event.target.closest('.milestone-row');
+            if (row) row.classList.remove('drag-over');
+
+            if (draggedItemIndex === null || draggedItemIndex === targetIndex) return;
+
+            const milestones = [...appData.milestones];
+            const itemToMove = milestones.splice(draggedItemIndex, 1)[0];
+            milestones.splice(targetIndex, 0, itemToMove);
+            
+            appData.milestones = milestones;
+            draggedItemIndex = null;
+            render();
+            // saveData() will be called when exiting edit mode
+        }
+
         // RENDERIZAÇÃO
         function render() {
             const container = document.getElementById('app');
@@ -408,7 +471,12 @@
                     ${appData.milestones.map((ms, i) => {
                         const isEven = i % 2 === 0;
                         return `
-                        <div class="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-0 relative">
+                        <div class="milestone-row flex flex-col md:flex-row items-center justify-between gap-8 md:gap-0 relative transition-all duration-300" 
+                             draggable="${isEditMode}" 
+                             ondragstart="onDragStart(${i})" 
+                             ondragover="onDragOver(${i})" 
+                             ondragleave="onDragLeave(${i})"
+                             ondrop="onDrop(${i})">
                             <!-- Lado Esquerdo -->
                             <div class="md:w-[45%] ${isEven ? 'text-right order-2 md:order-1' : 'flex justify-center md:justify-end order-1'}">
                                 ${isEven ? renderMilestoneCard(ms, i) : renderMilestoneIcon(ms)}
@@ -422,7 +490,7 @@
                                 ${isEven ? renderMilestoneIcon(ms) : renderMilestoneCard(ms, i)}
                             </div>
 
-                            ${isEditMode ? `<button onclick="removeMilestone(${i})" class="absolute top-0 right-0 text-red-500 p-2 bg-slate-900 rounded-full border border-slate-800"><i data-lucide="trash-2"></i></button>` : ''}
+                            ${isEditMode ? `<button onclick="removeMilestone(${i})" class="absolute top-0 right-0 text-red-500 p-2 bg-slate-900 rounded-full border border-slate-800 z-50"><i data-lucide="trash-2"></i></button>` : ''}
                         </div>
                         `
                     }).join('')}
