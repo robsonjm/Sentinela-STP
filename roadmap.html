@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap Sentinela STP - Inteligência em Movimento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700;900&display=swap');
+        
+        :root {
+            --accent-blue: #3b82f6;
+            --bg-dark: #020617;
+        }
+
+        body { 
+            font-family: 'Urbanist', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: white;
+            scroll-behavior: smooth;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(20px);
+        }
+
+        .login-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .roadmap-line { 
+            position: absolute; 
+            left: 50%; 
+            top: 0; 
+            bottom: 0; 
+            width: 2px; 
+            background: linear-gradient(to bottom, transparent, #3b82f6, #8b5cf6, #334155); 
+            transform: translateX(-50%); 
+        }
+
+        .milestone-card { 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .milestone-card:hover { 
+            border-color: var(--accent-blue); 
+            transform: translateY(-8px) scale(1.01);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .status-dot { 
+            width: 20px; 
+            height: 20px; 
+            border-radius: 50%; 
+            position: absolute; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 10; 
+            border: 4px solid var(--bg-dark); 
+        }
+
+        .completed { background-color: #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); }
+        .in-progress { background-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); animation: pulse 2s infinite; }
+        .future { background-color: #334155; }
+
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.4); opacity: 0.5; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .badge {
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            border-width: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Editor Styles */
+        .edit-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px dashed rgba(59, 130, 246, 0.5);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .admin-only { display: none; }
+        body.edit-mode .admin-only { display: inline-flex; }
+        body.edit-mode .editable { cursor: pointer; border: 1px dashed rgba(59, 130, 246, 0.3); padding: 2px; }
+
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12 overflow-x-hidden">
+
+    <!-- Login Section -->
+    <div id="login-overlay">
+        <div class="login-card text-center space-y-8">
+            <div class="space-y-2">
+                <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                    <i data-lucide="shield-check" class="text-blue-500" size="32"></i>
+                </div>
+                <h2 class="text-3xl font-black italic tracking-tighter uppercase">Acesso Restrito</h2>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Inteligência Sentinela STP</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div class="space-y-1 text-left">
+                    <label class="text-[9px] font-black text-slate-500 uppercase ml-2 tracking-widest">E-mail Corporativo</label>
+                    <input type="email" id="email" required class="login-input" placeholder="agente@sentinelastp.site">
+                </div>
+                <div class="space-y-1 text-left">
+                    <label class="text-[9px] font-black text-slate-500 uppercase ml-2 tracking-widest">Senha de Acesso</label>
+                    <input type="password" id="password" required class="login-input" placeholder="••••••••">
+                </div>
+                <button type="submit" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl uppercase text-xs tracking-[0.2em] shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2">
+                    Autenticar <i data-lucide="arrow-right" size="16"></i>
+                </button>
+            </form>
+            <p id="login-error" class="text-red-500 text-[10px] font-bold uppercase hidden"></p>
+        </div>
+    </div>
+
+    <div id="app" class="max-w-6xl mx-auto space-y-16 hidden">
+        <!-- Renderizado via JS -->
+    </div>
+
+    <div class="fab">
+        <button onclick="logout()" class="bg-red-600/20 hover:bg-red-600/40 text-red-500 p-4 rounded-full shadow-2xl flex items-center gap-2 font-black uppercase text-xs tracking-widest transition-all scale-100 hover:scale-110 mb-4">
+            <i data-lucide="log-out"></i>
+        </button>
+        <button onclick="toggleEditMode()" class="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-2xl flex items-center gap-2 font-black uppercase text-xs tracking-widest transition-all scale-100 hover:scale-110">
+            <i data-lucide="settings"></i> <span id="edit-btn-text">Modo Editor</span>
+        </button>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js?v=4";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global instances for regular script
+        window.auth = auth;
+        window.db = db;
+        window.firestore = { doc, getDoc, setDoc };
+
+        // Auth Logic
+        const loginForm = document.getElementById('login-form');
+        const loginOverlay = document.getElementById('login-overlay');
+        const appContainer = document.getElementById('app');
+        const loginError = document.getElementById('login-error');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('login-btn');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin"></i> Autenticando...`;
+            lucide.createIcons();
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                console.error("Erro no login:", error);
+                loginError.innerText = "Credenciais Inválidas";
+                loginError.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = `Autenticar <i data-lucide="arrow-right" size="16"></i>`;
+                lucide.createIcons();
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                loginOverlay.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                await loadFirebaseData();
+            } else {
+                loginOverlay.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        });
+
+        window.logout = () => {
+            signOut(auth);
+        };
+
+        // Firebase Data Sync
+        window.loadFirebaseData = async () => {
+            try {
+                const docRef = window.firestore.doc(db, "artifacts", "sentinela-stp", "private", "roadmap");
+                const docSnap = await window.firestore.getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    window.appData = docSnap.data();
+                } else {
+                    window.appData = window.defaultData;
+                    await window.saveDataToFirebase();
+                }
+                window.render();
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+            }
+        };
+
+        window.saveDataToFirebase = async () => {
+            try {
+                const docRef = window.firestore.doc(db, "artifacts", "sentinela-stp", "private", "roadmap");
+                await window.firestore.setDoc(docRef, window.appData);
+                console.log("Dados salvos no Firebase!");
+            } catch (error) {
+                console.error("Erro ao salvar dados:", error);
+                alert("Erro ao salvar no servidor. Verifique o console.");
+            }
+        };
+    </script>
+
+    <script>
+        // ESTADO INICIAL DA APLICAÇÃO (Fallback)
+        window.defaultData = {
+            progress: 52,
+            targetDate: "2026-03-17",
+            documents: [
+                { name: "Minuta de Lei V9 (Auditoria Social)", status: "Finalizado", type: "success" },
+                { name: "Dossiê: Genealogia do Lobby STP", status: "Finalizado", type: "success" },
+                { name: "Memorial Descritivo Workstations TI", status: "Aprovado", type: "info" },
+                { name: "Protocolo CNP/SLU (Viabilidade)", status: "Aguardando", type: "warning" }
+            ],
+            budget: [
+                { label: "Investimento Infra (QG)", value: 45000 },
+                { label: "Hardware IoT (50 Unidades)", value: 115000 },
+                { label: "Operação & Jornalismo (6 meses)", value: 25000 }
+            ],
+            milestones: [
+                { id: 1, date: "Jan - Fev 2026", title: "A Fagulha Técnica", desc: "Desenvolvimento do App Beta e Dashboard de Transparência.", tags: ["Core 1.0", "Backend"], status: "completed", icon: "check-circle" },
+                { id: 2, date: "11 de Março 2026", title: "Dossiê e Alianças", desc: "Consolidação do histórico do Lobby e entrada de Rafael Marinho.", tags: ["Dossiê OK", "Equipe OK"], status: "in-progress", icon: "brain" },
+                { id: 3, date: "17 de Março 2026", title: "Mesa Parlamentar", desc: "Apresentação do pleito de R$ 185k e protocolo da Minuta de Lei.", tags: ["Apresentação"], status: "future", icon: "landmark" },
+                { id: 4, date: "Abril - Maio 2026", title: "Formalização e Expansão", desc: "Execução do Plano de Expansão V1 e aquisição das Workstations TI.", tags: ["Protocolo CNP", "Plano Expansão"], status: "future", icon: "shield" },
+                { id: 5, date: "Agosto 2026", title: "Soberania IoT", desc: "Implantação de 50 unidades 'Caixa Preta'.", tags: ["Sentinela News"], status: "future", icon: "rocket" }
+            ]
+        };
+
+        window.appData = window.defaultData; // Inicia com default até carregar do Firebase
+        let isEditMode = false;
+
+        function saveData() {
+            if (window.saveDataToFirebase) {
+                window.saveDataToFirebase();
+            } else {
+                localStorage.setItem('sentinela_data', JSON.stringify(appData));
+            }
+            render();
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            document.body.classList.toggle('edit-mode', isEditMode);
+            document.getElementById('edit-btn-text').innerText = isEditMode ? "Salvar Alterações" : "Modo Editor";
+            if (!isEditMode) saveData();
+            render();
+        }
+
+        // Funções de Edição
+        function updateProgress(val) { appData.progress = val; render(); }
+        
+        function addDocument() {
+            appData.documents.push({ name: "Novo Documento", status: "Pendente", type: "warning" });
+            render();
+        }
+
+        function removeDocument(index) {
+            appData.documents.splice(index, 1);
+            render();
+        }
+
+        function addBudgetItem() {
+            appData.budget.push({ label: "Novo Item", value: 0 });
+            render();
+        }
+
+        function removeBudgetItem(index) {
+            appData.budget.splice(index, 1);
+            render();
+        }
+
+        function addMilestone() {
+            const newId = appData.milestones.length + 1;
+            appData.milestones.push({
+                id: newId,
+                date: "Nova Data",
+                title: "Novo Marco",
+                desc: "Descrição aqui...",
+                tags: ["Tag"],
+                status: "future",
+                icon: "plus"
+            });
+            render();
+        }
+
+        function removeMilestone(index) {
+            appData.milestones.splice(index, 1);
+            render();
+        }
+
+        function updateMilestone(index, field, value) {
+            appData.milestones[index][field] = value;
+            // No render here to avoid losing focus during typing if we used inputs
+        }
+
+        // RENDERIZAÇÃO
+        function render() {
+            const container = document.getElementById('app');
+            const totalBudget = appData.budget.reduce((acc, curr) => acc + curr.value, 0);
+            
+            // Cálculo Countdown
+            const today = new Date("2026-03-11");
+            const target = new Date(appData.targetDate);
+            const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+
+            container.innerHTML = `
+                <!-- Header -->
+                <header class="relative flex flex-col md:flex-row justify-between items-center gap-8 bg-slate-900/40 p-8 md:p-12 rounded-[3rem] border border-slate-800 shadow-2xl overflow-hidden">
+                    <div class="text-left space-y-4">
+                        <div class="inline-flex items-center gap-2 bg-blue-600/20 text-blue-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/30">
+                            <i data-lucide="activity" class="w-3 h-3"></i> Operação: Florianópolis Ativa
+                        </div>
+                        <h1 class="text-5xl md:text-7xl font-black tracking-tighter italic leading-none">
+                            SENTINELA <span class="text-blue-500">STP</span>
+                        </h1>
+                        <p class="text-slate-400 font-medium uppercase text-xs md:text-sm tracking-[0.3em]">Roadmap para a Soberania da Mobilidade Urbana</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
+                        <div class="bg-slate-950/80 p-6 rounded-3xl border border-slate-800 text-center flex-1">
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Status Geral</p>
+                            ${isEditMode ? `<input type="number" class="edit-input text-center text-green-500 font-black" value="${appData.progress}" onchange="appData.progress=this.value; render()">` : `<p class="text-2xl font-black text-green-500 italic">${appData.progress}%</p>`}
+                            <div class="w-full bg-slate-800 h-1.5 mt-2 rounded-full overflow-hidden">
+                                <div class="bg-green-500 h-full transition-all duration-1000" style="width: ${appData.progress}%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-blue-600 p-6 rounded-3xl text-center flex-1 shadow-lg shadow-blue-900/20">
+                            <p class="text-[10px] font-black text-white/70 uppercase mb-1 italic">D-Day (17 Mar)</p>
+                            <p class="text-2xl font-black text-white italic">${diffDays > 0 ? diffDays + ' DIAS' : (diffDays === 0 ? 'É HOJE' : 'CONCLUÍDO')}</p>
+                            <p class="text-[9px] font-bold text-white/50 uppercase mt-1 italic">Próximo Alvo</p>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Documentos e Orçamentos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel p-8 rounded-[2.5rem] border-blue-500/20">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-4 text-blue-400">
+                                <i data-lucide="file-text" size="24"></i>
+                                <h3 class="text-xl font-black uppercase italic tracking-tighter">Documentos Criados</h3>
+                            </div>
+                            <button onclick="addDocument()" class="admin-only bg-blue-600/20 text-blue-400 p-2 rounded-full hover:bg-blue-600/40 transition-all"><i data-lucide="plus"></i></button>
+                        </div>
+                        <ul class="space-y-3">
+                            ${appData.documents.map((doc, i) => `
+                                <li class="flex items-center justify-between p-3 bg-slate-950/50 rounded-2xl border border-slate-800 group">
+                                    ${isEditMode ? 
+                                        `<input class="edit-input text-xs font-bold" value="${doc.name}" onchange="appData.documents[${i}].name=this.value">` : 
+                                        `<span class="text-xs font-bold text-slate-300">${doc.name}</span>`
+                                    }
+                                    <div class="flex items-center gap-2">
+                                        <span class="badge ${doc.type === 'success' ? 'bg-green-500/10 text-green-400 border-green-500/20' : doc.type === 'warning' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}">
+                                            ${isEditMode ? 
+                                                `<select class="bg-transparent" onchange="appData.documents[${i}].status=this.value; render()">
+                                                    <option value="Finalizado">Finalizado</option>
+                                                    <option value="Aguardando">Aguardando</option>
+                                                    <option value="Aprovado">Aprovado</option>
+                                                </select>` : doc.status
+                                            }
+                                        </span>
+                                        <button onclick="removeDocument(${i})" class="admin-only text-red-500/50 hover:text-red-500"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-[2.5rem] border-purple-500/20">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-4 text-purple-400">
+                                <i data-lucide="banknote" size="24"></i>
+                                <h3 class="text-xl font-black uppercase italic tracking-tighter">Planejamento Orçamentário</h3>
+                            </div>
+                            <button onclick="addBudgetItem()" class="admin-only bg-purple-600/20 text-purple-400 p-2 rounded-full hover:bg-purple-600/40 transition-all"><i data-lucide="plus"></i></button>
+                        </div>
+                        <div class="space-y-4">
+                            ${appData.budget.map((item, i) => `
+                                <div class="flex justify-between items-end border-b border-slate-800 pb-2">
+                                    ${isEditMode ? 
+                                        `<input class="edit-input text-[10px] font-black" value="${item.label}" onchange="appData.budget[${i}].label=this.value">` : 
+                                        `<p class="text-[10px] font-black text-slate-500 uppercase">${item.label}</p>`
+                                    }
+                                    <div class="flex items-center gap-2">
+                                        ${isEditMode ? 
+                                            `<input type="number" class="edit-input text-right text-sm font-bold" value="${item.value}" onchange="appData.budget[${i}].value=Number(this.value); render()">` : 
+                                            `<p class="text-sm font-bold text-slate-200">R$ ${item.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`
+                                        }
+                                        <button onclick="removeBudgetItem(${i})" class="admin-only text-red-500/50 hover:text-red-500"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                            <div class="flex justify-between items-center p-4 bg-purple-600/10 rounded-2xl border border-purple-500/30 mt-4">
+                                <p class="text-xs font-black text-purple-400 uppercase tracking-widest">Total Pleiteado</p>
+                                <p class="text-xl font-black text-purple-400 italic">R$ ${totalBudget.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <section class="relative space-y-16 py-10">
+                    <div class="roadmap-line hidden md:block"></div>
+                    <div class="admin-only w-full flex justify-center mb-10">
+                        <button onclick="addMilestone()" class="bg-blue-600 text-white px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest hover:bg-blue-500 flex items-center gap-2">
+                            <i data-lucide="plus"></i> Adicionar Marco
+                        </button>
+                    </div>
+
+                    ${appData.milestones.map((ms, i) => {
+                        const isEven = i % 2 === 0;
+                        return `
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-0 relative">
+                            <!-- Lado Esquerdo -->
+                            <div class="md:w-[45%] ${isEven ? 'text-right order-2 md:order-1' : 'flex justify-center md:justify-end order-1'}">
+                                ${isEven ? renderMilestoneCard(ms, i) : renderMilestoneIcon(ms)}
+                            </div>
+                            
+                            <!-- Dot Central -->
+                            <div class="status-dot ${ms.status} hidden md:block"></div>
+                            
+                            <!-- Lado Direito -->
+                            <div class="md:w-[45%] ${isEven ? 'order-1 md:order-2 flex justify-center md:justify-start' : 'text-left order-2'}">
+                                ${isEven ? renderMilestoneIcon(ms) : renderMilestoneCard(ms, i)}
+                            </div>
+
+                            ${isEditMode ? `<button onclick="removeMilestone(${i})" class="absolute top-0 right-0 text-red-500 p-2 bg-slate-900 rounded-full border border-slate-800"><i data-lucide="trash-2"></i></button>` : ''}
+                        </div>
+                        `
+                    }).join('')}
+                </section>
+
+                <!-- Footer Banner -->
+                <footer class="relative bg-blue-600 p-12 md:p-16 rounded-[4rem] text-center shadow-2xl overflow-hidden group">
+                    <div class="absolute inset-0 bg-black/10"></div>
+                    <div class="relative z-10 space-y-6">
+                        <h2 class="text-2xl md:text-4xl font-black tracking-tight uppercase italic max-w-2xl mx-auto leading-tight">
+                            "Não é sobre esperar o ônibus. É sobre retomar o que é nosso."
+                        </h2>
+                        <div class="pt-8 border-t border-white/20 flex flex-wrap justify-center gap-6 md:gap-12 text-[10px] font-black uppercase tracking-[0.5em]">
+                            <span class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3 h-3"></i> Florianópolis, SC</span>
+                            <span>Instituto Sentinela STP</span>
+                            <span>SenTec Intelligence</span>
+                        </div>
+                    </div>
+                </footer>
+            `;
+            
+            lucide.createIcons();
+        }
+
+        function renderMilestoneCard(ms, i) {
+            return `
+                <div class="milestone-card bg-slate-900/40 p-8 rounded-[2.5rem] space-y-4">
+                    ${isEditMode ? `<input class="edit-input text-[10px] font-black text-blue-400" value="${ms.date}" onchange="appData.milestones[${i}].date=this.value">` : `<span class="text-[10px] font-black ${ms.status === 'completed' ? 'text-green-500' : 'text-blue-400'} uppercase tracking-widest">${ms.date}</span>`}
+                    ${isEditMode ? `<input class="edit-input text-2xl font-black italic" value="${ms.title}" onchange="appData.milestones[${i}].title=this.value">` : `<h3 class="text-2xl font-black italic uppercase">${ms.title}</h3>`}
+                    ${isEditMode ? `<textarea class="edit-input text-sm text-slate-400" onchange="appData.milestones[${i}].desc=this.value">${ms.desc}</textarea>` : `<p class="text-sm text-slate-400 leading-relaxed">${ms.desc}</p>`}
+                    
+                    <div class="flex flex-wrap ${i % 2 === 0 ? 'justify-end' : 'justify-start'} gap-2 pt-2">
+                        ${ms.tags.map(tag => `<span class="badge bg-slate-800 text-slate-400 border-slate-700">${tag}</span>`).join('')}
+                        ${isEditMode ? `<button class="text-[9px] text-blue-500 underline" onclick="const t=prompt('Nova Tag'); if(t) {appData.milestones[${i}].tags.push(t); render();}">+ tag</button>` : ''}
+                    </div>
+
+                    ${isEditMode ? `
+                        <div class="pt-4 border-t border-slate-800 flex gap-2 justify-center">
+                            <button onclick="appData.milestones[${i}].status='completed'; render()" class="text-[8px] bg-green-500/20 text-green-500 p-1 rounded">Feito</button>
+                            <button onclick="appData.milestones[${i}].status='in-progress'; render()" class="text-[8px] bg-blue-500/20 text-blue-500 p-1 rounded">Atual</button>
+                            <button onclick="appData.milestones[${i}].status='future'; render()" class="text-[8px] bg-slate-800 text-slate-500 p-1 rounded">Futuro</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderMilestoneIcon(ms) {
+            return `
+                <div class="p-4 ${ms.status === 'completed' ? 'bg-green-600/10 text-green-500 border-green-600/20' : ms.status === 'in-progress' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 'bg-slate-800 text-slate-500 border-slate-700'} rounded-full border">
+                    <i data-lucide="${ms.icon}" size="32"></i>
+                </div>
+            `;
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+</html>
