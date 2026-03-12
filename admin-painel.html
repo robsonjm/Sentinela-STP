@@ -307,7 +307,7 @@
             if (!user || user.isAnonymous) {
                 // Se for usuário anônimo tentando acessar admin, força o logout
                 if (user) signOut(auth);
-                window.location.href = 'login.html';
+                window.location.href = 'login.html?redirect=admin-painel.html';
             } else {
                 document.body.classList.remove('opacity-0');
                 const syncStatus = document.getElementById('sync-status');

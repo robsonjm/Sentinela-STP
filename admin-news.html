@@ -467,7 +467,7 @@
                 // Usuário não está logado ou é anônimo
                 console.log("Acesso negado: Usuário anônimo ou não autenticado.");
                 if (user) signOut(auth); // Forçar logout se for anônimo
-                window.location.href = "login.html";
+                window.location.href = "login.html?redirect=admin-news.html";
             }
         });
 
