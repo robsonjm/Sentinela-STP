@@ -191,7 +191,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { firebaseConfig } from "./js/config.js?v=4";
+        import { firebaseConfig } from "./js/config.js?v=3";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -248,7 +248,7 @@
         // Firebase Data Sync
         window.loadFirebaseData = async () => {
             try {
-                const docRef = window.firestore.doc(db, "artifacts", "sentinela-stp", "private", "roadmap");
+                const docRef = window.firestore.doc(db, "artifacts", "sentinela-stp", "public", "roadmap");
                 const docSnap = await window.firestore.getDoc(docRef);
                 
                 if (docSnap.exists()) {
@@ -260,17 +260,20 @@
                 window.render();
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
+                // Se der erro de permissão, usar defaultData para não quebrar a página
+                window.appData = window.defaultData;
+                window.render();
             }
         };
 
         window.saveDataToFirebase = async () => {
             try {
-                const docRef = window.firestore.doc(db, "artifacts", "sentinela-stp", "private", "roadmap");
+                const docRef = window.firestore.doc(db, "artifacts", "sentinela-stp", "public", "roadmap");
                 await window.firestore.setDoc(docRef, window.appData);
                 console.log("Dados salvos no Firebase!");
             } catch (error) {
                 console.error("Erro ao salvar dados:", error);
-                alert("Erro ao salvar no servidor. Verifique o console.");
+                alert("Erro ao salvar no servidor. Verifique as permissões do Firebase.");
             }
         };
     </script>
