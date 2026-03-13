@@ -509,7 +509,11 @@
 
         function addTask(msIndex) {
             if (!appData.milestones[msIndex].tasks) appData.milestones[msIndex].tasks = [];
-            appData.milestones[msIndex].tasks.push({ title: "Nova Tarefa", completed: false });
+            appData.milestones[msIndex].tasks.push({ 
+                title: "Nova Tarefa", 
+                completed: false,
+                budgetItemId: "" // Referência ao label do item no grupo vinculado
+            });
             render();
         }
 
@@ -823,23 +827,40 @@
                                     return `<li class="text-center py-8 text-slate-500 text-xs font-bold uppercase tracking-widest">Nenhuma tarefa pendente ✓</li>`;
                                 }
 
-                                return pendingTasks.map(task => `
-                                    <li class="flex flex-col gap-2 p-4 bg-slate-950/50 rounded-2xl border border-slate-800 group hover:border-blue-500/30 transition-all">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-3">
-                                                <button onclick="toggleTask(${task.msIdx}, ${task.tIdx})" class="text-slate-600 hover:text-green-500 transition-all">
-                                                    <i data-lucide="circle" size="16"></i>
-                                                </button>
-                                                <span class="text-sm font-bold text-slate-200">${task.title}</span>
+                                return pendingTasks.map(task => {
+                                    const ms = appData.milestones[task.msIdx];
+                                    const linkedGroup = appData.budgetGroups.find(g => g.id === ms.budgetGroupId);
+                                    let budgetItem = null;
+                                    if (linkedGroup && task.budgetItemId) {
+                                        budgetItem = linkedGroup.items.find(item => item.label === task.budgetItemId);
+                                    }
+
+                                    return `
+                                        <li class="flex flex-col gap-2 p-4 bg-slate-950/50 rounded-2xl border border-slate-800 group hover:border-blue-500/30 transition-all">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <button onclick="toggleTask(${task.msIdx}, ${task.tIdx})" class="text-slate-600 hover:text-green-500 transition-all">
+                                                        <i data-lucide="circle" size="16"></i>
+                                                    </button>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-sm font-bold text-slate-200">${task.title}</span>
+                                                        ${budgetItem ? `
+                                                            <div class="flex items-center gap-1 mt-0.5">
+                                                                <i data-lucide="banknote" size="8" class="text-purple-400"></i>
+                                                                <span class="text-[8px] font-black text-purple-400/80 uppercase">Custo: ${budgetItem.label}</span>
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                                <span class="text-[8px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded-full border border-blue-500/20 uppercase">${task.milestoneDate}</span>
                                             </div>
-                                            <span class="text-[8px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded-full border border-blue-500/20 uppercase">${task.milestoneDate}</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <i data-lucide="milestone" size="10" class="text-slate-500"></i>
-                                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Vinculado a: ${task.milestoneTitle}</span>
-                                        </div>
-                                    </li>
-                                `).join('');
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <i data-lucide="milestone" size="10" class="text-slate-500"></i>
+                                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Vinculado a: ${task.milestoneTitle}</span>
+                                            </div>
+                                        </li>
+                                    `;
+                                }).join('');
                             })()}
                         </ul>
                     </div>
@@ -1025,22 +1046,51 @@
                             <button onclick="addTask(${i})" class="admin-only text-blue-400 hover:text-blue-300"><i data-lucide="plus-circle" size="12"></i></button>
                         </div>
                         <div class="grid grid-cols-1 gap-2">
-                            ${tasks.map((task, tIdx) => `
-                                <div class="flex items-center justify-between gap-2 p-2 bg-slate-950/30 rounded-xl border border-white/5 group">
-                                    <div class="flex items-center gap-2 flex-1">
-                                        <button onclick="toggleTask(${i}, ${tIdx})" class="flex-none transition-all ${task.completed ? 'text-green-500' : 'text-slate-600 hover:text-blue-400'}">
-                                            <i data-lucide="${task.completed ? 'check-circle' : 'circle'}" size="14"></i>
-                                        </button>
-                                        ${isEditMode ? 
-                                            `<input class="edit-input text-[11px] font-medium" value="${task.title}" onchange="appData.milestones[${i}].tasks[${tIdx}].title=this.value">` : 
-                                            `<span class="text-[11px] font-medium ${task.completed ? 'text-slate-500 line-through' : 'text-slate-300'}">${task.title}</span>`
-                                        }
+                            ${tasks.map((task, tIdx) => {
+                                // Encontrar o item de orçamento vinculado, se existir
+                                let budgetItem = null;
+                                if (linkedGroup && task.budgetItemId) {
+                                    budgetItem = linkedGroup.items.find(item => item.label === task.budgetItemId);
+                                }
+
+                                return `
+                                    <div class="flex flex-col gap-1.5 p-2 bg-slate-950/30 rounded-xl border border-white/5 group">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <div class="flex items-center gap-2 flex-1">
+                                                <button onclick="toggleTask(${i}, ${tIdx})" class="flex-none transition-all ${task.completed ? 'text-green-500' : 'text-slate-600 hover:text-blue-400'}">
+                                                    <i data-lucide="${task.completed ? 'check-circle' : 'circle'}" size="14"></i>
+                                                </button>
+                                                ${isEditMode ? 
+                                                    `<input class="edit-input text-[11px] font-medium" value="${task.title}" onchange="appData.milestones[${i}].tasks[${tIdx}].title=this.value">` : 
+                                                    `<span class="text-[11px] font-medium ${task.completed ? 'text-slate-500 line-through' : 'text-slate-300'}">${task.title}</span>`
+                                                }
+                                            </div>
+                                            <button onclick="removeTask(${i}, ${tIdx})" class="admin-only opacity-0 group-hover:opacity-100 text-red-500/50 hover:text-red-500 transition-all">
+                                                <i data-lucide="x" size="12"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Link Orçamentário da Tarefa -->
+                                        ${isEditMode && linkedGroup ? `
+                                            <div class="flex items-center gap-2 ml-6">
+                                                <i data-lucide="link" size="10" class="text-slate-600"></i>
+                                                <select class="bg-transparent text-[8px] text-purple-400 border-none outline-none cursor-pointer" 
+                                                        onchange="appData.milestones[${i}].tasks[${tIdx}].budgetItemId=this.value; render()">
+                                                    <option value="">Vincular custo...</option>
+                                                    ${linkedGroup.items.map(item => `<option value="${item.label}" ${task.budgetItemId === item.label ? 'selected' : ''}>${item.label} (R$ ${item.value.toLocaleString()})</option>`).join('')}
+                                                </select>
+                                            </div>
+                                        ` : (budgetItem ? `
+                                            <div class="flex items-center gap-2 ml-6">
+                                                <div class="flex items-center gap-1 bg-purple-500/5 px-2 py-0.5 rounded border border-purple-500/10">
+                                                    <i data-lucide="banknote" size="8" class="text-purple-400"></i>
+                                                    <span class="text-[8px] font-bold text-purple-400/80 uppercase">${budgetItem.label}</span>
+                                                </div>
+                                            </div>
+                                        ` : '')}
                                     </div>
-                                    <button onclick="removeTask(${i}, ${tIdx})" class="admin-only opacity-0 group-hover:opacity-100 text-red-500/50 hover:text-red-500 transition-all">
-                                        <i data-lucide="x" size="12"></i>
-                                    </button>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
 
