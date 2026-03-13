@@ -280,6 +280,19 @@
                         data.budgetGroups = [{ id: "legacy", name: "Orçamento Geral", items: data.budget }];
                         delete data.budget;
                     }
+                    // Migração para propostas com unitValue e quantity
+                    if (data.budgetGroups) {
+                        data.budgetGroups.forEach(g => {
+                            g.items.forEach(item => {
+                                if (item.proposals) {
+                                    item.proposals.forEach(p => {
+                                        if (p.unitValue === undefined) p.unitValue = p.value || 0;
+                                        if (p.quantity === undefined) p.quantity = 1;
+                                    });
+                                }
+                            });
+                        });
+                    }
                     window.appData = data;
                 } else {
                     window.appData = window.defaultData;
@@ -450,6 +463,8 @@
             const { gIdx, iIdx } = currentProposalItem;
             appData.budgetGroups[gIdx].items[iIdx].proposals.push({
                 company: "Nova Empresa",
+                unitValue: 0,
+                quantity: 1,
                 value: 0,
                 note: ""
             });
@@ -463,10 +478,30 @@
             renderProposalsModal();
         }
 
+        function updateProposal(pIdx, field, val) {
+            if (!currentProposalItem) return;
+            const { gIdx, iIdx } = currentProposalItem;
+            const proposal = appData.budgetGroups[gIdx].items[iIdx].proposals[pIdx];
+            proposal[field] = val;
+            
+            // Recalcular o total da proposta
+            const uv = proposal.unitValue || 0;
+            const q = proposal.quantity || 1;
+            proposal.value = uv * q;
+            
+            renderProposalsModal();
+        }
+
         function useProposalValue(pIdx) {
             if (!currentProposalItem) return;
             const { gIdx, iIdx } = currentProposalItem;
             const proposal = appData.budgetGroups[gIdx].items[iIdx].proposals[pIdx];
+            
+            // Garantir que o valor total está atualizado
+            const uv = proposal.unitValue || 0;
+            const q = proposal.quantity || 1;
+            proposal.value = uv * q;
+            
             appData.budgetGroups[gIdx].items[iIdx].value = proposal.value;
             render();
             renderProposalsModal();
@@ -533,7 +568,7 @@
                     <div class="space-y-4">
                         ${proposals.map((p, pIdx) => `
                             <div class="p-4 bg-slate-900/50 rounded-2xl border ${item.value === p.value ? 'border-blue-500/50' : 'border-slate-800'} relative group">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div class="space-y-1">
                                         <label class="text-[9px] font-black text-slate-500 uppercase">Empresa / Proponente</label>
                                         ${isEditMode ? 
@@ -542,16 +577,33 @@
                                         }
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black text-slate-500 uppercase">Valor Ofertado</label>
+                                        <label class="text-[9px] font-black text-slate-500 uppercase">Valor Unitário</label>
+                                        ${isEditMode ? 
+                                            `<input type="number" class="edit-input text-sm font-bold text-blue-400" value="${p.unitValue || 0}" onchange="updateProposal(${pIdx}, 'unitValue', Number(this.value))">` :
+                                            `<p class="text-sm font-bold text-blue-400">R$ ${(p.unitValue || 0).toLocaleString('pt-BR')}</p>`
+                                        }
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-slate-500 uppercase">Quantidade</label>
                                         <div class="flex items-center gap-2">
                                             ${isEditMode ? 
-                                                `<input type="number" class="edit-input text-sm font-bold text-blue-400" value="${p.value}" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].proposals[${pIdx}].value=Number(this.value); renderProposalsModal()">` :
-                                                `<p class="text-sm font-bold text-blue-400">R$ ${p.value.toLocaleString('pt-BR')}</p>`
+                                                `<input type="number" class="edit-input text-sm font-bold text-blue-400 w-20" value="${p.quantity || 1}" onchange="updateProposal(${pIdx}, 'quantity', Number(this.value))">` :
+                                                `<p class="text-sm font-bold text-blue-400">${p.quantity || 1}</p>`
                                             }
-                                            <button onclick="useProposalValue(${pIdx})" class="admin-only text-[9px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded-lg hover:bg-blue-600/40 transition-all uppercase font-black">Usar este</button>
                                         </div>
                                     </div>
-                                    <div class="col-span-1 md:col-span-2 space-y-1">
+                                    
+                                    <div class="col-span-1 md:col-span-3 flex justify-between items-center bg-black/20 p-3 rounded-xl">
+                                        <div class="flex flex-col">
+                                            <label class="text-[8px] font-black text-slate-600 uppercase">Valor Total da Proposta</label>
+                                            <p class="text-lg font-black text-blue-500">R$ ${(p.value || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                                        </div>
+                                        <button onclick="useProposalValue(${pIdx})" class="admin-only bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-blue-900/20">
+                                            Usar este valor
+                                        </button>
+                                    </div>
+
+                                    <div class="col-span-1 md:col-span-3 space-y-1">
                                         <label class="text-[9px] font-black text-slate-500 uppercase">Observações / Detalhes</label>
                                         ${isEditMode ? 
                                             `<textarea class="edit-input text-[11px] h-16" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].proposals[${pIdx}].note=this.value">${p.note || ''}</textarea>` :
@@ -562,7 +614,7 @@
                                 <button onclick="removeProposal(${pIdx})" class="admin-only absolute top-4 right-4 text-red-500/50 hover:text-red-500 transition-all">
                                     <i data-lucide="trash-2" size="14"></i>
                                 </button>
-                                ${item.value === p.value ? `<div class="absolute -top-2 -right-2 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Valor Selecionado</div>` : ''}
+                                ${item.value === p.value ? `<div class="absolute -top-2 -left-2 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase shadow-lg border border-blue-400">Selecionado</div>` : ''}
                             </div>
                         `).join('')}
                     </div>
