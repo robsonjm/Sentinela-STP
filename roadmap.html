@@ -139,6 +139,43 @@
         body.edit-mode .milestone-row:active {
             cursor: grabbing;
         }
+
+        /* Add Milestone Between Zone */
+        .add-milestone-zone {
+            height: 24px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: -8px 0;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .add-milestone-zone:hover {
+            opacity: 1;
+        }
+
+        .add-milestone-btn {
+            background: var(--accent-blue);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            cursor: pointer;
+            border: 2px solid var(--bg-dark);
+            transition: transform 0.2s;
+        }
+
+        .add-milestone-btn:hover {
+            transform: scale(1.2);
+            background: #60a5fa;
+        }
     </style>
 </head>
 <body class="p-4 md:p-12 overflow-x-hidden opacity-0 transition-opacity duration-500">
@@ -380,9 +417,13 @@
         }
 
         function addMilestone() {
-            const newId = appData.milestones.length + 1;
+            addMilestoneAt(appData.milestones.length);
+        }
+
+        function addMilestoneAt(index) {
+            const newId = Date.now();
             const todayStr = new Date().toISOString().split('T')[0];
-            appData.milestones.push({
+            const newMilestone = {
                 id: newId,
                 date: "Nova Data",
                 targetDate: todayStr,
@@ -393,7 +434,8 @@
                 icon: "plus",
                 tasks: [],
                 budgetGroupId: ""
-            });
+            };
+            appData.milestones.splice(index, 0, newMilestone);
             render();
         }
 
@@ -652,15 +694,19 @@
                 <!-- Timeline -->
                 <section class="relative space-y-16 py-10">
                     <div class="roadmap-line hidden md:block"></div>
-                    <div class="admin-only w-full flex justify-center mb-10">
-                        <button onclick="addMilestone()" class="bg-blue-600 text-white px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest hover:bg-blue-500 flex items-center gap-2">
-                            <i data-lucide="plus"></i> Adicionar Marco
-                        </button>
-                    </div>
 
                     ${appData.milestones.map((ms, i) => {
                         const isEven = i % 2 === 0;
                         return `
+                        <!-- Hover Zone to add BEFORE this milestone -->
+                        ${isEditMode ? `
+                            <div class="add-milestone-zone">
+                                <div class="add-milestone-btn" onclick="addMilestoneAt(${i})" title="Inserir marco aqui">
+                                    <i data-lucide="plus" size="14"></i>
+                                </div>
+                            </div>
+                        ` : ''}
+
                         <div class="milestone-row flex flex-col md:flex-row items-center justify-between gap-8 md:gap-0 relative transition-all duration-300" 
                              draggable="${isEditMode}" 
                              ondragstart="onDragStart(${i})" 
@@ -684,6 +730,15 @@
                         </div>
                         `
                     }).join('')}
+
+                    <!-- Final Hover Zone -->
+                    ${isEditMode ? `
+                        <div class="add-milestone-zone">
+                            <div class="add-milestone-btn" onclick="addMilestoneAt(appData.milestones.length)" title="Inserir marco no final">
+                                <i data-lucide="plus" size="14"></i>
+                            </div>
+                        </div>
+                    ` : ''}
                 </section>
 
                 <!-- Footer Banner -->
