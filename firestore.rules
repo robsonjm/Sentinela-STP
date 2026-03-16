@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- REGRAS DO PROJETO SENTINELA STP ---
+
+    // 1. Roadmap Estratégico
+    // Permite leitura e escrita apenas para usuários autenticados (Login Agente)
+    match /artifacts/sentinela-stp/public/roadmap {
+      allow read, write: if request.auth != null;
+    }
+
+    // 2. Notícias e Artigos (Admin News)
+    // Público pode ler, mas apenas administradores logados podem criar/editar/excluir
+    match /artifacts/sentinela-stp/public/data/artigos/{articleId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 3. Evidências e Relatos (App Principal)
+    // Qualquer pessoa (mesmo anônima) pode enviar evidências. 
+    // A leitura das evidências brutas é restrita aos agentes logados.
+    match /artifacts/sentinela-stp/public/data/evidencias/{evidenciaId} {
+      allow create: if true; 
+      allow read: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+
+    // 4. Configurações Globais (Se houver)
+    match /artifacts/sentinela-stp/public/config/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 5. Patronos (Para Testes)
+    // Leitura pública para o Quadro de Honra e Feed.
+    // Criação pública para permitir que o script de simulação funcione.
+    match /artifacts/sentinela-stp/public/data/patrons/{patronId} {
+      allow read: if true;
+      allow create: if true; // ATENÇÃO: Apenas para testes. Em produção, restrinja a escrita.
+      allow update, delete: if false;
+    }
+
+    // Regra de segurança padrão: bloqueia tudo o que não foi definido acima
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

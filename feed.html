@@ -705,7 +705,6 @@
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === 'added') {
                         const data = change.doc.data();
-                        // Adicionar ID ao objeto
                         const newsCard = createNewsFeedCard({ ...data, id: change.doc.id });
                         insertSorted(container, newsCard);
                         hasChanges = true;
@@ -717,14 +716,125 @@
             });
         };
 
-        const startLiveFeed = () => {
-            // Cancelar listener anterior se existir
-            if (unsubscribeLiveFeed) {
-                unsubscribeLiveFeed();
-                unsubscribeLiveFeed = null;
+        // --- SISTEMA DE PATRONOS NO FEED ---
+        let unsubscribePatronsFeed = null;
+
+        const createPatronFeedCard = (patron) => {
+            const el = document.createElement('div');
+            
+            // Diferenciar estilos e cores por plano
+            let borderClass = 'border-slate-300';
+            let bgClass = 'bg-white';
+            let icon = 'users';
+            let iconColor = 'text-slate-400';
+            let badge = 'Apoiador';
+            let badgeClass = 'bg-slate-100 text-slate-600';
+
+            if (patron.plan === 'Patrono') {
+                borderClass = 'border-purple-500 ring-2 ring-purple-500/20';
+                bgClass = 'bg-slate-900';
+                icon = 'crown';
+                iconColor = 'text-purple-500';
+                badge = 'Mecenas';
+                badgeClass = 'bg-purple-600 text-white';
+            } else if (patron.plan === 'Sentinela STP') {
+                borderClass = 'border-orange-500 shadow-lg shadow-orange-900/10';
+                bgClass = 'bg-slate-950';
+                icon = 'zap';
+                iconColor = 'text-orange-500';
+                badge = 'Sentinela Gold';
+                badgeClass = 'bg-orange-600 text-white';
+            } else if (patron.plan === 'Fiscal Independente') {
+                borderClass = 'border-blue-500';
+                bgClass = 'bg-white';
+                icon = 'shield';
+                iconColor = 'text-blue-500';
+                badge = 'Fiscal';
+                badgeClass = 'bg-blue-600 text-white';
             }
 
-            // Resetar estado
+            el.className = `${bgClass} border-l-4 ${borderClass} rounded-2xl p-6 mb-6 relative overflow-hidden group transition-all hover:scale-[1.02]`;
+            
+            if (patron.timestamp && patron.timestamp.seconds) {
+                el.dataset.timestamp = patron.timestamp.seconds * 1000;
+            } else {
+                el.dataset.timestamp = Date.now();
+            }
+
+            const isDark = bgClass.includes('slate');
+            const textColor = isDark ? 'text-white' : 'text-slate-900';
+            const subTextColor = isDark ? 'text-slate-400' : 'text-slate-500';
+
+            el.innerHTML = `
+                <div class="absolute -right-4 -bottom-4 ${iconColor} opacity-10 group-hover:opacity-20 transition-all duration-700 rotate-12">
+                    <i data-lucide="${icon}" width="140" height="120" stroke-width="1"></i>
+                </div>
+                <div class="relative z-10 flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="${badgeClass} text-[8px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">
+                                ${badge}
+                            </span>
+                            <span class="${subTextColor} text-[9px] font-bold uppercase tracking-widest">Novo Membro</span>
+                        </div>
+                        <span class="${subTextColor} text-[9px] font-bold uppercase tracking-widest flex items-center gap-1">
+                            <i data-lucide="clock" size="10"></i>
+                            ${patron.data_str || 'Agora'}
+                        </span>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-black ${textColor} leading-tight">
+                            ${patron.name || 'Anônimo'} <span class="font-medium ${subTextColor}">acaba de se tornar um Patrono!</span>
+                        </h3>
+                        <p class="${subTextColor} text-xs italic font-medium leading-relaxed">
+                            "${patron.message || 'Contribuindo para a soberania da mobilidade em Florianópolis.'}"
+                        </p>
+                    </div>
+                    <div class="pt-2 flex items-center gap-2">
+                        <div class="h-px bg-slate-200 flex-1 opacity-20"></div>
+                        <span class="text-[8px] font-black ${iconColor} uppercase tracking-[0.2em]">Instituto Sentinela STP</span>
+                    </div>
+                </div>
+            `;
+            return el;
+        };
+
+        const startPatronsFeedIntegration = () => {
+            if (unsubscribePatronsFeed) {
+                unsubscribePatronsFeed();
+                unsubscribePatronsFeed = null;
+            }
+
+            const qPatrons = query(
+                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'patrons'),
+                orderBy('timestamp', 'desc'),
+                limit(10)
+            );
+
+            unsubscribePatronsFeed = onSnapshot(qPatrons, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const data = change.doc.data();
+                        // Filtrar planos que NÃO devem aparecer no feed (Observador)
+                        if (data.plan !== 'Observador') {
+                            const patronCard = createPatronFeedCard({ ...data, id: change.doc.id });
+                            insertSorted(container, patronCard);
+                        }
+                    }
+                });
+                lucide.createIcons();
+            });
+        };
+
+        const startLiveFeed = () => {
+            // Cancelar listeners anteriores
+            if (unsubscribeLiveFeed) { unsubscribeLiveFeed(); unsubscribeLiveFeed = null; }
+            
+            // Reiniciar sub-feeds
+            startNewsFeedIntegration();
+            startPatronsFeedIntegration();
+            
+            // Resetar estado do feed principal
             container.innerHTML = `
                 <div id="initial-loader" class="flex flex-col items-center justify-center py-20 text-slate-300">
                     <i data-lucide="loader-2" class="animate-spin mb-4" size="48"></i>
