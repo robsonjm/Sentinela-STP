@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinela STP - Pagamento Concluído</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-[3rem] p-12 text-center space-y-8 shadow-2xl">
+        <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-3xl flex items-center justify-center mx-auto">
+            <i data-lucide="check-circle" size="48"></i>
+        </div>
+        
+        <div class="space-y-2">
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase">OBRIGADO, <span class="text-blue-500">PATRONO!</span></h1>
+            <p class="text-slate-400 text-sm font-medium leading-relaxed">
+                Seu apoio foi processado com sucesso. Você agora faz parte da rede de inteligência Sentinela STP.
+            </p>
+        </div>
+
+        <div class="p-4 bg-blue-600/10 rounded-2xl border border-blue-500/20">
+            <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Próximos Passos</p>
+            <p class="text-[11px] text-slate-300 mt-1">Seu nome aparecerá na lista de patronos em breve.</p>
+        </div>
+
+        <a href="index.html" class="block w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/40">
+            Voltar ao Sistema
+        </a>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

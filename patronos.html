@@ -6,6 +6,7 @@
     <title>Sentinela STP - Patronos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
@@ -175,21 +176,70 @@
     <script type="module">
         import { mercadopagoConfig } from "./js/config.js?v=3";
         
-        // Expor chaves necessárias para as funções globais se necessário, 
-        // mas idealmente processar tudo aqui dentro do módulo.
-        window.mpConfig = mercadopagoConfig;
+        // Inicializar Mercado Pago
+        const mp = new MercadoPago(mercadopagoConfig.publicKey, {
+            locale: 'pt-BR'
+        });
 
-        window.checkout = (amount, planName) => {
-            console.log(`Iniciando checkout para ${planName} no valor de R$ ${amount}`);
-            alert(`Integração Mercado Pago: Criando preferência de pagamento para ${planName}...`);
-            // Aqui seria a chamada ao backend ou criação de preferência via SDK Client
-            // Como estamos puramente no frontend, redirecionaríamos para o link gerado.
+        window.checkout = async (amount, planName) => {
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin" size="14"></i> Processando...`;
+                lucide.createIcons();
+
+                // Criar preferência de pagamento via API do Mercado Pago
+                // Nota: Em um ambiente real, isso DEVE ser feito no BACKEND por segurança.
+                // Como este é um MVP frontend, usaremos o endpoint de checkout.
+                const preference = {
+                    items: [
+                        {
+                            title: `Assinatura Sentinela STP: ${planName}`,
+                            unit_price: Number(amount),
+                            quantity: 1,
+                            currency_id: 'BRL'
+                        }
+                    ],
+                    back_urls: {
+                        success: window.location.origin + "/success.html",
+                        failure: window.location.origin + "/patronos.html",
+                        pending: window.location.origin + "/patronos.html"
+                    },
+                    auto_return: "approved"
+                };
+
+                const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${mercadopagoConfig.accessToken}`
+                    },
+                    body: JSON.stringify(preference)
+                });
+
+                const data = await response.json();
+
+                if (data.init_point) {
+                    window.location.href = data.init_point;
+                } else {
+                    throw new Error("Erro ao gerar link de pagamento");
+                }
+
+            } catch (error) {
+                console.error("Erro no checkout:", error);
+                alert("Ocorreu um erro ao processar seu pagamento. Tente novamente mais tarde.");
+                btn.disabled = false;
+                btn.innerText = originalText;
+                lucide.createIcons();
+            }
         };
 
-        window.checkoutCustom = () => {
+        window.checkoutCustom = async () => {
             const val = document.getElementById('custom-val').value;
             if (val >= 65) {
-                window.checkout(val, 'Sentinela Patrono');
+                await window.checkout(val, 'Sentinela Patrono');
             } else {
                 alert('O valor para Sentinela Patrono deve ser no mínimo R$ 65,00');
             }
