@@ -50,12 +50,9 @@
                         <li class="flex items-center gap-2"><i data-lucide="check" size="12" class="text-blue-500"></i> Apoio à infraestrutura</li>
                     </ul>
                 </div>
-                <div class="mt-8 space-y-2">
+                <div class="mt-8 space-y-4">
                     <p class="text-2xl font-black italic">R$ 10<span class="text-xs text-slate-500">,00/mês</span></p>
-                    <div class="flex items-center gap-2">
-                        <button onclick="checkout(this, 10, 'Observador')" class="w-full bg-slate-800 hover:bg-blue-600 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Assinar</button>
-                        <button onclick="simulatePatron('Observador', 10)" class="bg-slate-700/50 hover:bg-slate-600 p-3 rounded-xl text-slate-400 transition-all" title="Simular Patrono Observador"><i data-lucide="plus-circle"></i></button>
-                    </div>
+                    <button onclick="checkout(this, 10, 'Observador')" class="w-full bg-slate-800 hover:bg-blue-600 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Assinar</button>
                 </div>
             </div>
 
@@ -75,12 +72,9 @@
                         <li class="flex items-center gap-2"><i data-lucide="check" size="12" class="text-blue-500"></i> Acesso antecipado a dossiês</li>
                     </ul>
                 </div>
-                <div class="mt-8 space-y-2">
+                <div class="mt-8 space-y-4">
                     <p class="text-2xl font-black italic">R$ 25<span class="text-xs text-slate-500">,00/mês</span></p>
-                    <div class="flex items-center gap-2">
-                        <button onclick="checkout(this, 25, 'Fiscal Independente')" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/40">Assinar</button>
-                        <button onclick="simulatePatron('Fiscal Independente', 25)" class="bg-blue-900/40 hover:bg-blue-800 p-3 rounded-xl text-blue-400 transition-all" title="Simular Patrono Fiscal"><i data-lucide="plus-circle"></i></button>
-                    </div>
+                    <button onclick="checkout(this, 25, 'Fiscal Independente')" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/40">Assinar</button>
                 </div>
             </div>
 
@@ -103,12 +97,9 @@
                         <li class="flex items-center gap-2"><i data-lucide="check" size="12" class="text-orange-500"></i> Participação em reuniões mensais</li>
                     </ul>
                 </div>
-                <div class="mt-8 space-y-2">
+                <div class="mt-8 space-y-4">
                     <p class="text-2xl font-black italic">R$ 50<span class="text-xs text-slate-500">,00/mês</span></p>
-                    <div class="flex items-center gap-2">
-                        <button onclick="checkout(this, 50, 'Sentinela STP')" class="w-full bg-orange-600 hover:bg-orange-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-900/40">Assinar</button>
-                        <button onclick="simulatePatron('Sentinela STP', 50)" class="bg-orange-900/40 hover:bg-orange-800 p-3 rounded-xl text-orange-400 transition-all" title="Simular Patrono Sentinela STP"><i data-lucide="plus-circle"></i></button>
-                    </div>
+                    <button onclick="checkout(this, 50, 'Sentinela STP')" class="w-full bg-orange-600 hover:bg-orange-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-900/40">Assinar</button>
                 </div>
             </div>
 
@@ -128,15 +119,12 @@
                         <li class="flex items-center gap-2"><i data-lucide="check" size="12" class="text-purple-500"></i> Relatório de impacto trimestral</li>
                     </ul>
                 </div>
-                <div class="mt-8 space-y-2">
+                <div class="mt-8 space-y-4">
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">R$</span>
                         <input type="number" id="custom-val" min="65" placeholder="65+" class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-8 pr-4 py-2 text-sm font-black outline-none focus:border-purple-500 transition-all">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="checkoutCustom(this)" class="w-full bg-purple-600 hover:bg-purple-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-900/40">Assinar</button>
-                        <button onclick="simulatePatron('Patrono', document.getElementById('custom-val').value || 150)" class="bg-purple-900/40 hover:bg-purple-800 p-3 rounded-xl text-purple-400 transition-all" title="Simular Patrono Mecenas"><i data-lucide="plus-circle"></i></button>
-                    </div>
+                    <button onclick="checkoutCustom(this)" class="w-full bg-purple-600 hover:bg-purple-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-purple-900/40">Assinar</button>
                 </div>
             </div>
 
@@ -191,33 +179,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // --- LÓGICA DE SIMULAÇÃO (TESTE) ---
-        window.simulatePatron = async (plan, amount) => {
-            const names = ["Ana Silva", "Beto Pereira", "Carlos Lima", "Dora Santos", "Enzo Souza"];
-            const messages = [
-                "Apoiando a transparência!", 
-                "Floripa merece mais fiscalização.", 
-                "Juntos somos mais fortes.", 
-                "Mobilidade é um direito!", 
-                "Fiscalizando o lobby técnico."
-            ];
-            
-            try {
-                await addDoc(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'patrons'), {
-                    name: names[Math.floor(Math.random() * names.length)],
-                    plan: plan,
-                    amount: amount,
-                    message: messages[Math.floor(Math.random() * messages.length)],
-                    timestamp: serverTimestamp(),
-                    data_str: new Date().toLocaleDateString('pt-BR')
-                });
-                console.log(`Patrono simulado: ${plan}`);
-                lucide.createIcons();
-            } catch (e) {
-                console.error("Erro na simulação:", e);
-            }
-        };
 
         // Inicializar Mercado Pago
         const mp = new MercadoPago(mercadopagoConfig.publicKey, {
