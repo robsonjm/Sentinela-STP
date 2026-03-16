@@ -243,6 +243,35 @@
             }
         };
 
+        // Limpeza de parâmetros do Mercado Pago na URL
+        const cleanUrl = () => {
+            const url = new URL(window.location.href);
+            
+            // Notificar o usuário se o pagamento falhou ou está pendente
+            const status = url.searchParams.get('status');
+            if (status === 'failure') {
+                alert("O pagamento não pôde ser processado. Verifique seus dados ou tente outro método.");
+            } else if (status === 'pending') {
+                alert("Seu pagamento está em processamento pelo Mercado Pago. Avisaremos assim que for confirmado.");
+            }
+
+            const params = ['collection_id', 'collection_status', 'payment_id', 'status', 'external_reference', 'payment_type', 'merchant_order_id', 'preference_id', 'site_id', 'processing_mode', 'merchant_account_id'];
+            
+            let hasParams = false;
+            params.forEach(p => {
+                if (url.searchParams.has(p)) {
+                    url.searchParams.delete(p);
+                    hasParams = true;
+                }
+            });
+
+            if (hasParams) {
+                window.history.replaceState({}, document.title, url.pathname + url.search);
+                console.log("URL limpa de parâmetros do Mercado Pago.");
+            }
+        };
+
+        cleanUrl();
         lucide.createIcons();
     </script>
 </body>
