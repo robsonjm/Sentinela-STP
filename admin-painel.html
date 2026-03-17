@@ -118,8 +118,9 @@
             <i data-lucide="shield-alert"></i> Sentinela Admin
         </h1>
         <div class="flex items-center gap-4">
+            <div id="sync-status" class="text-[10px] font-mono text-slate-400 hidden md:flex items-center gap-2"></div>
             <span id="user-email" class="text-[10px] font-mono text-slate-400 hidden md:inline-block"></span>
-            <a href="login.html" class="text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+            <a id="logout-btn" href="login.html" class="text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">
                 <i data-lucide="log-out" size="14"></i> Sair
             </a>
         </div>
@@ -259,7 +260,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig } from "./js/config.js?v=3";
 
         // Expose functions to global scope
@@ -282,7 +283,7 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
         const appId = 'sentinela-stp';
 
         const map = L.map('map').setView([-27.5945, -48.5477], 12);
@@ -311,7 +312,7 @@
             } else {
                 document.body.classList.remove('opacity-0');
                 const syncStatus = document.getElementById('sync-status');
-                syncStatus.innerHTML = `
+                if (syncStatus) syncStatus.innerHTML = `
                     <div class="flex flex-col items-end">
                         <span class="flex items-center gap-1 text-green-400">
                             <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> 
@@ -324,9 +325,13 @@
             }
         });
 
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = 'login.html');
-        });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                signOut(auth).finally(() => window.location.href = 'login.html');
+            });
+        }
 
         function loadData() {
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'), limit(1000));

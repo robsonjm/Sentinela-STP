@@ -165,8 +165,8 @@
                 <span class="text-[9px] font-black uppercase">Início</span>
             </a>
             <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
-                <i data-lucide="newspaper" size="20"></i>
-                <span class="text-[9px] font-black uppercase">Notícias</span>
+                <i data-lucide="message-square" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Feed</span>
             </a>
             <a href="painel.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
                 <i data-lucide="bar-chart" size="20" class="fill-current"></i>
@@ -186,7 +186,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig } from "./js/config.js?v=3";
 
         // Expose functions to global scope
@@ -209,7 +209,7 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
         const appId = 'sentinela-stp';
 
         const map = L.map('map').setView([-27.5945, -48.5477], 12);
