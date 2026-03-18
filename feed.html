@@ -487,12 +487,8 @@
         };
 
         const getUserId = () => {
-            let id = localStorage.getItem('sentinela_uid');
-            if (!id) {
-                id = 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('sentinela_uid', id);
-            }
-            return id;
+            const u = auth.currentUser;
+            return u && u.uid ? u.uid : null;
         };
 
         const createCard = (item, isNew = false) => {
@@ -518,7 +514,8 @@
             
             // Reações
             const reactions = item.reactions || {};
-            const userReaction = localStorage.getItem(`reacted_${item.id}`);
+            const userId = getUserId();
+            const userReaction = userId ? localStorage.getItem(`reacted_${item.id}_${userId}`) : null;
 
             let reactionsHtml = '';
             for (const [key, config] of Object.entries(REACTION_TYPES)) {
@@ -579,10 +576,15 @@
         };
 
         window.handleReaction = async (event, docId, emojiType) => {
+            const userId = getUserId();
+            if (!userId) {
+                window.showToast ? window.showToast("Conectando... tente novamente") : alert("Conectando... tente novamente");
+                return;
+            }
+
             const btn = event.currentTarget;
             const container = btn.parentElement;
-            const userId = getUserId();
-            const storageKey = `reacted_${docId}`;
+            const storageKey = `reacted_${docId}_${userId}`;
             const previousReaction = localStorage.getItem(storageKey);
             
             // --- ATUALIZAÇÃO OTIMISTA DA UI ---
