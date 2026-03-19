@@ -105,7 +105,12 @@
                 
                 // Obter parâmetro de redirecionamento ou padrão para admin-news
                 const urlParams = new URLSearchParams(window.location.search);
-                const redirectTo = urlParams.get('redirect') || 'admin-news.html';
+                const rawRedirectTo = urlParams.get('redirect');
+                const redirectTo = (() => {
+                    const t = rawRedirectTo == null ? '' : String(rawRedirectTo).trim();
+                    if (/^[a-z0-9-]+\.html$/i.test(t)) return t;
+                    return 'admin-news.html';
+                })();
                 
                 window.location.href = redirectTo;
             } catch (error) {

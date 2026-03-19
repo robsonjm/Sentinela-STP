@@ -263,11 +263,36 @@
         import { initializeFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig } from "./js/config.js?v=3";
 
+        function escapeHtml(value) {
+            const s = value == null ? '' : String(value);
+            return s.replace(/[&<>"']/g, (c) => {
+                if (c === '&') return '&amp;';
+                if (c === '<') return '&lt;';
+                if (c === '>') return '&gt;';
+                if (c === '"') return '&quot;';
+                return '&#39;';
+            });
+        }
+
+        function sanitizeUrl(value) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return null;
+            try {
+                const u = new URL(s, window.location.origin);
+                if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+                return u.toString();
+            } catch {
+                return null;
+            }
+        }
+
         // Expose functions to global scope
         window.openImageModal = (src) => {
             const modal = document.getElementById('image-modal');
             const img = document.getElementById('modal-img');
-            img.src = src;
+            const safeSrc = sanitizeUrl(src);
+            if (!safeSrc) return;
+            img.src = safeSrc;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.style.overflow = 'hidden';
@@ -312,13 +337,14 @@
             } else {
                 document.body.classList.remove('opacity-0');
                 const syncStatus = document.getElementById('sync-status');
+                const safeEmail = escapeHtml(user.email || '');
                 if (syncStatus) syncStatus.innerHTML = `
                     <div class="flex flex-col items-end">
                         <span class="flex items-center gap-1 text-green-400">
                             <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> 
                             Admin Conectado
                         </span>
-                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">${user.email}</span>
+                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">${safeEmail}</span>
                     </div>
                 `;
                 loadData();
@@ -475,9 +501,10 @@
                         
                         if (log.relato_pessoal) {
                             const shortText = log.relato_pessoal.length > 20 ? log.relato_pessoal.substring(0, 20) + '...' : log.relato_pessoal;
+                            const safeShortText = escapeHtml(shortText);
                             markerHtml = `
                                 <div class="relative w-0 h-0 overflow-visible">
-                                    <div class="comic-bubble" style="bottom: 36px; white-space: nowrap; width: auto; min-width: 100px; max-width: 160px;">${shortText}</div>
+                                    <div class="comic-bubble" style="bottom: 36px; white-space: nowrap; width: auto; min-width: 100px; max-width: 160px;">${safeShortText}</div>
                                     <div class="${bgColor} w-8 h-8 rounded-full flex items-center justify-center shadow-md border-2 border-white absolute -left-4 -top-4 transition-transform hover:scale-110 z-10">
                                         ${iconSvg}
                                     </div>
@@ -501,10 +528,20 @@
                         marker = L.marker([coords[0], coords[1]], { icon: customMarker });
 
                         // CONTEÚDO DO DETALHAMENTO AO CLICAR
+                        const safeType = escapeHtml(type || '');
+                        const safePrefixo = escapeHtml(prefixo || '');
+                        const safeLinha = escapeHtml(log.linha || '');
+                        const safeTemp = escapeHtml(log.temp_interna || '');
+                        const safeSintomas = escapeHtml(log.sintomas || '');
+                        const safeRelato = escapeHtml(log.relato_pessoal || '');
+                        const safeFoto = sanitizeUrl(log.foto_evidencia);
+                        const safeData = escapeHtml(log.data || '');
+                        const safeHora = escapeHtml(log.hora || '');
+                        const safeIdJson = JSON.stringify(String(log.id || ''));
                         const popupContent = `
                             <div class="p-2 min-w-[200px]">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">${type}</p>
-                                <h4 class="text-sm font-black text-slate-800 mb-2">#${prefixo} - ${log.linha}</h4>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">${safeType}</p>
+                                <h4 class="text-sm font-black text-slate-800 mb-2">#${safePrefixo} - ${safeLinha}</h4>
                                 <div class="grid grid-cols-2 gap-2 mb-3">
                                     <div class="bg-slate-50 p-2 rounded-lg text-center">
                                         <p class="text-[9px] font-bold text-slate-400 uppercase">Ruído</p>
@@ -512,31 +549,31 @@
                                     </div>
                                     <div class="bg-slate-50 p-2 rounded-lg text-center">
                                         <p class="text-[9px] font-bold text-slate-400 uppercase">Temp.</p>
-                                        <p class="text-sm font-black text-blue-600">${log.temp_interna}°C</p>
+                                        <p class="text-sm font-black text-blue-600">${safeTemp}°C</p>
                                     </div>
                                 </div>
                                 ${log.sintomas ? `
                                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Sintomas:</p>
-                                    <p class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md mb-2 inline-block">${log.sintomas}</p>
+                                    <p class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md mb-2 inline-block">${safeSintomas}</p>
                                 ` : ''}
                                 ${log.relato_pessoal ? `
                                     <div class="story-badge">
                                         <i data-lucide="quote" class="inline-block w-3 h-3 mb-1"></i>
-                                        "${log.relato_pessoal}"
+                                        "${safeRelato}"
                                     </div>
                                 ` : ''}
-                                ${log.foto_evidencia ? `
-                                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer" onclick="openImageModal('${log.foto_evidencia}')">
-                                        <img src="${log.foto_evidencia}" class="w-full h-32 object-cover transition-transform group-hover:scale-105" alt="Evidência">
+                                ${safeFoto ? `
+                                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer" onclick="openImageModal(${JSON.stringify(safeFoto)})">
+                                        <img src="${safeFoto}" class="w-full h-32 object-cover transition-transform group-hover:scale-105" alt="Evidência">
                                         <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <i data-lucide="maximize-2" class="text-white w-6 h-6 drop-shadow-md"></i>
                                         </div>
                                     </div>
                                 ` : ''}
-                                <p class="text-[9px] text-slate-300 mt-3 text-right">${log.data} às ${log.hora}</p>
+                                <p class="text-[9px] text-slate-300 mt-3 text-right">${safeData} às ${safeHora}</p>
                                 
                                 <div class="mt-3 pt-3 border-t border-slate-100 text-center">
-                                    <button onclick="deleteRecord('${log.id}')" class="text-[10px] font-black text-red-500 uppercase hover:bg-red-50 px-3 py-1 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto">
+                                    <button onclick="deleteRecord(${safeIdJson})" class="text-[10px] font-black text-red-500 uppercase hover:bg-red-50 px-3 py-1 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto">
                                         <i data-lucide="trash-2" size="12"></i> Excluir
                                     </button>
                                 </div>
@@ -552,22 +589,32 @@
                 const row = document.createElement('tr');
                 let rowClass = dbValue >= 85 ? "critical-row" : (type === "Quebra de Veículo" ? "breakdown-row" : (type === "Atraso Crítico" ? "delay-row" : ""));
                 row.className = rowClass;
+                const safeDataCell = escapeHtml(log.data || '');
+                const safeHoraCell = escapeHtml(log.hora || '');
+                const safeTypeCell = escapeHtml(type || '');
+                const safePrefixoCell = escapeHtml(prefixo || '');
+                const safeLinhaCell = escapeHtml(log.linha || '');
+                const safeTempCell = escapeHtml(log.temp_interna || '');
+                const safeRelatoCell = escapeHtml(log.relato_pessoal || '');
+                const safeSintomasCell = escapeHtml(log.sintomas || '');
+                const safeFotoCell = sanitizeUrl(log.foto_evidencia);
+                const safeIdCellJson = JSON.stringify(String(log.id || ''));
                 row.innerHTML = `
-                    <td class="px-6 py-4 text-slate-400">${log.data}<br><span class="text-[10px] font-bold">${log.hora}</span></td>
-                    <td class="px-6 py-4 font-black uppercase text-[10px] tracking-tighter text-slate-600">${type}</td>
+                    <td class="px-6 py-4 text-slate-400">${safeDataCell}<br><span class="text-[10px] font-bold">${safeHoraCell}</span></td>
+                    <td class="px-6 py-4 font-black uppercase text-[10px] tracking-tighter text-slate-600">${safeTypeCell}</td>
                     <td class="px-6 py-4">
-                        <span class="font-black text-slate-800">#${prefixo}</span><br>
-                        <span class="opacity-50">${log.linha}</span>
+                        <span class="font-black text-slate-800">#${safePrefixoCell}</span><br>
+                        <span class="opacity-50">${safeLinhaCell}</span>
                         ${!hasGPS ? '<div class="flex items-center gap-1 mt-1 text-red-400 font-bold uppercase text-[9px]"><i data-lucide="map-off" class="w-3 h-3"></i> Sem GPS</div>' : ''}
                     </td>
-                    <td class="px-6 py-4"><span class="${dbValue >= 85 ? 'text-red-600 font-bold' : ''}">${dbValue}dB</span> | ${log.temp_interna}°C</td>
+                    <td class="px-6 py-4"><span class="${dbValue >= 85 ? 'text-red-600 font-bold' : ''}">${dbValue}dB</span> | ${safeTempCell}°C</td>
                     <td class="px-6 py-4">
-                        ${log.relato_pessoal ? `<div class="story-badge">${log.relato_pessoal}</div>` : `<span class="opacity-20 italic">Sem relato</span>`}
-                        <div class="text-[9px] mt-1 text-blue-600 font-black uppercase">${log.sintomas || ''}</div>
-                        ${log.foto_evidencia ? `<button onclick="openImageModal('${log.foto_evidencia}')" class="mt-2 text-[10px] text-blue-500 underline flex items-center gap-1"><i data-lucide="image" size="12"></i> Ver Foto</button>` : ''}
+                        ${log.relato_pessoal ? `<div class="story-badge">${safeRelatoCell}</div>` : `<span class="opacity-20 italic">Sem relato</span>`}
+                        <div class="text-[9px] mt-1 text-blue-600 font-black uppercase">${safeSintomasCell}</div>
+                        ${safeFotoCell ? `<button onclick="openImageModal(${JSON.stringify(safeFotoCell)})" class="mt-2 text-[10px] text-blue-500 underline flex items-center gap-1"><i data-lucide="image" size="12"></i> Ver Foto</button>` : ''}
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="deleteRecord('${log.id}')" class="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full" title="Excluir">
+                        <button onclick="deleteRecord(${safeIdCellJson})" class="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full" title="Excluir">
                             <i data-lucide="trash-2" size="16"></i>
                         </button>
                     </td>
@@ -582,12 +629,14 @@
                 .slice(0, 8).forEach((bus, index) => {
                     const item = document.createElement('div');
                     item.className = "bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center";
+                    const safeBusId = escapeHtml(bus.id);
+                    const safeBusLine = escapeHtml(bus.line);
                     item.innerHTML = `
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-black text-slate-300">#${index+1}</span>
                             <div class="text-left">
-                                <p class="text-sm font-black text-slate-800">V: ${bus.id}</p>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase truncate max-w-[120px]">${bus.line}</p>
+                                <p class="text-sm font-black text-slate-800">V: ${safeBusId}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase truncate max-w-[120px]">${safeBusLine}</p>
                             </div>
                         </div>
                         <div class="text-right">
