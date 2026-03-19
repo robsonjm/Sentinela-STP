@@ -270,6 +270,12 @@
 
                 snapshot.docs.forEach((doc, index) => {
                     const data = doc.data();
+                    const safeIcon = sanitizeLucideName(data.icone, 'mic');
+                    const safeCategoria = escapeHtml(data.categoria || 'Reportagem');
+                    const safeTitulo = escapeHtml(data.titulo || '');
+                    const safeResumo = escapeHtml(data.resumo || '');
+                    const safeLink = sanitizeHref(data.link || '#');
+                    const safeDataStr = escapeHtml(data.data_str || 'Recentemente');
                     const card = document.createElement('div');
                     // Removida a classe 'group-hover:scale-110' do ícone para evitar conflito com animação CSS
                     card.className = "w-full shrink-0 snap-center editorial-card p-8 rounded-[2.5rem] relative overflow-hidden group cursor-pointer transition-all";
@@ -278,20 +284,20 @@
                     card.innerHTML = `
                         <div class="absolute -top-12 -right-12 p-0 z-0 pointer-events-none overflow-visible">
                             <div class="animated-icon text-white">
-                                <i data-lucide="${data.icone || 'mic'}" width="280" height="280" stroke-width="0.8"></i>
+                                <i data-lucide="${safeIcon}" width="280" height="280" stroke-width="0.8"></i>
                             </div>
                         </div>
                         <div class="relative z-10 max-w-2xl text-left h-full flex flex-col justify-between">
                             <div>
-                                <span class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block backdrop-blur-md">${data.categoria || 'Reportagem'}</span>
-                                <h2 class="text-2xl md:text-3xl font-black tracking-tight mb-2 leading-tight drop-shadow-sm line-clamp-2">${data.titulo}</h2>
+                                <span class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block backdrop-blur-md">${safeCategoria}</span>
+                                <h2 class="text-2xl md:text-3xl font-black tracking-tight mb-2 leading-tight drop-shadow-sm line-clamp-2">${safeTitulo}</h2>
                                 <p class="text-blue-100 text-xs md:text-sm font-medium leading-relaxed mb-4 line-clamp-3">
-                                    ${data.resumo}
+                                    ${safeResumo}
                                 </p>
                             </div>
                             <div class="flex items-center gap-4 mt-auto">
-                                <a href="${data.link || '#'}" class="bg-white text-blue-700 px-5 py-2.5 rounded-2xl font-black uppercase text-[9px] tracking-widest hover:bg-blue-50 transition-all shadow-lg shadow-blue-900/20">Ler Tudo</a>
-                                <span class="text-[9px] font-bold text-blue-200">Publicado em ${data.data_str || 'Recentemente'}</span>
+                                <a href="${safeLink}" class="bg-white text-blue-700 px-5 py-2.5 rounded-2xl font-black uppercase text-[9px] tracking-widest hover:bg-blue-50 transition-all shadow-lg shadow-blue-900/20">Ler Tudo</a>
+                                <span class="text-[9px] font-bold text-blue-200">Publicado em ${safeDataStr}</span>
                             </div>
                         </div>
                     `;
@@ -410,25 +416,31 @@
             }
             
             // Fundo Sutil Animado
+            const safeIcon = sanitizeLucideName(item.icone, 'newspaper');
+            const safeCategoria = escapeHtml(item.categoria || 'Notícia');
+            const safeDataStr = escapeHtml(item.data_str || 'Agora');
+            const safeTitulo = escapeHtml(item.titulo || '');
+            const safeResumo = escapeHtml(item.resumo || '');
+            const safeLink = sanitizeHref(item.link || '#');
             el.innerHTML = `
                 <div class="absolute -right-6 -bottom-6 text-blue-800/20 group-hover:text-blue-700/30 transition-all duration-500 timeline-icon">
-                    <i data-lucide="${item.icone || 'newspaper'}" width="120" height="120" stroke-width="1.5"></i>
+                    <i data-lucide="${safeIcon}" width="120" height="120" stroke-width="1.5"></i>
                 </div>
                 <div class="relative z-10">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="bg-blue-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">
-                            ${item.categoria || 'Notícia'}
+                            ${safeCategoria}
                         </span>
                         <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
                             <i data-lucide="clock" size="10"></i>
-                            ${item.data_str || 'Agora'}
+                            ${safeDataStr}
                         </span>
                     </div>
-                    <h3 class="text-lg font-bold text-white mb-2 leading-tight">${item.titulo}</h3>
+                    <h3 class="text-lg font-bold text-white mb-2 leading-tight">${safeTitulo}</h3>
                     <p class="text-slate-300 text-xs leading-relaxed mb-3 line-clamp-3 w-[85%]">
-                        ${item.resumo}
+                        ${safeResumo}
                     </p>
-                    <a href="${item.link || '#'}" class="inline-flex items-center gap-1 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:text-blue-300 transition-colors">
+                    <a href="${safeLink}" class="inline-flex items-center gap-1 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:text-blue-300 transition-colors">
                         Ler Reportagem <i data-lucide="arrow-right" size="10"></i>
                     </a>
                 </div>
@@ -491,7 +503,7 @@
             return u && u.uid ? u.uid : null;
         };
 
-        const escapeHtml = (value) => {
+        function escapeHtml(value) {
             const s = value == null ? '' : String(value);
             return s.replace(/[&<>"']/g, (c) => {
                 if (c === '&') return '&amp;';
@@ -500,7 +512,28 @@
                 if (c === '"') return '&quot;';
                 return '&#39;';
             });
-        };
+        }
+
+        function sanitizeHref(value) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return '#';
+            if (s.startsWith('#')) return s;
+            if (s.startsWith('/') || s.startsWith('./') || s.startsWith('../')) return s;
+
+            try {
+                const u = new URL(s, window.location.origin);
+                if (u.protocol !== 'http:' && u.protocol !== 'https:') return '#';
+                return u.toString();
+            } catch {
+                return '#';
+            }
+        }
+
+        function sanitizeLucideName(value, fallback) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return fallback;
+            return /^[a-z0-9-]+$/i.test(s) ? s : fallback;
+        }
 
         const createCard = (item, isNew = false) => {
             if (!item.relato_pessoal || item.relato_pessoal.trim() === "") return null;
@@ -786,6 +819,10 @@
             const textColor = isDark ? 'text-white' : 'text-slate-900';
             const subTextColor = isDark ? 'text-slate-400' : 'text-slate-500';
 
+            const safeDataStr = escapeHtml(patron.data_str || 'Agora');
+            const safeName = escapeHtml(patron.name || 'Anônimo');
+            const safeMessage = escapeHtml(patron.message || 'Contribuindo para a soberania da mobilidade em Florianópolis.');
+
             el.innerHTML = `
                 <div class="absolute -right-4 -bottom-4 ${iconColor} opacity-10 group-hover:opacity-20 transition-all duration-700 rotate-12">
                     <i data-lucide="${icon}" width="140" height="120" stroke-width="1"></i>
@@ -800,15 +837,15 @@
                         </div>
                         <span class="${subTextColor} text-[9px] font-bold uppercase tracking-widest flex items-center gap-1">
                             <i data-lucide="clock" size="10"></i>
-                            ${patron.data_str || 'Agora'}
+                            ${safeDataStr}
                         </span>
                     </div>
                     <div class="space-y-1">
                         <h3 class="text-lg font-black ${textColor} leading-tight">
-                            ${patron.name || 'Anônimo'} <span class="font-medium ${subTextColor}">acaba de se tornar um Patrono!</span>
+                            ${safeName} <span class="font-medium ${subTextColor}">acaba de se tornar um Patrono!</span>
                         </h3>
                         <p class="${subTextColor} text-xs italic font-medium leading-relaxed">
-                            "${patron.message || 'Contribuindo para a soberania da mobilidade em Florianópolis.'}"
+                            "${safeMessage}"
                         </p>
                     </div>
                     <div class="pt-2 flex items-center gap-2">

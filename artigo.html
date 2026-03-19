@@ -150,6 +150,103 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        function sanitizeLucideName(value, fallback) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return fallback;
+            return /^[a-z0-9-]+$/i.test(s) ? s : fallback;
+        }
+
+        function sanitizeHref(value) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return null;
+            if (s.startsWith('#')) return s;
+            if (s.startsWith('/') || s.startsWith('./') || s.startsWith('../')) return s;
+
+            try {
+                const u = new URL(s, window.location.origin);
+                if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+                return u.toString();
+            } catch {
+                return null;
+            }
+        }
+
+        function sanitizeRichHtml(html) {
+            const template = document.createElement('template');
+            template.innerHTML = html == null ? '' : String(html);
+
+            const allowedTags = new Set([
+                'P', 'BR', 'STRONG', 'EM', 'B', 'I', 'U',
+                'H2', 'H3', 'H4',
+                'UL', 'OL', 'LI',
+                'BLOCKQUOTE', 'HR',
+                'A', 'IMG'
+            ]);
+
+            const allowedAttrs = {
+                A: new Set(['href', 'title', 'target', 'rel']),
+                IMG: new Set(['src', 'alt', 'title'])
+            };
+
+            const cleanElement = (el) => {
+                const tag = el.tagName;
+                if (!allowedTags.has(tag)) {
+                    const text = document.createTextNode(el.textContent || '');
+                    el.replaceWith(text);
+                    return;
+                }
+
+                const allowed = allowedAttrs[tag] || new Set();
+                Array.from(el.attributes).forEach((attr) => {
+                    const name = attr.name.toLowerCase();
+                    if (name.startsWith('on') || name === 'style') {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+                    if (!allowed.has(attr.name)) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+
+                if (tag === 'A') {
+                    const href = sanitizeHref(el.getAttribute('href'));
+                    if (!href) {
+                        el.removeAttribute('href');
+                    } else {
+                        el.setAttribute('href', href);
+                        const target = el.getAttribute('target');
+                        if (target === '_blank') {
+                            el.setAttribute('rel', 'noopener noreferrer');
+                        }
+                    }
+                }
+
+                if (tag === 'IMG') {
+                    const src = el.getAttribute('src');
+                    if (!src) {
+                        el.remove();
+                        return;
+                    }
+                    try {
+                        const u = new URL(src, window.location.origin);
+                        if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+                            el.remove();
+                            return;
+                        }
+                        el.setAttribute('src', u.toString());
+                    } catch {
+                        el.remove();
+                        return;
+                    }
+                }
+
+                Array.from(el.children).forEach(cleanElement);
+            };
+
+            Array.from(template.content.querySelectorAll('*')).forEach(cleanElement);
+            return template.innerHTML;
+        }
+
         // Scroll Effect Header
         window.addEventListener('scroll', () => {
             const header = document.getElementById('main-header');
@@ -194,9 +291,18 @@
                     document.getElementById('article-date').innerText = data.data_str || 'Data desconhecida';
                     
                     // Ícone dinâmico
-                    const iconName = data.icone || 'file-text';
+                    const iconName = sanitizeLucideName(data.icone, 'file-text');
                     const iconContainer = document.getElementById('article-icon').parentElement;
-                    iconContainer.innerHTML = `<i data-lucide="${iconName}" size="14"></i> <span class="text-[10px] font-black uppercase tracking-widest">${data.categoria}</span>`;
+                    iconContainer.innerHTML = '';
+                    const iconEl = document.createElement('i');
+                    iconEl.setAttribute('data-lucide', iconName);
+                    iconEl.setAttribute('size', '14');
+                    const catEl = document.createElement('span');
+                    catEl.className = 'text-[10px] font-black uppercase tracking-widest';
+                    catEl.textContent = data.categoria || 'Notícia';
+                    iconContainer.appendChild(iconEl);
+                    iconContainer.appendChild(document.createTextNode(' '));
+                    iconContainer.appendChild(catEl);
 
                     // Preencher Conteúdo
                     document.getElementById('article-lead').innerText = data.resumo;
@@ -204,23 +310,7 @@
                     // Conteúdo HTML Rico ou Fallback
                     if (data.conteudo_html) {
                         const bodyEl = document.getElementById('article-body');
-                        bodyEl.innerHTML = data.conteudo_html;
-                        
-                        // Lazy Load Social Embeds
-                        // Só carrega os scripts se houver embeds na página
-                        if (bodyEl.querySelector('.instagram-media')) {
-                            const script = document.createElement('script');
-                            script.src = "//www.instagram.com/embed.js";
-                            script.async = true;
-                            document.body.appendChild(script);
-                        }
-                        
-                        if (bodyEl.querySelector('.tiktok-embed')) {
-                            const script = document.createElement('script');
-                            script.src = "https://www.tiktok.com/embed.js";
-                            script.async = true;
-                            document.body.appendChild(script);
-                        }
+                        bodyEl.innerHTML = sanitizeRichHtml(data.conteudo_html);
                     } else {
                         // Fallback se não tiver conteúdo rico
                         document.getElementById('article-body').innerHTML = `<p class="italic text-slate-500">Conteúdo detalhado não disponível para visualização rápida. Consulte a fonte original.</p>`;

@@ -180,6 +180,17 @@
         const auth = getAuth(app);
         const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
 
+        function escapeHtml(value) {
+            const s = value == null ? '' : String(value);
+            return s.replace(/[&<>"']/g, (c) => {
+                if (c === '&') return '&amp;';
+                if (c === '<') return '&lt;';
+                if (c === '>') return '&gt;';
+                if (c === '"') return '&quot;';
+                return '&#39;';
+            });
+        }
+
         // Inicializar Mercado Pago
         const mp = new MercadoPago(mercadopagoConfig.publicKey, {
             locale: 'pt-BR'
@@ -210,6 +221,13 @@
                 snapshot.docs.forEach(doc => {
                     const patron = doc.data();
                     const card = document.createElement('div');
+                    const safePlan = escapeHtml(patron.plan || '');
+                    const safeName = escapeHtml(patron.name || 'Anônimo');
+                    const safeMemberSince = escapeHtml(
+                        patron.timestamp?.seconds
+                            ? new Date(patron.timestamp.seconds * 1000).toLocaleDateString('pt-BR')
+                            : 'agora'
+                    );
                     
                     // Diferenciar estilos por plano
                     let bgClass = 'bg-slate-900/40 border-slate-800';
@@ -234,10 +252,10 @@
                     card.innerHTML = `
                         <div class="flex justify-center gap-1">
                             ${badge}
-                            <p class="text-[10px] font-black uppercase tracking-widest ${textClass}">${patron.plan}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest ${textClass}">${safePlan}</p>
                         </div>
-                        <p class="text-xs font-bold text-white truncate">${patron.name || 'Anônimo'}</p>
-                        <p class="text-[8px] font-black text-slate-500 uppercase">Membro desde ${new Date(patron.timestamp?.seconds * 1000).toLocaleDateString('pt-BR') || 'agora'}</p>
+                        <p class="text-xs font-bold text-white truncate">${safeName}</p>
+                        <p class="text-[8px] font-black text-slate-500 uppercase">Membro desde ${safeMemberSince}</p>
                     `;
                     patronsListContainer.appendChild(card);
                 });
