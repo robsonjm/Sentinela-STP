@@ -33,6 +33,15 @@
         .article-preview blockquote { border-left: 4px solid #3b82f6; padding-left: 1.5rem; font-style: italic; color: #475569; margin: 2rem 0; background: #eff6ff; padding: 1.5rem; border-radius: 0 1rem 1rem 0; }
         .article-preview img { width: 100%; height: auto; border-radius: 1rem; margin: 2rem 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .article-preview a { color: #2563eb; text-decoration: underline; font-weight: 600; }
+
+        @media (max-width: 640px) {
+            .article-preview p { margin-bottom: 1rem; font-size: 0.95rem; }
+            .article-preview h2 { font-size: 1.25rem; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+            .article-preview h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+            .article-preview ul { padding-left: 1.25rem; margin-bottom: 1rem; }
+            .article-preview blockquote { margin: 1.25rem 0; padding: 1rem; }
+            .article-preview img { margin: 1.25rem 0; }
+        }
         
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -74,7 +83,7 @@
             <p class="text-sm text-slate-500 font-medium">Preencha os dados abaixo para atualizar o mural de notícias em tempo real.</p>
         </div>
 
-        <div class="max-w-lg mx-auto bg-white rounded-[2rem] border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
+        <div class="max-w-lg mx-auto bg-white rounded-[2rem] border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col gap-3">
             <div class="flex items-center justify-between gap-4">
                 <div class="text-left">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Backup de Matérias</p>
@@ -99,10 +108,10 @@
         </div>
 
         <!-- Grid Layout -->
-        <div class="grid lg:grid-cols-2 gap-8 items-start">
+        <div class="grid lg:grid-cols-2 gap-6 lg:gap-8 items-start">
             
             <!-- Formulário -->
-            <form id="news-form" class="space-y-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+            <form id="news-form" class="space-y-4 bg-white p-4 sm:p-6 rounded-[2rem] shadow-sm border border-slate-200">
             
             <!-- Título -->
             <div class="space-y-1">
@@ -118,7 +127,7 @@
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:text-slate-300 resize-none"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Categoria -->
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria</label>
@@ -220,8 +229,8 @@
                 </div>
 
                 <!-- Área de Edição -->
-                <textarea id="conteudo_html" rows="16" placeholder="Escreva sua matéria aqui..." 
-                    class="w-full bg-white p-6 text-sm font-mono text-slate-700 outline-none resize-y leading-relaxed selection:bg-blue-100 selection:text-blue-900"></textarea>
+                <textarea id="conteudo_html" rows="12" placeholder="Escreva sua matéria aqui..." 
+                    class="w-full bg-white p-4 sm:p-6 text-sm font-mono text-slate-700 outline-none resize-y leading-relaxed selection:bg-blue-100 selection:text-blue-900"></textarea>
                 
                 <!-- Rodapé do Editor -->
                 <div class="bg-slate-50 border-t border-slate-200 p-2 flex justify-between items-center text-[10px] text-slate-400 font-medium px-4">
@@ -276,8 +285,8 @@
             <!-- Container Card -->
             <div id="preview-container-card" class="opacity-50 pointer-events-none transition-all duration-300">
                 <div id="card-preview" class="preview-card p-6 sm:p-8 relative overflow-hidden group transform transition-transform duration-500 hover:scale-[1.02]">
-                    <div class="absolute top-0 right-0 p-8 opacity-10">
-                        <i id="preview-icon" data-lucide="alert-triangle" size="120"></i>
+                    <div class="absolute top-0 right-0 p-6 sm:p-8 opacity-10">
+                        <i id="preview-icon" data-lucide="alert-triangle" size="96"></i>
                     </div>
                     <div class="relative z-10 text-left">
                         <span id="preview-categoria" class="bg-blue-400/30 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-white/20 mb-4 inline-block">Investigação</span>
@@ -294,7 +303,7 @@
             </div>
 
             <!-- Container Artigo Completo -->
-            <div id="preview-container-article" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm article-preview relative max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <div id="preview-container-article" class="hidden bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm article-preview relative max-h-[80vh] overflow-y-auto custom-scrollbar">
                 <div class="absolute top-4 right-4 opacity-10 text-slate-300">
                     <i data-lucide="smartphone" size="24"></i>
                 </div>
@@ -312,12 +321,12 @@
 
         <!-- Lista de Gerenciamento -->
         <div class="space-y-4 pt-8 border-t border-slate-200" id="manage-news-section">
-            <div class="flex justify-between items-end px-2">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 px-2">
                 <div>
                     <h3 class="text-lg font-black text-slate-800 tracking-tight">Gerenciar Publicações</h3>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Editar ou remover notícias</p>
                 </div>
-                <div class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                <div class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 w-fit">
                     <i data-lucide="database" size="10"></i> <span id="news-count">0</span>
                 </div>
             </div>
@@ -363,9 +372,9 @@
     </div>
 
     <!-- Modal Seletor de Ícones -->
-    <div id="icon-picker-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-6 opacity-0 transition-opacity duration-300">
+    <div id="icon-picker-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-3 sm:p-6 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col overflow-hidden scale-95 transition-transform duration-300 transform">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <div>
                     <h3 class="text-lg font-black text-slate-800 tracking-tight">Escolher Ícone</h3>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selecione um ícone para a matéria</p>
@@ -375,7 +384,7 @@
                 </button>
             </div>
             
-            <div class="p-6 overflow-y-auto grid grid-cols-4 gap-4" id="icon-grid">
+            <div class="p-4 sm:p-6 overflow-y-auto grid grid-cols-4 gap-4" id="icon-grid">
                 <!-- Ícones serão injetados aqui via JS -->
             </div>
         </div>
@@ -1176,8 +1185,8 @@
                         const safeCategoria = escapeHtml(data.categoria || '');
                         
                         html += `
-                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between gap-4 hover:shadow-md transition-shadow group">
-                                <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 hover:shadow-md transition-shadow group">
+                                <div class="flex items-center gap-3 overflow-hidden w-full">
                                     <div class="bg-blue-50 p-2 rounded-lg text-blue-600 flex-shrink-0">
                                         <i data-lucide="${safeIcon}" size="18"></i>
                                     </div>
@@ -1190,7 +1199,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity self-end sm:self-auto">
                                     <button onclick="window.editNews(${safeIdJson})" class="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors" title="Editar">
                                         <i data-lucide="edit-2" size="16"></i>
                                     </button>
