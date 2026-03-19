@@ -74,6 +74,30 @@
             <p class="text-sm text-slate-500 font-medium">Preencha os dados abaixo para atualizar o mural de notícias em tempo real.</p>
         </div>
 
+        <div class="max-w-lg mx-auto bg-white rounded-[2rem] border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-4">
+                <div class="text-left">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Backup de Matérias</p>
+                    <p class="text-xs font-bold text-slate-600">Exporta/Importa JSON da coleção de artigos</p>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    Teste
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button type="button" id="export-artigos-btn" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="download" size="16"></i> Exportar JSON
+                </button>
+                <button type="button" id="import-artigos-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="upload" size="16"></i> Importar JSON
+                </button>
+                <input type="file" id="import-artigos-file" accept="application/json" class="hidden">
+            </div>
+            <p class="text-[10px] font-bold text-slate-400 leading-relaxed">
+                O export é baixado no seu computador. O import restaura/cria documentos pelos IDs do backup (não apaga os que não estiverem no arquivo).
+            </p>
+        </div>
+
         <!-- Grid Layout -->
         <div class="grid lg:grid-cols-2 gap-8 items-start">
             
@@ -426,7 +450,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
-            initializeFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, onSnapshot as firestoreOnSnapshot 
+            initializeFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, onSnapshot as firestoreOnSnapshot, writeBatch, Timestamp 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig, imgbbConfig } from "./js/config.js?v=4";
 
@@ -446,8 +470,12 @@
         const newsCountEl = document.getElementById('news-count');
         const previewContainer = document.getElementById('preview-container-card');
         const logoutBtn = document.getElementById('logout-btn');
+        const exportArtigosBtn = document.getElementById('export-artigos-btn');
+        const importArtigosBtn = document.getElementById('import-artigos-btn');
+        const importArtigosFile = document.getElementById('import-artigos-file');
 
         let editingId = null;
+        const ARTIGOS_COLLECTION_PATH = ['artifacts', 'sentinela-stp', 'public', 'data', 'artigos'];
 
         // Verificar Autenticação
         onAuthStateChanged(auth, (user) => {
@@ -480,6 +508,130 @@
                 }).catch((error) => {
                     console.error("Erro ao fazer logout:", error);
                 });
+            });
+        }
+
+        function normalizeForBackup(value) {
+            if (value && typeof value === 'object') {
+                if (value instanceof Date) {
+                    return { __type: 'date', value: value.toISOString() };
+                }
+                if (value instanceof Timestamp) {
+                    return { __type: 'timestamp', millis: value.toMillis() };
+                }
+                if (Array.isArray(value)) {
+                    return value.map(normalizeForBackup);
+                }
+                const out = {};
+                Object.entries(value).forEach(([k, v]) => {
+                    out[k] = normalizeForBackup(v);
+                });
+                return out;
+            }
+            return value;
+        }
+
+        function denormalizeFromBackup(value) {
+            if (value && typeof value === 'object') {
+                if (value.__type === 'timestamp' && typeof value.millis === 'number') {
+                    return Timestamp.fromMillis(value.millis);
+                }
+                if (value.__type === 'date' && typeof value.value === 'string') {
+                    const d = new Date(value.value);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                if (Array.isArray(value)) {
+                    return value.map(denormalizeFromBackup);
+                }
+                const out = {};
+                Object.entries(value).forEach(([k, v]) => {
+                    out[k] = denormalizeFromBackup(v);
+                });
+                return out;
+            }
+            return value;
+        }
+
+        function downloadJson(filename, data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        async function exportArtigosBackup() {
+            const colRef = collection(db, ...ARTIGOS_COLLECTION_PATH);
+            const q = query(colRef, orderBy('timestamp', 'desc'));
+            const snap = await getDocs(q);
+            const docs = snap.docs.map(d => ({ id: d.id, data: normalizeForBackup(d.data()) }));
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const filename = `sentinela_artigos_backup_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.json`;
+            downloadJson(filename, { version: 1, exportedAt: now.toISOString(), projectId: firebaseConfig.projectId, collection: 'artigos', docs });
+        }
+
+        async function importArtigosBackup(file) {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            const docs = parsed && parsed.docs ? parsed.docs : [];
+            if (!Array.isArray(docs) || docs.length === 0) {
+                alert('Backup inválido ou vazio.');
+                return;
+            }
+
+            const ok = confirm(`Importar ${docs.length} documentos em artigos? Isso vai sobrescrever documentos com o mesmo ID.`);
+            if (!ok) return;
+
+            const chunkSize = 400;
+            for (let i = 0; i < docs.length; i += chunkSize) {
+                const batch = writeBatch(db);
+                const chunk = docs.slice(i, i + chunkSize);
+                chunk.forEach((entry) => {
+                    if (!entry || typeof entry.id !== 'string' || !entry.id) return;
+                    const data = denormalizeFromBackup(entry.data || {});
+                    const docRef = doc(db, ...ARTIGOS_COLLECTION_PATH, entry.id);
+                    batch.set(docRef, data, { merge: false });
+                });
+                await batch.commit();
+            }
+        }
+
+        if (exportArtigosBtn) {
+            exportArtigosBtn.addEventListener('click', async () => {
+                try {
+                    exportArtigosBtn.disabled = true;
+                    await exportArtigosBackup();
+                } catch (e) {
+                    console.error(e);
+                    alert('Erro ao exportar backup.');
+                } finally {
+                    exportArtigosBtn.disabled = false;
+                }
+            });
+        }
+
+        if (importArtigosBtn && importArtigosFile) {
+            importArtigosBtn.addEventListener('click', () => importArtigosFile.click());
+            importArtigosFile.addEventListener('change', async () => {
+                const file = importArtigosFile.files && importArtigosFile.files[0];
+                importArtigosFile.value = '';
+                if (!file) return;
+                try {
+                    importArtigosBtn.disabled = true;
+                    await importArtigosBackup(file);
+                    alert('Import concluído.');
+                    fetchNewsData();
+                } catch (e) {
+                    console.error(e);
+                    alert('Erro ao importar backup.');
+                } finally {
+                    importArtigosBtn.disabled = false;
+                }
             });
         }
 
