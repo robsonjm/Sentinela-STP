@@ -537,7 +537,7 @@
                         const safeFoto = sanitizeUrl(log.foto_evidencia);
                         const safeData = escapeHtml(log.data || '');
                         const safeHora = escapeHtml(log.hora || '');
-                        const safeIdJson = JSON.stringify(String(log.id || ''));
+                        const safeIdAttr = escapeHtml(String(log.id || ''));
                         const popupContent = `
                             <div class="p-2 min-w-[200px]">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">${safeType}</p>
@@ -563,7 +563,7 @@
                                     </div>
                                 ` : ''}
                                 ${safeFoto ? `
-                                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer" onclick='openImageModal(${JSON.stringify(safeFoto)})'>
+                                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer" data-img-src="${escapeHtml(safeFoto)}">
                                         <img src="${safeFoto}" class="w-full h-32 object-cover transition-transform group-hover:scale-105" alt="Evidência">
                                         <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <i data-lucide="maximize-2" class="text-white w-6 h-6 drop-shadow-md"></i>
@@ -573,7 +573,7 @@
                                 <p class="text-[9px] text-slate-300 mt-3 text-right">${safeData} às ${safeHora}</p>
                                 
                                 <div class="mt-3 pt-3 border-t border-slate-100 text-center">
-                                    <button onclick='deleteRecord(${safeIdJson})' class="text-[10px] font-black text-red-500 uppercase hover:bg-red-50 px-3 py-1 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto">
+                                    <button data-delete-id="${safeIdAttr}" class="text-[10px] font-black text-red-500 uppercase hover:bg-red-50 px-3 py-1 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto">
                                         <i data-lucide="trash-2" size="12"></i> Excluir
                                     </button>
                                 </div>
@@ -581,6 +581,22 @@
                         `;
 
                         marker.bindPopup(popupContent);
+                        marker.on('popupopen', (ev) => {
+                            const root = ev.popup.getElement();
+                            if (!root) return;
+
+                            const deleteBtn = root.querySelector('[data-delete-id]');
+                            if (deleteBtn) {
+                                deleteBtn.addEventListener('click', () => window.deleteRecord(log.id));
+                            }
+
+                            if (safeFoto) {
+                                const imgWrap = root.querySelector('[data-img-src]');
+                                if (imgWrap) {
+                                    imgWrap.addEventListener('click', () => window.openImageModal(safeFoto));
+                                }
+                            }
+                        });
                         markersGroup.addLayer(marker);
                     }
                 }
@@ -598,7 +614,7 @@
                 const safeRelatoCell = escapeHtml(log.relato_pessoal || '');
                 const safeSintomasCell = escapeHtml(log.sintomas || '');
                 const safeFotoCell = sanitizeUrl(log.foto_evidencia);
-                const safeIdCellJson = JSON.stringify(String(log.id || ''));
+                const safeIdCellAttr = escapeHtml(String(log.id || ''));
                 row.innerHTML = `
                     <td class="px-6 py-4 text-slate-400">${safeDataCell}<br><span class="text-[10px] font-bold">${safeHoraCell}</span></td>
                     <td class="px-6 py-4 font-black uppercase text-[10px] tracking-tighter text-slate-600">${safeTypeCell}</td>
@@ -611,15 +627,26 @@
                     <td class="px-6 py-4">
                         ${log.relato_pessoal ? `<div class="story-badge">${safeRelatoCell}</div>` : `<span class="opacity-20 italic">Sem relato</span>`}
                         <div class="text-[9px] mt-1 text-blue-600 font-black uppercase">${safeSintomasCell}</div>
-                        ${safeFotoCell ? `<button onclick='openImageModal(${JSON.stringify(safeFotoCell)})' class="mt-2 text-[10px] text-blue-500 underline flex items-center gap-1"><i data-lucide="image" size="12"></i> Ver Foto</button>` : ''}
+                        ${safeFotoCell ? `<button data-img-src="${escapeHtml(safeFotoCell)}" class="mt-2 text-[10px] text-blue-500 underline flex items-center gap-1"><i data-lucide="image" size="12"></i> Ver Foto</button>` : ''}
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick='deleteRecord(${safeIdCellJson})' class="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full" title="Excluir">
+                        <button data-delete-id="${safeIdCellAttr}" class="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full" title="Excluir">
                             <i data-lucide="trash-2" size="16"></i>
                         </button>
                     </td>
                 `;
                 tableBody.appendChild(row);
+
+                const deleteBtn = row.querySelector('[data-delete-id]');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => window.deleteRecord(log.id));
+                }
+                if (safeFotoCell) {
+                    const imgBtn = row.querySelector('[data-img-src]');
+                    if (imgBtn) {
+                        imgBtn.addEventListener('click', () => window.openImageModal(safeFotoCell));
+                    }
+                }
             });
 
             // Ranking
