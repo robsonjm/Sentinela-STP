@@ -373,6 +373,8 @@
         
         let currentG = null;
         let maxG = null;
+        let gravityVec = { x: 0, y: 0, z: 0 };
+        let gravityReady = false;
         
         let alertsDb = 0;
         let alertsG = 0;
@@ -531,13 +533,41 @@
                 }
                 
                 window.addEventListener('devicemotion', (event) => {
-                    const acc = event.acceleration || event.accelerationIncludingGravity;
-                    if (!acc) return;
-                    const ax = Number(acc.x || 0);
-                    const ay = Number(acc.y || 0);
-                    const az = Number(acc.z || 0);
-                    const gTotal = Math.sqrt(ax * ax + ay * ay + az * az) / GRAVITY;
-                    currentG = Math.max(0, gTotal);
+                    const accLin = event.acceleration;
+                    const accInc = event.accelerationIncludingGravity;
+                    let gImpact = null;
+
+                    if (accLin && (accLin.x != null || accLin.y != null || accLin.z != null)) {
+                        const ax = Number(accLin.x || 0);
+                        const ay = Number(accLin.y || 0);
+                        const az = Number(accLin.z || 0);
+                        gImpact = Math.sqrt(ax * ax + ay * ay + az * az) / GRAVITY;
+                    } else if (accInc && (accInc.x != null || accInc.y != null || accInc.z != null)) {
+                        const ax = Number(accInc.x || 0);
+                        const ay = Number(accInc.y || 0);
+                        const az = Number(accInc.z || 0);
+
+                        if (!gravityReady) {
+                            gravityVec = { x: ax, y: ay, z: az };
+                            gravityReady = true;
+                        } else {
+                            const alpha = 0.8;
+                            gravityVec = {
+                                x: alpha * gravityVec.x + (1 - alpha) * ax,
+                                y: alpha * gravityVec.y + (1 - alpha) * ay,
+                                z: alpha * gravityVec.z + (1 - alpha) * az
+                            };
+                        }
+
+                        const lx = ax - gravityVec.x;
+                        const ly = ay - gravityVec.y;
+                        const lz = az - gravityVec.z;
+                        gImpact = Math.sqrt(lx * lx + ly * ly + lz * lz) / GRAVITY;
+                    }
+
+                    if (gImpact == null) return;
+
+                    currentG = Math.max(0, gImpact);
                     if (!maxG || currentG > maxG) maxG = currentG;
                     gNowEl.textContent = currentG ? currentG.toFixed(2) : '0.00';
                     gMaxEl.textContent = maxG ? maxG.toFixed(2) : '0.00';
@@ -550,7 +580,7 @@
                             lastAlertGAt = now;
                             alertsG += 1;
                             alertsGEl.textContent = String(alertsG);
-                            const msg = `Trepidação acima de ${THRESHOLD_G.toFixed(1)}G (pico ${currentG.toFixed(2)}G)`;
+                            const msg = `Impacto acima de ${THRESHOLD_G.toFixed(1)}G (pico ${currentG.toFixed(2)}G)`;
                             showAlert(msg);
                             addEvent('ALERTA G', { message: msg, tag: 'G' });
                         }
