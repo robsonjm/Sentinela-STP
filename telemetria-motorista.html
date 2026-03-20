@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinela STP - Telemetria do Motorista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; padding-bottom: calc(5rem + var(--sab)); }
+        #map { height: 72vh; }
+        .status-dot { width: 8px; height: 8px; border-radius: 9999px; display: inline-block; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <header class="sticky top-0 z-50 bg-slate-900 text-white px-4 pt-[calc(0.75rem+var(--sat))] pb-3 shadow-lg">
+        <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="bg-white/10 p-2 rounded-xl">
+                    <i data-lucide="route" size="18"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-sm font-black tracking-tight uppercase leading-none truncate">Telemetria do Motorista</h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Registro do trajeto em tempo real</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1">
+                    <span id="gps-dot" class="status-dot bg-slate-500"></span>
+                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-300">GPS</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span id="mic-dot" class="status-dot bg-slate-500"></span>
+                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-300">MIC</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span id="mot-dot" class="status-dot bg-slate-500"></span>
+                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-300">MOV</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span id="rec-dot" class="status-dot bg-slate-500"></span>
+                    <span id="rec-label" class="text-[9px] font-black uppercase tracking-widest text-slate-300">OFF</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="relative">
+                <div id="map"></div>
+
+                <div class="absolute top-3 left-3 right-3 z-[600]">
+                    <div class="bg-white/95 backdrop-blur rounded-3xl border border-slate-200 shadow-sm p-3 space-y-2">
+                        <div class="flex gap-2">
+                            <div class="flex-1 relative">
+                                <i data-lucide="bus" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size="14"></i>
+                                <input list="fenix-lines" id="bus-line" placeholder="Linha..." class="w-full bg-slate-50 border-0 pl-9 pr-3 py-2.5 rounded-xl text-xs font-bold ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 outline-none uppercase placeholder:normal-case">
+                            </div>
+                            <div class="w-20 relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[10px]">#</span>
+                                <input id="bus-prefix" type="number" inputmode="numeric" placeholder="0000" class="w-full bg-slate-50 border-0 pl-7 pr-2 py-2.5 rounded-xl text-xs font-bold ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 relative">
+                                <i data-lucide="thermometer" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size="14"></i>
+                                <input id="temp-ext" type="number" inputmode="decimal" step="0.1" placeholder="Temp. externa (°C)" class="w-full bg-slate-50 border-0 pl-9 pr-3 py-2.5 rounded-xl text-xs font-bold ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-slate-300">
+                            </div>
+                            <div class="w-28 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-black text-slate-700 flex items-center justify-between">
+                                <span id="temp-est">—</span>
+                            </div>
+                            <button id="permissions-btn" type="button" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="shield" size="16"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="alert-banner" class="hidden absolute top-[112px] left-3 right-3 z-[650] bg-red-600 text-white rounded-2xl p-4 shadow-lg">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-white/15 p-2 rounded-xl">
+                            <i data-lucide="siren" size="18"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-black uppercase tracking-widest">Alerta</p>
+                            <p id="alert-text" class="text-sm font-bold leading-tight">—</p>
+                        </div>
+                        <button id="dismiss-alert" type="button" class="text-white/80 hover:text-white p-1">
+                            <i data-lucide="x" size="18"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="absolute right-3 top-[184px] z-[650] flex flex-col gap-2">
+                    <button id="start-btn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-3 rounded-2xl shadow-lg shadow-blue-200/50 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="play" size="16"></i>
+                    </button>
+                    <button id="stop-btn" type="button" class="hidden bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-3 rounded-2xl shadow-lg shadow-red-200/50 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="square" size="16"></i>
+                    </button>
+                </div>
+
+                <div class="absolute bottom-3 left-3 right-3 z-[600]">
+                    <div class="bg-white/95 backdrop-blur rounded-[2.5rem] border border-slate-200 shadow-sm p-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white rounded-2xl border border-slate-200 p-4">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Decibéis</p>
+                                <p class="text-3xl font-black tracking-tight mt-2"><span id="db-now">—</span><span class="text-sm font-black text-slate-400"> dB</span></p>
+                                <div class="mt-2 flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <span>Máx</span>
+                                    <span id="db-max">—</span>
+                                </div>
+                                <div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                    <div id="db-bar" class="h-full bg-blue-600 w-0 transition-all"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-2xl border border-slate-200 p-4">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trepidação</p>
+                                <p class="text-3xl font-black tracking-tight mt-2"><span id="g-now">—</span><span class="text-sm font-black text-slate-400"> G</span></p>
+                                <div class="mt-2 flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <span>Pico</span>
+                                    <span id="g-max">—</span>
+                                </div>
+                                <div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                    <div id="g-bar" class="h-full bg-blue-600 w-0 transition-all"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 bg-slate-50 rounded-2xl border border-slate-200 p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Viagem</p>
+                                    <p class="text-sm font-bold text-slate-700 mt-1"><span id="trip-status">Aguardando</span></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Duração</p>
+                                    <p class="text-sm font-black text-slate-700 mt-1"><span id="trip-duration">00:00:00</span></p>
+                                </div>
+                            </div>
+                            <div class="mt-3 grid grid-cols-3 gap-2">
+                                <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Distância</p>
+                                    <p class="text-sm font-black text-slate-800 mt-1"><span id="trip-distance">0.00</span> km</p>
+                                </div>
+                                <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alertas dB</p>
+                                    <p class="text-sm font-black text-slate-800 mt-1" id="alerts-db">0</p>
+                                </div>
+                                <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alertas G</p>
+                                    <p class="text-sm font-black text-slate-800 mt-1" id="alerts-g">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Eventos</p>
+                    <p class="text-xs font-bold text-slate-500">Registros de alerta durante o percurso</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="download-btn" type="button" class="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i data-lucide="download" size="14"></i> JSON
+                    </button>
+                    <button id="clear-btn" type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-black uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="trash-2" size="14"></i>
+                    </button>
+                    <button id="copy-last-btn" type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-black uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="copy" size="14"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="events" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+        </div>
+    </main>
+
+    <datalist id="fenix-lines">
+        <option value="665 - Abraão"><option value="762 - Angelo Laporta"><option value="844 - Bairro de Fátima">
+        <option value="V-844 - Bairro de Fátima"><option value="V-661 - Balneário"><option value="661 - Balneário">
+        <option value="763 - Caeira do Saco dos Limões"><option value="V-662 - Canto via Otília Cruz"><option value="662 - Canto via Otília Cruz">
+        <option value="631 - Capoeiras"><option value="V-631 - Capoeiras"><option value="183 - Carianos via Saco dos Limões">
+        <option value="772 - Chico Mendes"><option value="V-663 - Coloninha via Araci Vaz Callado"><option value="663 - Coloninha via Araci Vaz Callado">
+        <option value="630 - Corredor Continente"><option value="V-630 - Corredor Continente"><option value="664 - Itaguaçu">
+        <option value="V-670 - Monte Cristo"><option value="670 - Monte Cristo"><option value="672 - Monte Cristo via Esc. Edith Gama Ramos">
+        <option value="764 - Monte Serrat"><option value="V-764 - Monte Serrat via NEIM Evandro Sousa"><option value="160 - Morro da Cruz">
+        <option value="161 - Morro da Penitenciária"><option value="765 - Morro da Queimada"><option value="766 - Morro do 25">
+        <option value="760 - Morro do Geraldo"><option value="768 - Morro do Horácio"><option value="769 - Morro Nova Trento">
+        <option value="186 - Multi-hospital via Túnel"><option value="460 - Porto da Lagoa"><option value="467 - Tapera / Saco dos Limões">
+        <option value="461 - Tapera via Túnel"><option value="154 - TICEN - Carvoeira via Pantanal"><option value="188 - TICEN - UFSC">
+        <option value="431 - TICEN - Aeroporto"><option value="104 - TICEN / Itacorubi via Mauro Ramos"><option value="476 - TICEN / Tapera">
+        <option value="191 - TITRI / TICEN via Transcaeira"><option value="184 - UDESC via Beira Mar"><option value="V-671 - Vila / Promorar">
+        <option value="671 - Vila / Promorar"><option value="761 - Vila Aparecida"><option value="137 - Volta ao Morro Norte via H.U.">
+        <option value="135 - Volta ao Morro Norte via Lauro Linhares"><option value="136 - Volta ao Morro Sul via H.U."><option value="138 - Volta ao Morro Sul via Lauro Linhares">
+        <option value="230 - TICAN - Gama D'Eça via TITRI"><option value="224 - TICAN - TITRI via Virgílio Várzea"><option value="233 - TICAN - UFSC via Santa Mônica">
+        <option value="210 - TICAN / TICEN Direto"><option value="221 - TICAN / TICEN via Mauro Ramos"><option value="231 - TICAN / TICEN via TITRI">
+        <option value="840 - TICAN - TILAG via Barra da Lagoa"><option value="132 - TITRI - TICEN via Gama D'Eça/H.I"><option value="850 - TILAG / Rio Vermelho via Cidade da Barra">
+        <option value="320 - TILAG / TICEN via Beira Mar"><option value="330 - TILAG / TICEN via Mauro Ramos"><option value="841 - TILAG / TIRIO">
+        <option value="843 - TILAG / TIRIO via LIC"><option value="845 - TILAG / TITRI via Córrego Grande"><option value="333 - TILAG / TITRI via Madre Benvenuta">
+        <option value="410 - TIRIO / TICEN Direto"><option value="430 - TIRIO / TICEN via Costeira"><option value="847 - TIRIO - TITRI via UFSC">
+        <option value="212 - TISAN - TICEN Direto"><option value="332 - TISAN / TICEN via Beira Mar"><option value="331 - TISAN / TICEN via Mauro Ramos">
+        <option value="110 - TITRI - TICEN Direto"><option value="131 - TITRI - TICEN via Gama D'Eça"><option value="133 - TITRI / TICEN via Mauro Ramos">
+        <option value="2120 - Executivo Barra da Lagoa"><option value="1126 - Executivo Cachoeira"><option value="4124 - Executivo Caieira da Barra do Sul via Tapera">
+        <option value="1120 - Executivo Canasvieiras"><option value="1128 - Executivo Costa do Moçambique"><option value="1132 - Executivo Costa do Moçambique via Vargem Grande">
+        <option value="1127 - Executivo Gaivotas"><option value="1121 - Executivo Ingleses / Santinho"><option value="1123 - Executivo Jurerê">
+        <option value="1129 - Executivo Muquém"><option value="4120 - Executivo Pântano do Sul via Eucaliptos"><option value="4125 - Executivo Pântano do Sul via Gramal">
+        <option value="1122 - Executivo Praia Brava"><option value="4123 - Executivo Ribeirão da Ilha"><option value="1125 - Executivo Rio Vermelho">
+        <option value="673 - Ponte Viva"><option value="276 - Balneário Canasvieiras"><option value="277 - Balneário Ingleses"><option value="280 - Cachoeira - TICAN">
+        <option value="260 - Cachoeira do Bom Jesus"><option value="261 - Capivari"><option value="V-261 - Capivari via SC-403">
+        <option value="262 - Circular Canasvieiras"><option value="285 - Circular Moçambique"><option value="288 - Circular Rio Vermelho">
+        <option value="281 - Costa do Moçambique"><option value="250 - Forte / Canasvieiras"><option value="V-250 - Forte / Canasvieiras via Col. Virgílio Várzea">
+        <option value="263 - Gaivotas"><option value="269 - Moçambique via Rua Alzira Rosa Aguiar"><option value="265 - Ponta das Canas">
+        <option value="266 - Praia Brava"><option value="267 - Rio Vermelho"><option value="287 - Rio Vermelho via Vargem Grande">
+        <option value="264 - Santinho via Ingleses"><option value="268 - Sítio de Baixo"><option value="274 - Tulipas Vermelhas via Muquém">
+        <option value="283 - Vargem do Bom Jesus"><option value="270 - Vargem Grande"><option value="289 - Circular Vargem Grande via Rio Vermelho">
+        <option value="282 - Vargem Pequena"><option value="V-282 - Vargem Pequena via Esc. Prof. Zulma Freitas">
+        <option value="846 - Cacupé"><option value="V-846 - Cacupé via Caminho dos Açores"><option value="170 - Caminho da Cruz via João Paulo">
+        <option value="151 - Centro Administrativo"><option value="164 - Córrego Grande via Poção"><option value="165 - Itacorubi">
+        <option value="169 - Monte Verde via Mané Vicente"><option value="173 - Morro do Quilombo"><option value="V-173 - Morro do Quilombo via SC 404">
+        <option value="178 - Saco Grande Retorno SC-401"><option value="176 - Saco Grande via HU"><option value="174 - Saco Grande via João Paulo">
+        <option value="V-174 - Saco Grande via João Paulo / Barreira do Janga"><option value="177 - Santa Mônica"><option value="179 - Serrinha">
+        <option value="155 - Sol Nascente"><option value="470 - Tapera / TITRI"><option value="180 - TITRI - Pantanal via Carvoeira">
+        <option value="366 - Barra do Sambaqui via Padre Rohr"><option value="181 - Cacupé - João Paulo"><option value="940 - Canasvieiras / Santo Antônio via Jurerê">
+        <option value="273 - Circular Ratones"><option value="271 - Daniela"><option value="272 - Jurerê"><option value="365 - Sambaqui">
+        <option value="601 - Circular Abraão - Estreito"><option value="291 - Circular Canasvieiras/Praia Brava"><option value="605 - Circular Estreito - Abraão">
+        <option value="296 - Circular Santinho Ingleses"><option value="294 - Interpraias"><option value="100 - Madrugadão Centro - UFSC Norte">
+        <option value="102 - Madrugadão Centro / UFSC Sul"><option value="600 - Madrugadão Continente Norte"><option value="604 - Madrugadão Continente Sul">
+        <option value="300 - Madrugadão Leste"><option value="201 - Madrugadão Norte - Jurerê / Canasvieiras"><option value="200 - Madrugadão Norte - Rio Vermelho / Santinho">
+        <option value="301 - Madrugadão Norte - Santo Antônio / TICAN"><option value="500 - Madrugadão Sul - Pântano do Sul"><option value="501 - Madrugadão Sul - Ribeirão">
+        <option value="720 - Monte Serrat - Serrinha"><option value="722 - Morro do 25 - Morro da Cruz"><option value="721 - Morro do Horácio - Saco dos Limões">
+        <option value="D-564 - Pântano do Sul"><option value="D-565 - Ribeirão da Ilha"><option value="D-260 - TICEN / Cachoeira do Bom Jesus via Mauro Ramos">
+        <option value="D-264 - TICEN / Ingleses via Mauro Ramos"><option value="D-266 - TICEN / Praia Brava via Mauro Ramos"><option value="D-267 - TICEN / Rio Vermelho via Mauro Ramos">
+        <option value="560 - Armação"><option value="561 - Caieira da Barra do Sul"><option value="462 - Campeche">
+        <option value="562 - Costa de Cima"><option value="V-562 - Costa de Cima via Costa de Dentro"><option value="563 - Costa de Dentro">
+        <option value="V-563 - Costa de Dentro via Costa de Cima"><option value="473 - Morro das Pedras via Eucaliptos"><option value="474 - Morro das Pedras via Gramal">
+        <option value="564 - Pântano do Sul"><option value="565 - Ribeirão da Ilha"><option value="469 - Tapera / TIRIO">
+        <option value="477 - TIRIO / Aeroporto via Tapera"><option value="V-468 - TIRIO / Multihospital via Aeroporto"><option value="468 - TIRIO / Multihospital">
+        <option value="360 - Barra da Lagoa"><option value="V-360 - Barra da Lagoa via Terminal Lacustre"><option value="362 - Canto dos Araçás">
+        <option value="363 - Joaquina"><option value="364 - Osni Ortiga"><option value="840 - TICAN - TILAG via Barra da Lagoa">
+    </datalist>
+    
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="index.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="home" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Início</span>
+            </a>
+            <a href="feed.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="message-square" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Feed</span>
+            </a>
+            <a href="painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="bar-chart" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Painel</span>
+            </a>
+            <a href="telemetria-motorista.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="route" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Telem.</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeFirestore, collection, doc, setDoc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js?v=3";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
+
+        let user = null;
+        signInAnonymously(auth);
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            window.__telemetryUser = u;
+        });
+
+        const BASE = ['artifacts', 'sentinela-stp', 'public', 'data', 'telemetria_viagens'];
+
+        window.telemetryCloud = {
+            createTrip: async (meta) => {
+                if (!user) throw new Error('auth-not-ready');
+                const tripsCol = collection(db, ...BASE);
+                const tripRef = doc(tripsCol);
+                await setDoc(tripRef, {
+                    ownerUid: user.uid,
+                    status: 'active',
+                    startedAt: serverTimestamp(),
+                    startedAtMs: Date.now(),
+                    meta
+                });
+                return tripRef.id;
+            },
+            addChunk: async (tripId, chunk) => {
+                if (!user) throw new Error('auth-not-ready');
+                const chunkCol = collection(db, ...BASE, tripId, 'chunks');
+                await addDoc(chunkCol, { ...chunk, createdAt: serverTimestamp() });
+            },
+            finishTrip: async (tripId, summary) => {
+                if (!user) throw new Error('auth-not-ready');
+                const tripRef = doc(db, ...BASE, tripId);
+                await updateDoc(tripRef, {
+                    status: 'ended',
+                    endedAt: serverTimestamp(),
+                    endedAtMs: Date.now(),
+                    summary
+                });
+            }
+        };
+    </script>
+    
+    <script>
+        lucide.createIcons();
+        
+        const THRESHOLD_DB = 85;
+        const THRESHOLD_G = 1.5;
+        const GRAVITY = 9.80665;
+        
+        const gpsDot = document.getElementById('gps-dot');
+        const micDot = document.getElementById('mic-dot');
+        const motDot = document.getElementById('mot-dot');
+        const recDot = document.getElementById('rec-dot');
+        const recLabel = document.getElementById('rec-label');
+        
+        const dbNowEl = document.getElementById('db-now');
+        const dbMaxEl = document.getElementById('db-max');
+        const dbBar = document.getElementById('db-bar');
+        
+        const gNowEl = document.getElementById('g-now');
+        const gMaxEl = document.getElementById('g-max');
+        const gBar = document.getElementById('g-bar');
+        
+        const tripStatusEl = document.getElementById('trip-status');
+        const tripDurationEl = document.getElementById('trip-duration');
+        const tripDistanceEl = document.getElementById('trip-distance');
+        const alertsDbEl = document.getElementById('alerts-db');
+        const alertsGEl = document.getElementById('alerts-g');
+        
+        const alertBanner = document.getElementById('alert-banner');
+        const alertText = document.getElementById('alert-text');
+        const dismissAlertBtn = document.getElementById('dismiss-alert');
+        
+        const permissionsBtn = document.getElementById('permissions-btn');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const eventsEl = document.getElementById('events');
+        const copyLastBtn = document.getElementById('copy-last-btn');
+        
+        const tempExtEl = document.getElementById('temp-ext');
+        const tempEstEl = document.getElementById('temp-est');
+        
+        let permissionsGranted = false;
+        let isRecording = false;
+        
+        let audioCtx = null;
+        let analyser = null;
+        let dataArr = null;
+        let userStream = null;
+        let rafId = null;
+        
+        let geoWatchId = null;
+        let lastPos = null;
+        
+        let currentDb = null;
+        let maxDb = null;
+        
+        let currentG = null;
+        let maxG = null;
+        
+        let alertsDb = 0;
+        let alertsG = 0;
+        let lastAlertDbAt = 0;
+        let lastAlertGAt = 0;
+        
+        let startedAt = null;
+        let durationTimer = null;
+        
+        let distanceKm = 0;
+        
+        let trip = null;
+        let cloudTripId = null;
+        let cloudSamples = [];
+        let cloudGps = [];
+        let cloudEvents = [];
+        let cloudFlushTimer = null;
+        let lastStoredSampleAt = 0;
+        
+        const map = L.map('map', { zoomControl: false }).setView([-27.5945, -48.5477], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        
+        const trackPolyline = L.polyline([], { color: '#2563eb', weight: 4, opacity: 0.9 }).addTo(map);
+        const marker = L.circleMarker([-27.5945, -48.5477], { radius: 8, color: '#0f172a', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map);
+        
+        function setDot(dotEl, ok) {
+            dotEl.className = ok ? "status-dot bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "status-dot bg-slate-500";
+        }
+        
+        function fmtTime(ms) {
+            const s = Math.max(0, Math.floor(ms / 1000));
+            const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+            const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+        
+        function haversineKm(a, b) {
+            const R = 6371;
+            const dLat = (b.lat - a.lat) * Math.PI / 180;
+            const dLng = (b.lng - a.lng) * Math.PI / 180;
+            const lat1 = a.lat * Math.PI / 180;
+            const lat2 = b.lat * Math.PI / 180;
+            const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLng / 2) ** 2);
+            return 2 * R * Math.asin(Math.min(1, Math.sqrt(x)));
+        }
+        
+        function showAlert(message) {
+            alertText.textContent = message;
+            alertBanner.classList.remove('hidden');
+        }
+        
+        function hideAlert() {
+            alertBanner.classList.add('hidden');
+        }
+        
+        function addEvent(kind, payload) {
+            const now = new Date();
+            const item = {
+                ts: now.toISOString(),
+                kind,
+                ...payload
+            };
+            if (trip) trip.events.push(item);
+            if (isRecording) cloudEvents.push(item);
+            
+            const el = document.createElement('div');
+            el.className = 'bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-start justify-between gap-3';
+            const left = document.createElement('div');
+            left.className = 'min-w-0';
+            const title = document.createElement('p');
+            title.className = 'text-[10px] font-black text-slate-400 uppercase tracking-widest';
+            title.textContent = kind;
+            const msg = document.createElement('p');
+            msg.className = 'text-sm font-bold text-slate-800 leading-tight break-words';
+            msg.textContent = payload && payload.message ? payload.message : '';
+            const meta = document.createElement('p');
+            meta.className = 'text-[10px] font-bold text-slate-400 mt-1';
+            meta.textContent = now.toLocaleString();
+            left.appendChild(title);
+            left.appendChild(msg);
+            left.appendChild(meta);
+            const tag = document.createElement('span');
+            tag.className = 'text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-600';
+            tag.textContent = payload && payload.tag ? payload.tag : 'LOG';
+            el.appendChild(left);
+            el.appendChild(tag);
+            eventsEl.prepend(el);
+        }
+        
+        function updateTemperatureEstimate() {
+            const extRaw = tempExtEl.value;
+            if (extRaw === '' || extRaw == null) {
+                tempEstEl.textContent = '—';
+                return;
+            }
+            const ext = Number(extRaw);
+            if (!Number.isFinite(ext)) {
+                tempEstEl.textContent = '—';
+                return;
+            }
+            const estimated = ext + 6;
+            tempEstEl.textContent = `${estimated.toFixed(1)}°C`;
+        }
+        
+        tempExtEl.addEventListener('input', updateTemperatureEstimate);
+        
+        dismissAlertBtn.addEventListener('click', hideAlert);
+        
+        copyLastBtn.addEventListener('click', async () => {
+            const last = trip && trip.events && trip.events.length > 0 ? trip.events[trip.events.length - 1] : null;
+            const text = last ? JSON.stringify(last, null, 2) : '';
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+            }
+        });
+        
+        async function flushCloud(force = false) {
+            if (!cloudTripId || !window.telemetryCloud) return;
+            const hasData = cloudSamples.length > 0 || cloudGps.length > 0 || cloudEvents.length > 0;
+            if (!hasData) return;
+
+            const chunk = {
+                samples: cloudSamples,
+                gps: cloudGps,
+                events: cloudEvents
+            };
+            if (!force && cloudSamples.length < 50 && cloudGps.length < 25 && cloudEvents.length < 1) return;
+
+            cloudSamples = [];
+            cloudGps = [];
+            cloudEvents = [];
+            try {
+                await window.telemetryCloud.addChunk(cloudTripId, chunk);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function requestPermissions() {
+            try {
+                userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                setDot(micDot, true);
+                
+                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                    const resp = await DeviceMotionEvent.requestPermission();
+                    if (resp !== 'granted') throw new Error('Motion permission denied');
+                }
+                
+                window.addEventListener('devicemotion', (event) => {
+                    const acc = event.acceleration || event.accelerationIncludingGravity;
+                    if (!acc) return;
+                    const ax = Number(acc.x || 0);
+                    const ay = Number(acc.y || 0);
+                    const az = Number(acc.z || 0);
+                    const gTotal = Math.sqrt(ax * ax + ay * ay + az * az) / GRAVITY;
+                    currentG = Math.max(0, gTotal);
+                    if (!maxG || currentG > maxG) maxG = currentG;
+                    gNowEl.textContent = currentG ? currentG.toFixed(2) : '0.00';
+                    gMaxEl.textContent = maxG ? maxG.toFixed(2) : '0.00';
+                    gBar.style.width = `${Math.min((currentG / 3) * 100, 100)}%`;
+                    setDot(motDot, true);
+                    
+                    if (isRecording && currentG >= THRESHOLD_G) {
+                        const now = Date.now();
+                        if (now - lastAlertGAt >= 5000) {
+                            lastAlertGAt = now;
+                            alertsG += 1;
+                            alertsGEl.textContent = String(alertsG);
+                            const msg = `Trepidação acima de ${THRESHOLD_G.toFixed(1)}G (pico ${currentG.toFixed(2)}G)`;
+                            showAlert(msg);
+                            addEvent('ALERTA G', { message: msg, tag: 'G' });
+                        }
+                    }
+                }, { passive: true });
+                
+                permissionsGranted = true;
+                return true;
+            } catch (e) {
+                console.error(e);
+                setDot(micDot, false);
+                setDot(motDot, false);
+                alert('Permissões negadas. Habilite Microfone e Movimento para iniciar.');
+                return false;
+            }
+        }
+        
+        function startGps() {
+            if (!navigator.geolocation) {
+                alert('Este dispositivo não possui suporte a GPS.');
+                return;
+            }
+            
+            geoWatchId = navigator.geolocation.watchPosition((p) => {
+                const point = {
+                    lat: p.coords.latitude,
+                    lng: p.coords.longitude,
+                    acc: p.coords.accuracy,
+                    speed: p.coords.speed,
+                    heading: p.coords.heading,
+                    ts: Date.now()
+                };
+                
+                setDot(gpsDot, true);
+                
+                marker.setLatLng([point.lat, point.lng]);
+                trackPolyline.addLatLng([point.lat, point.lng]);
+                map.panTo([point.lat, point.lng], { animate: true, duration: 0.25 });
+                
+                if (lastPos) {
+                    const d = haversineKm(lastPos, point);
+                    if (Number.isFinite(d) && d < 1) {
+                        distanceKm += d;
+                        tripDistanceEl.textContent = distanceKm.toFixed(2);
+                    }
+                }
+                
+                lastPos = point;
+                if (trip) trip.gps.push(point);
+                if (isRecording) cloudGps.push(point);
+                if (cloudGps.length >= 100) flushCloud(true);
+            }, (err) => {
+                console.error(err);
+                setDot(gpsDot, false);
+                alert('Falha ao obter GPS. Ative a localização.');
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+        }
+        
+        function stopGps() {
+            if (geoWatchId != null) {
+                navigator.geolocation.clearWatch(geoWatchId);
+                geoWatchId = null;
+            }
+            setDot(gpsDot, false);
+        }
+        
+        function ensureAudio() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!audioCtx) audioCtx = new AC();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 2048;
+            dataArr = new Uint8Array(analyser.frequencyBinCount);
+            const mic = audioCtx.createMediaStreamSource(userStream);
+            mic.connect(analyser);
+        }
+        
+        function sampleDb() {
+            if (!isRecording || !analyser) return;
+            analyser.getByteTimeDomainData(dataArr);
+            let sum = 0;
+            for (let i = 0; i < dataArr.length; i++) {
+                const n = (dataArr[i] - 128) / 128;
+                sum += n * n;
+            }
+            const rms = Math.sqrt(sum / dataArr.length) || 0.0001;
+            const db = Math.round(20 * Math.log10(rms) + 105);
+            currentDb = Math.max(30, db);
+            if (!maxDb || currentDb > maxDb) maxDb = currentDb;
+            
+            dbNowEl.textContent = String(currentDb);
+            dbMaxEl.textContent = maxDb ? String(maxDb) : '—';
+            dbBar.style.width = `${Math.min((currentDb / 110) * 100, 100)}%`;
+            
+            if (trip) {
+                const now = Date.now();
+                if (now - lastStoredSampleAt >= 1000) {
+                    lastStoredSampleAt = now;
+                    const sample = {
+                        ts: now,
+                        db: currentDb,
+                        g: currentG,
+                        lat: lastPos ? lastPos.lat : null,
+                        lng: lastPos ? lastPos.lng : null
+                    };
+                    trip.samples.push(sample);
+                    cloudSamples.push(sample);
+                    if (cloudSamples.length >= 200) flushCloud(true);
+                }
+            }
+            
+            if (currentDb >= THRESHOLD_DB) {
+                const now = Date.now();
+                if (now - lastAlertDbAt >= 5000) {
+                    lastAlertDbAt = now;
+                    alertsDb += 1;
+                    alertsDbEl.textContent = String(alertsDb);
+                    const msg = `Ruído acima de ${THRESHOLD_DB}dB (${currentDb}dB)`;
+                    showAlert(msg);
+                    addEvent('ALERTA dB', { message: msg, tag: 'dB' });
+                }
+            }
+            
+            rafId = requestAnimationFrame(sampleDb);
+        }
+        
+        function startDurationTimer() {
+            if (durationTimer) clearInterval(durationTimer);
+            durationTimer = setInterval(() => {
+                if (!startedAt) return;
+                tripDurationEl.textContent = fmtTime(Date.now() - startedAt);
+            }, 500);
+        }
+        
+        function stopDurationTimer() {
+            if (durationTimer) clearInterval(durationTimer);
+            durationTimer = null;
+        }
+        
+        function resetUi() {
+            hideAlert();
+            dbNowEl.textContent = '—';
+            dbMaxEl.textContent = '—';
+            dbBar.style.width = '0%';
+            gNowEl.textContent = '—';
+            gMaxEl.textContent = '—';
+            gBar.style.width = '0%';
+            tripDurationEl.textContent = '00:00:00';
+            tripDistanceEl.textContent = '0.00';
+            alertsDbEl.textContent = '0';
+            alertsGEl.textContent = '0';
+            tripStatusEl.textContent = 'Aguardando';
+            eventsEl.innerHTML = '';
+            setDot(gpsDot, false);
+            setDot(micDot, permissionsGranted);
+            setDot(motDot, permissionsGranted);
+            setDot(recDot, false);
+            recLabel.textContent = 'OFF';
+        }
+        
+        function downloadTrip() {
+            if (!trip) return;
+            const payload = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                trip
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const pad = (n) => String(n).padStart(2, '0');
+            const dt = new Date();
+            const file = `telemetria_${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}_${pad(dt.getHours())}-${pad(dt.getMinutes())}-${pad(dt.getSeconds())}.json`;
+            a.href = url;
+            a.download = file;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+        
+        permissionsBtn.addEventListener('click', async () => {
+            if (permissionsGranted) return;
+            const ok = await requestPermissions();
+            if (ok) {
+                setDot(micDot, true);
+                setDot(motDot, true);
+            }
+        });
+        
+        startBtn.addEventListener('click', async () => {
+            const line = document.getElementById('bus-line').value.trim();
+            if (!line) {
+                alert('Informe a linha.');
+                return;
+            }
+            
+            if (!permissionsGranted) {
+                const ok = await requestPermissions();
+                if (!ok) return;
+            }
+            
+            if (!userStream) {
+                alert('Microfone indisponível.');
+                return;
+            }
+            
+            try {
+                if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+                ensureAudio();
+            } catch (e) {
+                console.error(e);
+                alert('Falha ao iniciar áudio.');
+                return;
+            }
+            
+            isRecording = true;
+            startedAt = Date.now();
+            distanceKm = 0;
+            lastPos = null;
+            maxDb = null;
+            maxG = null;
+            lastStoredSampleAt = 0;
+            alertsDb = 0;
+            alertsG = 0;
+            lastAlertDbAt = 0;
+            lastAlertGAt = 0;
+            cloudTripId = null;
+            cloudSamples = [];
+            cloudGps = [];
+            cloudEvents = [];
+            
+            trip = {
+                id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+                startedAt: new Date(startedAt).toISOString(),
+                endedAt: null,
+                meta: {
+                    linha: line,
+                    prefixo: document.getElementById('bus-prefix').value.trim() || 'S/N',
+                    temp_externa_c: tempExtEl.value === '' ? null : Number(tempExtEl.value),
+                    temp_estimada_c: tempExtEl.value === '' ? null : Number((Number(tempExtEl.value) + 6).toFixed(1)),
+                    thresholds: { db: THRESHOLD_DB, g: THRESHOLD_G }
+                },
+                gps: [],
+                samples: [],
+                events: []
+            };
+
+            if (window.telemetryCloud) {
+                try {
+                    cloudTripId = await window.telemetryCloud.createTrip(trip.meta);
+                } catch (e) {
+                    console.error(e);
+                    cloudTripId = null;
+                }
+            }
+            
+            tripStatusEl.textContent = 'Em andamento';
+            setDot(recDot, true);
+            recLabel.textContent = 'ON';
+            
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            downloadBtn.disabled = true;
+            
+            trackPolyline.setLatLngs([]);
+            startGps();
+            startDurationTimer();
+            if (cloudFlushTimer) clearInterval(cloudFlushTimer);
+            cloudFlushTimer = setInterval(() => flushCloud(false), 10000);
+            sampleDb();
+        });
+        
+        stopBtn.addEventListener('click', async () => {
+            isRecording = false;
+            setDot(recDot, false);
+            recLabel.textContent = 'OFF';
+            tripStatusEl.textContent = 'Encerrada';
+            
+            stopGps();
+            stopDurationTimer();
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = null;
+            
+            try {
+                if (userStream) {
+                    userStream.getTracks().forEach(t => t.stop());
+                    userStream = null;
+                }
+            } catch (e) { console.error(e); }
+            
+            try {
+                if (audioCtx) {
+                    await audioCtx.close();
+                    audioCtx = null;
+                }
+            } catch (e) { console.error(e); }
+            
+            setDot(micDot, false);
+            
+            if (trip) {
+                trip.endedAt = new Date().toISOString();
+                trip.summary = {
+                    duration_ms: startedAt ? Date.now() - startedAt : null,
+                    distance_km: Number(distanceKm.toFixed(3)),
+                    max_db: maxDb,
+                    max_g: maxG,
+                    alerts_db: alertsDb,
+                    alerts_g: alertsG
+                };
+                if (cloudFlushTimer) clearInterval(cloudFlushTimer);
+                cloudFlushTimer = null;
+                await flushCloud(true);
+                if (cloudTripId && window.telemetryCloud) {
+                    try {
+                        await window.telemetryCloud.finishTrip(cloudTripId, trip.summary);
+                    } catch (e) { console.error(e); }
+                }
+                try {
+                    const key = `telemetria_trip_${trip.id}`;
+                    localStorage.setItem(key, JSON.stringify(trip));
+                } catch (e) { console.error(e); }
+            }
+            
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            downloadBtn.disabled = false;
+        });
+        
+        downloadBtn.addEventListener('click', downloadTrip);
+        
+        clearBtn.addEventListener('click', () => {
+            isRecording = false;
+            stopGps();
+            stopDurationTimer();
+            if (cloudFlushTimer) clearInterval(cloudFlushTimer);
+            cloudFlushTimer = null;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = null;
+            trackPolyline.setLatLngs([]);
+            marker.setLatLng([-27.5945, -48.5477]);
+            map.setView([-27.5945, -48.5477], 13);
+            startedAt = null;
+            distanceKm = 0;
+            trip = null;
+            maxDb = null;
+            maxG = null;
+            currentDb = null;
+            currentG = null;
+            alertsDb = 0;
+            alertsG = 0;
+            cloudTripId = null;
+            cloudSamples = [];
+            cloudGps = [];
+            cloudEvents = [];
+            downloadBtn.disabled = true;
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            resetUi();
+        });
+        
+        resetUi();
+        updateTemperatureEstimate();
+    </script>
+    <script src="version-display.js"></script>
+</body>
+</html>

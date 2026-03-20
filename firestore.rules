@@ -30,6 +30,22 @@ service cloud.firestore {
       }
     }
 
+    // 3b. Telemetria de Motoristas (Trajetos completos)
+    // Separado de evidências de passageiros. Motorista (anônimo autenticado) escreve apenas os próprios dados.
+    // Leitura liberada para administradores logados (email/senha).
+    match /artifacts/sentinela-stp/public/data/telemetria_viagens/{tripId} {
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow read, update, delete: if request.auth != null && (request.auth.token.email != null || resource.data.ownerUid == request.auth.uid);
+
+      match /chunks/{chunkId} {
+        allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/artifacts/sentinela-stp/public/data/telemetria_viagens/$(tripId)).data.ownerUid == request.auth.uid;
+        allow read: if request.auth != null &&
+          (request.auth.token.email != null || get(/databases/$(database)/documents/artifacts/sentinela-stp/public/data/telemetria_viagens/$(tripId)).data.ownerUid == request.auth.uid);
+        allow update, delete: if false;
+      }
+    }
+
     // 4. Configurações Globais (Se houver)
     match /artifacts/sentinela-stp/public/config/{configId} {
       allow read: if true;
