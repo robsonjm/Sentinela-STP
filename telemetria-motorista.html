@@ -394,7 +394,6 @@
         
         const map = L.map('map', { zoomControl: false }).setView([-27.5945, -48.5477], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
-        L.control.zoom({ position: 'topleft' }).addTo(map);
         
         const trackPolyline = L.polyline([], { color: '#2563eb', weight: 4, opacity: 0.9 }).addTo(map);
         const marker = L.circleMarker([-27.5945, -48.5477], { radius: 8, color: '#0f172a', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map);
