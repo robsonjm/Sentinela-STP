@@ -107,6 +107,9 @@
                             <button id="download-trip-btn" class="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2" disabled>
                                 <i data-lucide="download" size="14"></i> JSON
                             </button>
+                            <button id="delete-trip-btn" class="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2" disabled>
+                                <i data-lucide="trash-2" size="14"></i> Excluir
+                            </button>
                         </div>
                     </div>
             </section>
@@ -150,7 +153,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { initializeFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, doc, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig } from "./js/config.js?v=3";
 
         const THRESHOLD_DB = 85;
@@ -176,6 +179,7 @@
         const toggleAlertsGEl = document.getElementById('toggle-alerts-g');
         const fitBtn = document.getElementById('fit-btn');
         const downloadTripBtn = document.getElementById('download-trip-btn');
+        const deleteTripBtn = document.getElementById('delete-trip-btn');
 
         const eventsCountEl = document.getElementById('events-count');
         const eventsListEl = document.getElementById('events-list');
@@ -415,6 +419,7 @@
                 chipDurationEl.textContent = '00:00:00';
                 chipMaxEl.textContent = 'max';
                 downloadTripBtn.disabled = true;
+                deleteTripBtn.disabled = true;
                 renderEventsList([]);
                 return;
             }
@@ -485,6 +490,44 @@
             }));
             renderEventsList(eventsWithCoords);
             downloadTripBtn.disabled = false;
+            deleteTripBtn.disabled = false;
+        }
+
+        async function deleteTrip(tripDoc) {
+            if (!tripDoc) return;
+            const meta = tripDoc.meta || {};
+            const line = escapeText(meta.linha || 'Linha não informada');
+            const prefix = escapeText(meta.prefixo || 'S/N');
+            const tripId = tripDoc.id;
+
+            const ok = confirm(`Excluir permanentemente esta corrida?\n\n${line}\n#${prefix}\nID: ${tripId}\n\nIsso removerá também os dados de telemetria (chunks).`);
+            if (!ok) return;
+            const typed = prompt('Digite APAGAR para confirmar a exclusão:');
+            if (typed !== 'APAGAR') return;
+
+            deleteTripBtn.disabled = true;
+            downloadTripBtn.disabled = true;
+
+            const chunksCol = collection(db, ...BASE, tripId, 'chunks');
+
+            while (true) {
+                const snap = await getDocs(query(chunksCol, limit(400)));
+                if (snap.empty) break;
+                const batch = writeBatch(db);
+                snap.docs.forEach((d) => batch.delete(d.ref));
+                await batch.commit();
+            }
+
+            await deleteDoc(doc(db, ...BASE, tripId));
+
+            if (selectedTripId === tripId) {
+                selectedTripId = null;
+                selectedTrip = null;
+                selectedTripChunks = [];
+                selectedTripComputed = null;
+                setActiveTripItem('');
+                renderMapAndDetails(null, { gps: [], events: [], maxDb: null, maxG: null, alertDbPoints: [], alertGPoints: [] });
+            }
         }
 
         async function loadTripChunks(tripId) {
@@ -557,6 +600,21 @@
                 a.click();
                 a.remove();
                 URL.revokeObjectURL(url);
+            });
+
+            deleteTripBtn.addEventListener('click', async () => {
+                try {
+                    if (!selectedTrip) return;
+                    await deleteTrip(selectedTrip);
+                } catch (e) {
+                    console.error(e);
+                    alert('Erro ao excluir corrida.');
+                } finally {
+                    if (!selectedTrip) {
+                        deleteTripBtn.disabled = true;
+                        downloadTripBtn.disabled = true;
+                    }
+                }
             });
 
             if (logoutBtn) {
