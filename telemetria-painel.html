@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sentinela STP - Painel de Telemetria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; padding-bottom: calc(5rem + var(--sab)); }
+        #map { height: calc(100vh - 140px); min-height: 420px; }
+        @media (max-width: 1024px) { #map { height: 56vh; min-height: 320px; } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    </style>
+</head>
+<body class="min-h-screen opacity-0 transition-opacity duration-500 bg-slate-50">
+    <header class="bg-slate-900 text-white px-4 pt-[calc(0.75rem+var(--sat))] pb-3 shadow-lg sticky top-0 z-[100]">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="bg-white/10 p-2 rounded-xl text-white backdrop-blur-sm">
+                    <i data-lucide="route" size="20"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-lg font-black tracking-tighter uppercase leading-none truncate">Painel de Telemetria</h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Corridas de motoristas</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="user-email" class="text-[10px] font-mono text-slate-400 hidden sm:inline-block"></span>
+                <button id="logout-btn" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 p-2 rounded-lg transition-colors" title="Sair">
+                    <i data-lucide="log-out" size="18"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-4">
+        <div class="grid lg:grid-cols-[360px_1fr] gap-4 items-start">
+            <section class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-100">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-sm font-black text-slate-800 uppercase tracking-tight">Corridas</h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selecione uma viagem</p>
+                        </div>
+                        <div class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                            <i data-lucide="database" size="10"></i> <span id="trips-count">0</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2">
+                        <div class="flex-1 relative">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size="14"></i>
+                            <input id="trip-search" type="text" placeholder="Buscar linha, prefixo, UID..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:text-slate-300">
+                        </div>
+                        <button id="refresh-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl transition-colors border border-slate-200" title="Atualizar">
+                            <i data-lucide="refresh-cw" size="16"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="trips-list" class="p-3 space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto custom-scrollbar">
+                    <div class="text-center py-10 text-slate-400">
+                        <i data-lucide="loader-2" class="animate-spin mx-auto mb-3 text-blue-500" size="24"></i>
+                        <p class="text-xs font-bold uppercase tracking-widest">Carregando...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Viagem Selecionada</p>
+                            <h3 id="trip-title" class="text-base font-black text-slate-900 tracking-tight truncate">Nenhuma</h3>
+                            <p id="trip-subtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">—</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span id="chip-status" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">status</span>
+                            <span id="chip-distance" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">0.00 km</span>
+                            <span id="chip-duration" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">00:00:00</span>
+                            <span id="chip-max" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">max</span>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                    <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <label class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-600 cursor-pointer">
+                                <input id="toggle-alerts-db" type="checkbox" class="accent-blue-600" checked>
+                                Alertas dB
+                            </label>
+                            <label class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-600 cursor-pointer">
+                                <input id="toggle-alerts-g" type="checkbox" class="accent-blue-600" checked>
+                                Alertas G
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="fit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2">
+                                <i data-lucide="maximize" size="14"></i> Ajustar
+                            </button>
+                            <button id="download-trip-btn" class="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2" disabled>
+                                <i data-lucide="download" size="14"></i> JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Eventos</p>
+                            <p class="text-xs font-bold text-slate-500">Alertas e ocorrências registradas</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            <span id="events-count">0</span>
+                        </div>
+                    </div>
+                    <div id="events-list" class="p-3 space-y-2 max-h-64 overflow-y-auto custom-scrollbar"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="admin-news.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="newspaper" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Notícias</span>
+            </a>
+            <a href="admin-painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="map" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Evidências</span>
+            </a>
+            <a href="telemetria-painel.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="route" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Telem.</span>
+            </a>
+            <a href="roadmap.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="milestone" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Roadmap</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeFirestore, collection, query, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js?v=3";
+
+        const THRESHOLD_DB = 85;
+        const THRESHOLD_G = 1.5;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
+
+        const tripsCountEl = document.getElementById('trips-count');
+        const tripsListEl = document.getElementById('trips-list');
+        const searchEl = document.getElementById('trip-search');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        const tripTitleEl = document.getElementById('trip-title');
+        const tripSubtitleEl = document.getElementById('trip-subtitle');
+        const chipStatusEl = document.getElementById('chip-status');
+        const chipDistanceEl = document.getElementById('chip-distance');
+        const chipDurationEl = document.getElementById('chip-duration');
+        const chipMaxEl = document.getElementById('chip-max');
+
+        const toggleAlertsDbEl = document.getElementById('toggle-alerts-db');
+        const toggleAlertsGEl = document.getElementById('toggle-alerts-g');
+        const fitBtn = document.getElementById('fit-btn');
+        const downloadTripBtn = document.getElementById('download-trip-btn');
+
+        const eventsCountEl = document.getElementById('events-count');
+        const eventsListEl = document.getElementById('events-list');
+
+        const userEmailEl = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        const BASE = ['artifacts', 'sentinela-stp', 'public', 'data', 'telemetria_viagens'];
+
+        let trips = [];
+        let selectedTripId = null;
+        let selectedTrip = null;
+        let selectedTripChunks = [];
+        let selectedTripComputed = null;
+
+        const map = L.map('map', { zoomControl: false }).setView([-27.5945, -48.5477], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
+
+        const routeLayer = L.layerGroup().addTo(map);
+        const alertsDbLayer = L.layerGroup().addTo(map);
+        const alertsGLayer = L.layerGroup().addTo(map);
+
+        function escapeText(value) {
+            return value == null ? '' : String(value);
+        }
+
+        function fmtKm(value) {
+            const n = Number(value);
+            if (!Number.isFinite(n)) return '0.00 km';
+            return `${n.toFixed(2)} km`;
+        }
+
+        function fmtTimeFromMs(ms) {
+            const s = Math.max(0, Math.floor(ms / 1000));
+            const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+            const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+
+        function fmtDate(value) {
+            if (!value) return '—';
+            if (typeof value === 'number') return new Date(value).toLocaleString('pt-BR');
+            if (typeof value === 'string') {
+                const d = new Date(value);
+                if (!isNaN(d.getTime())) return d.toLocaleString('pt-BR');
+                return value;
+            }
+            if (value.seconds) return new Date(value.seconds * 1000).toLocaleString('pt-BR');
+            return '—';
+        }
+
+        function setActiveTripItem(id) {
+            Array.from(tripsListEl.querySelectorAll('[data-trip-id]')).forEach((el) => {
+                el.classList.toggle('ring-2', el.getAttribute('data-trip-id') === id);
+                el.classList.toggle('ring-blue-500/30', el.getAttribute('data-trip-id') === id);
+            });
+        }
+
+        function renderTrips() {
+            const term = escapeText(searchEl.value).toLowerCase().trim();
+            const filtered = trips.filter((t) => {
+                if (!term) return true;
+                const meta = t.meta || {};
+                const key = [
+                    t.id,
+                    meta.linha,
+                    meta.prefixo,
+                    t.ownerUid
+                ].map(escapeText).join(' ').toLowerCase();
+                return key.includes(term);
+            });
+
+            tripsCountEl.textContent = String(filtered.length);
+            tripsListEl.innerHTML = '';
+
+            if (filtered.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-10 text-slate-400';
+                empty.innerHTML = '<p class="text-xs font-bold uppercase tracking-widest">Nenhuma viagem encontrada</p>';
+                tripsListEl.appendChild(empty);
+                return;
+            }
+
+            filtered.forEach((t) => {
+                const meta = t.meta || {};
+                const line = escapeText(meta.linha || 'Linha não informada');
+                const prefix = escapeText(meta.prefixo || 'S/N');
+                const status = escapeText(t.status || '—');
+                const started = fmtDate(t.startedAtMs || t.startedAt);
+                const ended = t.endedAtMs || t.endedAt ? fmtDate(t.endedAtMs || t.endedAt) : '';
+                const dist = t.summary && t.summary.distance_km != null ? fmtKm(t.summary.distance_km) : '';
+
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'w-full text-left bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl p-3 transition-all';
+                card.setAttribute('data-trip-id', t.id);
+
+                const top = document.createElement('div');
+                top.className = 'flex items-start justify-between gap-3';
+                const left = document.createElement('div');
+                left.className = 'min-w-0';
+                const title = document.createElement('p');
+                title.className = 'text-xs font-black text-slate-800 truncate';
+                title.textContent = line;
+                const sub = document.createElement('p');
+                sub.className = 'text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate';
+                sub.textContent = `#${prefix} • ${status}`;
+                left.appendChild(title);
+                left.appendChild(sub);
+
+                const right = document.createElement('div');
+                right.className = 'text-right flex flex-col items-end gap-1';
+                const badge = document.createElement('span');
+                badge.className = `text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-xl ${status === 'active' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`;
+                badge.textContent = status === 'active' ? 'Ativa' : 'Final';
+                right.appendChild(badge);
+                if (dist) {
+                    const dEl = document.createElement('span');
+                    dEl.className = 'text-[10px] font-black text-slate-600 tabular-nums';
+                    dEl.textContent = dist;
+                    right.appendChild(dEl);
+                }
+
+                top.appendChild(left);
+                top.appendChild(right);
+
+                const bottom = document.createElement('div');
+                bottom.className = 'mt-2 text-[10px] font-bold text-slate-500';
+                bottom.textContent = ended ? `${started} → ${ended}` : started;
+
+                card.appendChild(top);
+                card.appendChild(bottom);
+
+                card.addEventListener('click', () => selectTrip(t.id));
+                tripsListEl.appendChild(card);
+            });
+
+            if (selectedTripId) setActiveTripItem(selectedTripId);
+        }
+
+        function clearMap() {
+            routeLayer.clearLayers();
+            alertsDbLayer.clearLayers();
+            alertsGLayer.clearLayers();
+        }
+
+        function renderEventsList(items) {
+            eventsListEl.innerHTML = '';
+            eventsCountEl.textContent = String(items.length);
+
+            if (items.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-10 text-slate-400';
+                empty.innerHTML = '<p class="text-xs font-bold uppercase tracking-widest">Sem eventos</p>';
+                eventsListEl.appendChild(empty);
+                return;
+            }
+
+            items.slice().reverse().forEach((e) => {
+                const row = document.createElement('div');
+                row.className = 'bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-start justify-between gap-3';
+
+                const left = document.createElement('div');
+                left.className = 'min-w-0';
+                const kind = document.createElement('p');
+                kind.className = 'text-[10px] font-black text-slate-400 uppercase tracking-widest';
+                kind.textContent = escapeText(e.kind || 'EVENTO');
+                const msg = document.createElement('p');
+                msg.className = 'text-sm font-bold text-slate-800 leading-tight break-words';
+                msg.textContent = escapeText(e.message || '');
+                const meta = document.createElement('p');
+                meta.className = 'text-[10px] font-bold text-slate-400 mt-1';
+                meta.textContent = fmtDate(e.ts);
+                left.appendChild(kind);
+                left.appendChild(msg);
+                left.appendChild(meta);
+
+                const tag = document.createElement('span');
+                tag.className = 'text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-xl bg-white border border-slate-200 text-slate-600';
+                tag.textContent = escapeText(e.tag || 'LOG');
+
+                row.appendChild(left);
+                row.appendChild(tag);
+
+                if (e.lat != null && e.lng != null) {
+                    row.addEventListener('click', () => {
+                        map.setView([e.lat, e.lng], Math.max(map.getZoom(), 16), { animate: true });
+                    });
+                }
+
+                eventsListEl.appendChild(row);
+            });
+        }
+
+        function computeTripData(chunks) {
+            const gps = [];
+            const samples = [];
+            const events = [];
+
+            chunks.forEach((c) => {
+                (c.gps || []).forEach((p) => gps.push(p));
+                (c.samples || []).forEach((s) => samples.push(s));
+                (c.events || []).forEach((e) => events.push(e));
+            });
+
+            const alertDbPoints = [];
+            const alertGPoints = [];
+
+            let maxDb = null;
+            let maxG = null;
+
+            samples.forEach((s) => {
+                const dbv = Number(s.db);
+                const gv = Number(s.g);
+                if (Number.isFinite(dbv)) maxDb = maxDb == null ? dbv : Math.max(maxDb, dbv);
+                if (Number.isFinite(gv)) maxG = maxG == null ? gv : Math.max(maxG, gv);
+                if (Number.isFinite(dbv) && dbv >= THRESHOLD_DB && s.lat != null && s.lng != null) {
+                    alertDbPoints.push({ lat: s.lat, lng: s.lng, ts: s.ts, value: dbv });
+                }
+                if (Number.isFinite(gv) && gv >= THRESHOLD_G && s.lat != null && s.lng != null) {
+                    alertGPoints.push({ lat: s.lat, lng: s.lng, ts: s.ts, value: gv });
+                }
+            });
+
+            return { gps, samples, events, maxDb, maxG, alertDbPoints, alertGPoints };
+        }
+
+        function renderMapAndDetails(tripDoc, computed) {
+            clearMap();
+
+            if (!tripDoc) {
+                tripTitleEl.textContent = 'Nenhuma';
+                tripSubtitleEl.textContent = '—';
+                chipStatusEl.textContent = 'status';
+                chipDistanceEl.textContent = '0.00 km';
+                chipDurationEl.textContent = '00:00:00';
+                chipMaxEl.textContent = 'max';
+                downloadTripBtn.disabled = true;
+                renderEventsList([]);
+                return;
+            }
+
+            const meta = tripDoc.meta || {};
+            const line = escapeText(meta.linha || 'Linha não informada');
+            const prefix = escapeText(meta.prefixo || 'S/N');
+            const status = escapeText(tripDoc.status || '—');
+            const started = tripDoc.startedAtMs || tripDoc.startedAt;
+            const ended = tripDoc.endedAtMs || tripDoc.endedAt;
+
+            tripTitleEl.textContent = line;
+            tripSubtitleEl.textContent = `#${prefix} • ${escapeText(tripDoc.ownerUid || '')}`;
+
+            chipStatusEl.textContent = status === 'active' ? 'Ativa' : 'Final';
+            chipStatusEl.className = `px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${status === 'active' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`;
+
+            const distKm = tripDoc.summary && tripDoc.summary.distance_km != null ? Number(tripDoc.summary.distance_km) : null;
+            chipDistanceEl.textContent = fmtKm(distKm || 0);
+
+            const durationMs = tripDoc.summary && tripDoc.summary.duration_ms != null ? Number(tripDoc.summary.duration_ms) : (
+                typeof started === 'number' && typeof ended === 'number' ? Math.max(0, ended - started) : null
+            );
+            chipDurationEl.textContent = durationMs == null ? '00:00:00' : fmtTimeFromMs(durationMs);
+
+            const maxDb = tripDoc.summary && tripDoc.summary.max_db != null ? Number(tripDoc.summary.max_db) : computed.maxDb;
+            const maxG = tripDoc.summary && tripDoc.summary.max_g != null ? Number(tripDoc.summary.max_g) : computed.maxG;
+            chipMaxEl.textContent = `MAX ${Number.isFinite(maxDb) ? `${Math.round(maxDb)}dB` : '—'} / ${Number.isFinite(maxG) ? `${maxG.toFixed(2)}G` : '—'}`;
+
+            const gpsPoints = computed.gps.filter((p) => p && p.lat != null && p.lng != null).map((p) => [p.lat, p.lng]);
+
+            if (gpsPoints.length >= 2) {
+                const poly = L.polyline(gpsPoints, { color: '#2563eb', weight: 4, opacity: 0.9 });
+                routeLayer.addLayer(poly);
+
+                const start = gpsPoints[0];
+                const end = gpsPoints[gpsPoints.length - 1];
+                routeLayer.addLayer(L.circleMarker(start, { radius: 7, color: '#0f172a', weight: 2, fillColor: '#22c55e', fillOpacity: 1 }));
+                routeLayer.addLayer(L.circleMarker(end, { radius: 7, color: '#0f172a', weight: 2, fillColor: '#ef4444', fillOpacity: 1 }));
+
+                try {
+                    map.fitBounds(poly.getBounds(), { padding: [24, 24] });
+                } catch {}
+            } else {
+                map.setView([-27.5945, -48.5477], 13);
+            }
+
+            if (toggleAlertsDbEl.checked) {
+                computed.alertDbPoints.forEach((p) => {
+                    const m = L.circleMarker([p.lat, p.lng], { radius: 6, color: '#991b1b', weight: 2, fillColor: '#ef4444', fillOpacity: 0.9 });
+                    m.bindTooltip(`${Math.round(p.value)} dB`, { direction: 'top' });
+                    alertsDbLayer.addLayer(m);
+                });
+            }
+
+            if (toggleAlertsGEl.checked) {
+                computed.alertGPoints.forEach((p) => {
+                    const m = L.circleMarker([p.lat, p.lng], { radius: 6, color: '#7c2d12', weight: 2, fillColor: '#f97316', fillOpacity: 0.9 });
+                    m.bindTooltip(`${p.value.toFixed(2)} G`, { direction: 'top' });
+                    alertsGLayer.addLayer(m);
+                });
+            }
+
+            const eventsWithCoords = computed.events.map((e) => ({
+                ...e,
+                lat: e.lat != null ? e.lat : null,
+                lng: e.lng != null ? e.lng : null
+            }));
+            renderEventsList(eventsWithCoords);
+            downloadTripBtn.disabled = false;
+        }
+
+        async function loadTripChunks(tripId) {
+            const chunksCol = collection(db, ...BASE, tripId, 'chunks');
+            const q = query(chunksCol, orderBy('createdAt', 'asc'), limit(500));
+            const snap = await getDocs(q);
+            return snap.docs.map((d) => d.data());
+        }
+
+        async function selectTrip(tripId) {
+            selectedTripId = tripId;
+            setActiveTripItem(tripId);
+            downloadTripBtn.disabled = true;
+
+            const tripRef = doc(db, ...BASE, tripId);
+            const tripSnap = await getDoc(tripRef);
+            if (!tripSnap.exists()) {
+                selectedTrip = null;
+                selectedTripChunks = [];
+                selectedTripComputed = null;
+                renderMapAndDetails(null, { gps: [], events: [], maxDb: null, maxG: null, alertDbPoints: [], alertGPoints: [] });
+                return;
+            }
+
+            selectedTrip = { id: tripId, ...tripSnap.data() };
+            selectedTripChunks = await loadTripChunks(tripId);
+            selectedTripComputed = computeTripData(selectedTripChunks);
+            renderMapAndDetails(selectedTrip, selectedTripComputed);
+        }
+
+        function setupListeners() {
+            searchEl.addEventListener('input', () => renderTrips());
+            refreshBtn.addEventListener('click', () => renderTrips());
+
+            toggleAlertsDbEl.addEventListener('change', () => {
+                if (!selectedTrip) return;
+                renderMapAndDetails(selectedTrip, selectedTripComputed);
+            });
+
+            toggleAlertsGEl.addEventListener('change', () => {
+                if (!selectedTrip) return;
+                renderMapAndDetails(selectedTrip, selectedTripComputed);
+            });
+
+            fitBtn.addEventListener('click', () => {
+                const poly = routeLayer.getLayers().find((l) => l instanceof L.Polyline);
+                if (poly) {
+                    try {
+                        map.fitBounds(poly.getBounds(), { padding: [24, 24] });
+                    } catch {}
+                }
+            });
+
+            downloadTripBtn.addEventListener('click', () => {
+                if (!selectedTrip) return;
+                const payload = {
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    trip: selectedTrip,
+                    chunks: selectedTripChunks
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const pad = (n) => String(n).padStart(2, '0');
+                const dt = new Date();
+                a.download = `telemetria_painel_${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}_${pad(dt.getHours())}-${pad(dt.getMinutes())}-${pad(dt.getSeconds())}.json`;
+                a.href = url;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            });
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    signOut(auth).finally(() => window.location.href = 'login.html');
+                });
+            }
+        }
+
+        function startTripsListener() {
+            const tripsCol = collection(db, ...BASE);
+            const q = query(tripsCol, orderBy('startedAtMs', 'desc'), limit(200));
+            onSnapshot(q, (snap) => {
+                trips = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                renderTrips();
+                if (!selectedTripId && trips.length > 0) {
+                    selectTrip(trips[0].id);
+                }
+            }, (err) => {
+                console.error(err);
+                tripsListEl.innerHTML = '<div class="text-center py-10 text-red-500"><p class="text-xs font-bold uppercase tracking-widest">Erro ao carregar</p></div>';
+            });
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && !user.isAnonymous) {
+                document.body.classList.remove('opacity-0');
+                if (userEmailEl) userEmailEl.textContent = user.email || '';
+                setupListeners();
+                startTripsListener();
+                lucide.createIcons();
+            } else {
+                if (user) signOut(auth);
+                window.location.href = 'login.html?redirect=telemetria-painel.html';
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+    <script src="version-display.js"></script>
+</body>
+</html>
