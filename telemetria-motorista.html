@@ -78,6 +78,12 @@
                             <button id="permissions-btn" type="button" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl transition-all flex items-center justify-center gap-2">
                                 <i data-lucide="shield" size="16"></i>
                             </button>
+                            <button id="start-btn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl shadow-lg shadow-blue-200/40 transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="play" size="16"></i>
+                            </button>
+                            <button id="stop-btn" type="button" class="hidden bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl shadow-lg shadow-red-200/40 transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="square" size="16"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -97,48 +103,38 @@
                     </div>
                 </div>
 
-                <div class="absolute right-3 top-3 z-[650] flex flex-col gap-2">
-                    <button id="start-btn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-3 rounded-2xl shadow-lg shadow-blue-200/50 transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="play" size="16"></i>
-                    </button>
-                    <button id="stop-btn" type="button" class="hidden bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-3 rounded-2xl shadow-lg shadow-red-200/50 transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="square" size="16"></i>
-                    </button>
-                </div>
-
                 <div class="absolute bottom-3 left-3 right-3 z-[600]">
                     <div class="bg-white/80 backdrop-blur rounded-2xl border border-slate-200 shadow-sm px-3 py-2">
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
-                                    <i data-lucide="volume-2" size="14" class="text-slate-500"></i>
-                                    <span class="text-sm font-black text-slate-900 tabular-nums" id="db-now">—</span>
-                                    <span class="text-[10px] font-black text-slate-400">dB</span>
-                                    <span class="text-[10px] font-black text-slate-300">/</span>
-                                    <span class="text-[10px] font-black text-slate-500 tabular-nums" id="db-max">—</span>
-                                </div>
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
-                                    <i data-lucide="activity" size="14" class="text-slate-500"></i>
-                                    <span class="text-sm font-black text-slate-900 tabular-nums" id="g-now">—</span>
-                                    <span class="text-[10px] font-black text-slate-400">G</span>
-                                    <span class="text-[10px] font-black text-slate-300">/</span>
-                                    <span class="text-[10px] font-black text-slate-500 tabular-nums" id="g-max">—</span>
-                                </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
+                                <i data-lucide="volume-2" size="14" class="text-slate-500"></i>
+                                <span class="text-sm font-black text-slate-900 tabular-nums" id="db-now">—</span>
+                                <span class="text-[10px] font-black text-slate-400">dB</span>
+                                <span class="text-[10px] font-black text-slate-300">/</span>
+                                <span class="text-[10px] font-black text-slate-500 tabular-nums" id="db-max">—</span>
                             </div>
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
+                                <i data-lucide="activity" size="14" class="text-slate-500"></i>
+                                <span class="text-sm font-black text-slate-900 tabular-nums" id="g-now">—</span>
+                                <span class="text-[10px] font-black text-slate-400">G</span>
+                                <span class="text-[10px] font-black text-slate-300">/</span>
+                                <span class="text-[10px] font-black text-slate-500 tabular-nums" id="g-max">—</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
+                                <i data-lucide="clock" size="14" class="text-slate-500"></i>
+                                <span class="text-[11px] font-black text-slate-900 tabular-nums" id="trip-duration">00:00:00</span>
+                            </div>
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
+                                <i data-lucide="route" size="14" class="text-slate-500"></i>
+                                <span class="text-[11px] font-black text-slate-900 tabular-nums"><span id="trip-distance">0.00</span> km</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest" id="trip-status">Aguardando</span>
                             <div class="flex items-center gap-2">
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
-                                    <i data-lucide="clock" size="14" class="text-slate-500"></i>
-                                    <span class="text-[11px] font-black text-slate-900 tabular-nums" id="trip-duration">00:00:00</span>
-                                </div>
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-1">
-                                    <i data-lucide="route" size="14" class="text-slate-500"></i>
-                                    <span class="text-[11px] font-black text-slate-900 tabular-nums"><span id="trip-distance">0.00</span> km</span>
-                                </div>
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 flex items-center gap-2">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest" id="trip-status">Aguardando</span>
-                                    <span class="text-[10px] font-black text-slate-500 tabular-nums"><span id="alerts-db">0</span>dB</span>
-                                    <span class="text-[10px] font-black text-slate-500 tabular-nums"><span id="alerts-g">0</span>G</span>
-                                </div>
+                                <span class="text-[10px] font-black text-slate-500 tabular-nums"><span id="alerts-db">0</span>dB</span>
+                                <span class="text-[10px] font-black text-slate-500 tabular-nums"><span id="alerts-g">0</span>G</span>
                             </div>
                         </div>
 
@@ -398,7 +394,7 @@
         
         const map = L.map('map', { zoomControl: false }).setView([-27.5945, -48.5477], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        L.control.zoom({ position: 'topleft' }).addTo(map);
         
         const trackPolyline = L.polyline([], { color: '#2563eb', weight: 4, opacity: 0.9 }).addTo(map);
         const marker = L.circleMarker([-27.5945, -48.5477], { radius: 8, color: '#0f172a', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map);
