@@ -582,7 +582,7 @@
                             alertsGEl.textContent = String(alertsG);
                             const msg = `Impacto acima de ${THRESHOLD_G.toFixed(1)}G (pico ${currentG.toFixed(2)}G)`;
                             showAlert(msg);
-                            addEvent('ALERTA G', { message: msg, tag: 'G' });
+                            addEvent('ALERTA G', { message: msg, tag: 'G', g: currentG, lat: lastPos ? lastPos.lat : null, lng: lastPos ? lastPos.lng : null, tsMs: now });
                         }
                     }
                 }, { passive: true });
@@ -699,7 +699,7 @@
                     alertsDbEl.textContent = String(alertsDb);
                     const msg = `Ruído acima de ${THRESHOLD_DB}dB (${currentDb}dB)`;
                     showAlert(msg);
-                    addEvent('ALERTA dB', { message: msg, tag: 'dB' });
+                    addEvent('ALERTA dB', { message: msg, tag: 'dB', db: currentDb, lat: lastPos ? lastPos.lat : null, lng: lastPos ? lastPos.lng : null, tsMs: now });
                 }
             }
             

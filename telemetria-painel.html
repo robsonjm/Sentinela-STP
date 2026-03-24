@@ -375,7 +375,9 @@
             });
         }
 
-        function computeTripData(chunks) {
+        function computeTripData(chunks, thresholds) {
+            const thresholdDb = thresholds && thresholds.db != null ? Number(thresholds.db) : THRESHOLD_DB;
+            const thresholdG = thresholds && thresholds.g != null ? Number(thresholds.g) : THRESHOLD_G;
             const gps = [];
             const samples = [];
             const events = [];
@@ -392,16 +394,69 @@
             let maxDb = null;
             let maxG = null;
 
+            const keyForPoint = (p) => {
+                const lat = typeof p.lat === 'number' ? Math.round(p.lat * 1e5) : 'x';
+                const lng = typeof p.lng === 'number' ? Math.round(p.lng * 1e5) : 'y';
+                const ts = p.ts != null ? Math.round(Number(p.ts) / 5000) : 't';
+                return `${lat}:${lng}:${ts}`;
+            };
+
+            const seenDb = new Set();
+            const seenG = new Set();
+
+            events.forEach((e) => {
+                const tag = (e && e.tag) ? String(e.tag) : '';
+                const lat = e && e.lat != null ? Number(e.lat) : null;
+                const lng = e && e.lng != null ? Number(e.lng) : null;
+                const ts = e && e.tsMs != null ? Number(e.tsMs) : (e && e.ts ? Date.parse(e.ts) : null);
+
+                if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+                if (tag === 'dB') {
+                    const dbv = e && e.db != null ? Number(e.db) : (e && e.value != null ? Number(e.value) : null);
+                    if (Number.isFinite(dbv) && dbv >= thresholdDb) {
+                        const p = { lat, lng, ts, value: dbv };
+                        const k = keyForPoint(p);
+                        if (!seenDb.has(k)) {
+                            seenDb.add(k);
+                            alertDbPoints.push(p);
+                        }
+                    }
+                }
+
+                if (tag === 'G') {
+                    const gv = e && e.g != null ? Number(e.g) : (e && e.value != null ? Number(e.value) : null);
+                    if (Number.isFinite(gv) && gv >= thresholdG) {
+                        const p = { lat, lng, ts, value: gv };
+                        const k = keyForPoint(p);
+                        if (!seenG.has(k)) {
+                            seenG.add(k);
+                            alertGPoints.push(p);
+                        }
+                    }
+                }
+            });
+
             samples.forEach((s) => {
                 const dbv = Number(s.db);
                 const gv = Number(s.g);
                 if (Number.isFinite(dbv)) maxDb = maxDb == null ? dbv : Math.max(maxDb, dbv);
                 if (Number.isFinite(gv)) maxG = maxG == null ? gv : Math.max(maxG, gv);
-                if (Number.isFinite(dbv) && dbv >= THRESHOLD_DB && s.lat != null && s.lng != null) {
-                    alertDbPoints.push({ lat: s.lat, lng: s.lng, ts: s.ts, value: dbv });
+                if (Number.isFinite(dbv) && dbv >= thresholdDb && s.lat != null && s.lng != null) {
+                    const p = { lat: Number(s.lat), lng: Number(s.lng), ts: s.ts, value: dbv };
+                    const k = keyForPoint(p);
+                    if (!seenDb.has(k)) {
+                        seenDb.add(k);
+                        alertDbPoints.push(p);
+                    }
                 }
-                if (Number.isFinite(gv) && gv >= THRESHOLD_G && s.lat != null && s.lng != null) {
-                    alertGPoints.push({ lat: s.lat, lng: s.lng, ts: s.ts, value: gv });
+                if (Number.isFinite(gv) && gv >= thresholdG && s.lat != null && s.lng != null) {
+                    const p = { lat: Number(s.lat), lng: Number(s.lng), ts: s.ts, value: gv };
+                    const k = keyForPoint(p);
+                    if (!seenG.has(k)) {
+                        seenG.add(k);
+                        alertGPoints.push(p);
+                    }
                 }
             });
 
@@ -554,7 +609,7 @@
 
             selectedTrip = { id: tripId, ...tripSnap.data() };
             selectedTripChunks = await loadTripChunks(tripId);
-            selectedTripComputed = computeTripData(selectedTripChunks);
+            selectedTripComputed = computeTripData(selectedTripChunks, selectedTrip.meta && selectedTrip.meta.thresholds ? selectedTrip.meta.thresholds : null);
             renderMapAndDetails(selectedTrip, selectedTripComputed);
         }
 
