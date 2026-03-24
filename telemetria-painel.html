@@ -115,13 +115,26 @@
             </section>
 
             <section class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden min-h-0 flex flex-col">
-                <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Eventos</p>
-                        <p class="text-xs font-bold text-slate-500">Alertas e ocorrências registradas</p>
+                <div class="p-4 border-b border-slate-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Eventos</p>
+                            <p class="text-xs font-bold text-slate-500">Alertas e ocorrências registradas</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            <span id="events-count">0</span>
+                        </div>
                     </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        <span id="events-count">0</span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button id="events-filter-all" type="button" class="bg-slate-900 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                            Todos
+                        </button>
+                        <button id="events-filter-db" type="button" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                            dB
+                        </button>
+                        <button id="events-filter-g" type="button" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                            G
+                        </button>
                     </div>
                 </div>
                 <div id="events-list" class="p-3 space-y-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar"></div>
@@ -183,6 +196,9 @@
 
         const eventsCountEl = document.getElementById('events-count');
         const eventsListEl = document.getElementById('events-list');
+        const eventsFilterAllBtn = document.getElementById('events-filter-all');
+        const eventsFilterDbBtn = document.getElementById('events-filter-db');
+        const eventsFilterGBtn = document.getElementById('events-filter-g');
 
         const userEmailEl = document.getElementById('user-email');
         const logoutBtn = document.getElementById('logout-btn');
@@ -194,6 +210,7 @@
         let selectedTrip = null;
         let selectedTripChunks = [];
         let selectedTripComputed = null;
+        let eventsFilter = 'all';
 
         const map = L.map('map', { zoomControl: false }).setView([-27.5945, -48.5477], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
@@ -329,9 +346,16 @@
 
         function renderEventsList(items) {
             eventsListEl.innerHTML = '';
-            eventsCountEl.textContent = String(items.length);
+            const filtered = items.filter((e) => {
+                if (eventsFilter === 'all') return true;
+                const tag = e && e.tag ? String(e.tag) : '';
+                if (eventsFilter === 'db') return tag === 'dB';
+                if (eventsFilter === 'g') return tag === 'G';
+                return true;
+            });
+            eventsCountEl.textContent = String(filtered.length);
 
-            if (items.length === 0) {
+            if (filtered.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'text-center py-10 text-slate-400';
                 empty.innerHTML = '<p class="text-xs font-bold uppercase tracking-widest">Sem eventos</p>';
@@ -339,7 +363,7 @@
                 return;
             }
 
-            items.slice().reverse().forEach((e) => {
+            filtered.slice().reverse().forEach((e) => {
                 const row = document.createElement('div');
                 row.className = 'bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-start justify-between gap-3';
 
@@ -412,6 +436,35 @@
                 return null;
             };
 
+            const parseNumber = (value) => {
+                if (value == null) return null;
+                if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+                if (typeof value === 'string') {
+                    const norm = value.replace(',', '.');
+                    const n = Number(norm);
+                    return Number.isFinite(n) ? n : null;
+                }
+                return null;
+            };
+
+            const parseGFromMessage = (msg) => {
+                const s = msg == null ? '' : String(msg);
+                const m1 = s.match(/pico\s+([0-9]+(?:[.,][0-9]+)?)\s*G/i);
+                if (m1 && m1[1]) return parseNumber(m1[1]);
+                const m2 = s.match(/([0-9]+(?:[.,][0-9]+)?)\s*G/i);
+                if (m2 && m2[1]) return parseNumber(m2[1]);
+                return null;
+            };
+
+            const parseDbFromMessage = (msg) => {
+                const s = msg == null ? '' : String(msg);
+                const m1 = s.match(/\(([0-9]+(?:[.,][0-9]+)?)\s*dB\)/i);
+                if (m1 && m1[1]) return parseNumber(m1[1]);
+                const m2 = s.match(/([0-9]+(?:[.,][0-9]+)?)\s*dB/i);
+                if (m2 && m2[1]) return parseNumber(m2[1]);
+                return null;
+            };
+
             const samplePoints = samples
                 .map((s) => ({
                     ts: parseTsMs(s.ts),
@@ -469,7 +522,9 @@
                 if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
                 if (tag === 'dB') {
-                    const dbv = e && e.db != null ? Number(e.db) : (e && e.value != null ? Number(e.value) : null);
+                    const dbv = (e && e.db != null ? parseNumber(e.db) : null) ??
+                        (e && e.value != null ? parseNumber(e.value) : null) ??
+                        parseDbFromMessage(e && e.message);
                     if (Number.isFinite(dbv) && dbv >= thresholdDb) {
                         const p = { lat, lng, ts, value: dbv };
                         const k = keyForPoint(p);
@@ -481,7 +536,9 @@
                 }
 
                 if (tag === 'G') {
-                    const gv = e && e.g != null ? Number(e.g) : (e && e.value != null ? Number(e.value) : null);
+                    const gv = (e && e.g != null ? parseNumber(e.g) : null) ??
+                        (e && e.value != null ? parseNumber(e.value) : null) ??
+                        parseGFromMessage(e && e.message);
                     if (Number.isFinite(gv) && gv >= thresholdG) {
                         const p = { lat, lng, ts, value: gv };
                         const k = keyForPoint(p);
@@ -594,12 +651,7 @@
                 });
             }
 
-            const eventsWithCoords = computed.events.map((e) => ({
-                ...e,
-                lat: e.lat != null ? e.lat : null,
-                lng: e.lng != null ? e.lng : null
-            }));
-            renderEventsList(eventsWithCoords);
+            renderEventsList(computed.events || []);
             downloadTripBtn.disabled = false;
             deleteTripBtn.disabled = false;
         }
@@ -682,6 +734,20 @@
                 if (!selectedTrip) return;
                 renderMapAndDetails(selectedTrip, selectedTripComputed);
             });
+
+            const setEventsFilter = (next) => {
+                eventsFilter = next;
+                const active = 'bg-slate-900 text-white';
+                const inactive = 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50';
+                eventsFilterAllBtn.className = `${next === 'all' ? active : inactive} px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest`;
+                eventsFilterDbBtn.className = `${next === 'db' ? active : inactive} px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest`;
+                eventsFilterGBtn.className = `${next === 'g' ? active : inactive} px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest`;
+                if (selectedTripComputed) renderEventsList(selectedTripComputed.events || []);
+            };
+
+            eventsFilterAllBtn.addEventListener('click', () => setEventsFilter('all'));
+            eventsFilterDbBtn.addEventListener('click', () => setEventsFilter('db'));
+            eventsFilterGBtn.addEventListener('click', () => setEventsFilter('g'));
 
             fitBtn.addEventListener('click', () => {
                 const poly = routeLayer.getLayers().find((l) => l instanceof L.Polyline);
