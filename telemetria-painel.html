@@ -394,6 +394,51 @@
             let maxDb = null;
             let maxG = null;
 
+            const parseTsMs = (value) => {
+                if (value == null) return null;
+                if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+                if (typeof value === 'string') {
+                    const trimmed = value.trim();
+                    if (trimmed === '') return null;
+                    const asNum = Number(trimmed);
+                    if (Number.isFinite(asNum)) return asNum;
+                    const parsed = Date.parse(trimmed);
+                    return Number.isFinite(parsed) ? parsed : null;
+                }
+                if (typeof value === 'object' && value.seconds != null) {
+                    const ms = Number(value.seconds) * 1000;
+                    return Number.isFinite(ms) ? ms : null;
+                }
+                return null;
+            };
+
+            const samplePoints = samples
+                .map((s) => ({
+                    ts: parseTsMs(s.ts),
+                    lat: s.lat == null ? null : Number(s.lat),
+                    lng: s.lng == null ? null : Number(s.lng)
+                }))
+                .filter((p) => p.ts != null && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+                .sort((a, b) => a.ts - b.ts);
+
+            const nearestSamplePoint = (tsMs) => {
+                if (!samplePoints.length || tsMs == null) return null;
+                let lo = 0;
+                let hi = samplePoints.length - 1;
+                while (lo < hi) {
+                    const mid = Math.floor((lo + hi) / 2);
+                    if (samplePoints[mid].ts < tsMs) lo = mid + 1;
+                    else hi = mid;
+                }
+                const cand1 = samplePoints[lo];
+                const cand2 = lo > 0 ? samplePoints[lo - 1] : null;
+                let best = cand1;
+                if (cand2 && Math.abs(cand2.ts - tsMs) < Math.abs(cand1.ts - tsMs)) best = cand2;
+                const toleranceMs = 15000;
+                if (Math.abs(best.ts - tsMs) > toleranceMs) return null;
+                return best;
+            };
+
             const keyForPoint = (p) => {
                 const lat = typeof p.lat === 'number' ? Math.round(p.lat * 1e5) : 'x';
                 const lng = typeof p.lng === 'number' ? Math.round(p.lng * 1e5) : 'y';
@@ -404,11 +449,22 @@
             const seenDb = new Set();
             const seenG = new Set();
 
-            events.forEach((e) => {
+            const enrichedEvents = events.map((e) => {
+                const lat = e && e.lat != null ? Number(e.lat) : null;
+                const lng = e && e.lng != null ? Number(e.lng) : null;
+                if (Number.isFinite(lat) && Number.isFinite(lng)) return { ...e, lat, lng };
+
+                const tsMs = e && e.tsMs != null ? parseTsMs(e.tsMs) : parseTsMs(e && e.ts);
+                const nearest = nearestSamplePoint(tsMs);
+                if (!nearest) return e;
+                return { ...e, lat: nearest.lat, lng: nearest.lng, approx: true };
+            });
+
+            enrichedEvents.forEach((e) => {
                 const tag = (e && e.tag) ? String(e.tag) : '';
                 const lat = e && e.lat != null ? Number(e.lat) : null;
                 const lng = e && e.lng != null ? Number(e.lng) : null;
-                const ts = e && e.tsMs != null ? Number(e.tsMs) : (e && e.ts ? Date.parse(e.ts) : null);
+                const ts = e && e.tsMs != null ? parseTsMs(e.tsMs) : parseTsMs(e && e.ts);
 
                 if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
@@ -460,7 +516,7 @@
                 }
             });
 
-            return { gps, samples, events, maxDb, maxG, alertDbPoints, alertGPoints };
+            return { gps, samples, events: enrichedEvents, maxDb, maxG, alertDbPoints, alertGPoints };
         }
 
         function renderMapAndDetails(tripDoc, computed) {
