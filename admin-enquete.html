@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinela Admin - Enquetes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        main { padding-bottom: calc(5rem + var(--sab)); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .filter-btn-active { background-color: #1d4ed8 !important; color: white !important; border-color: #1d4ed8 !important; }
+    </style>
+</head>
+<body class="min-h-screen pb-12 opacity-0 transition-opacity duration-500">
+    <header class="bg-slate-800 text-white p-4 shadow-lg flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-black tracking-tighter uppercase text-yellow-400 flex items-center gap-2">
+            <i data-lucide="shield-check"></i> Enquetes (Admin)
+        </h1>
+        <div class="flex items-center gap-4">
+            <div id="sync-status" class="text-[10px] font-mono text-slate-400 hidden md:flex items-center gap-2"></div>
+            <span id="user-email" class="text-[10px] font-mono text-slate-400 hidden md:inline-block"></span>
+            <a id="logout-btn" href="login.html" class="text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                <i data-lucide="log-out" size="14"></i> Sair
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+        <section class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase mr-2 flex items-center gap-1">
+                    <i data-lucide="calendar"></i> Período:
+                </span>
+                <button type="button" id="filter-hoje" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">Hoje</button>
+                <button type="button" id="filter-7d" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">7 dias</button>
+                <button type="button" id="filter-30d" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">30 dias</button>
+                <button type="button" id="filter-todos" class="filter-btn-active px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-all">Tudo</button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <select id="region-filter" class="text-xs border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-600 bg-white">
+                    <option value="">Todas as regiões</option>
+                    <option value="Norte">Norte</option>
+                    <option value="Sul">Sul</option>
+                    <option value="Continente">Continente</option>
+                    <option value="Centro">Centro</option>
+                    <option value="Outro">Outro</option>
+                </select>
+                <input type="text" id="table-search" placeholder="Buscar linha, bairro, nome..." class="text-xs border border-slate-200 rounded-xl px-4 py-2 md:w-80 outline-none focus:ring-2 focus:ring-blue-600">
+                <button id="export-json" type="button" class="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                    <i data-lucide="download" size="14"></i> JSON
+                </button>
+                <button id="export-csv" type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-slate-200">
+                    <i data-lucide="file-spreadsheet" size="14"></i> CSV
+                </button>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Total</p>
+                <h3 id="stat-total" class="text-3xl font-black text-slate-800">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-blue-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Norte</p>
+                <h3 id="stat-norte" class="text-3xl font-black text-blue-700">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-emerald-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Sul</p>
+                <h3 id="stat-sul" class="text-3xl font-black text-emerald-700">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-purple-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Continente</p>
+                <h3 id="stat-continente" class="text-3xl font-black text-purple-700">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-amber-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Centro</p>
+                <h3 id="stat-centro" class="text-3xl font-black text-amber-700">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-slate-500">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Última</p>
+                <h3 id="stat-latest" class="text-base font-black text-slate-800 leading-tight">—</h3>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section class="lg:col-span-1 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="text-blue-600"></i> Análise
+                    </h2>
+                    <select id="question-select" class="text-xs border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 bg-white">
+                        <option value="q1">Q1 Saúde</option>
+                        <option value="q2">Q2 Calor</option>
+                        <option value="q3">Q3 Barulho</option>
+                        <option value="q4">Q4 Estresse</option>
+                        <option value="q5">Q5 Subsídio</option>
+                        <option value="q6">Q6 Em pé</option>
+                        <option value="q7">Q7 % salário</option>
+                        <option value="q8">Q8 Centro melhor?</option>
+                        <option value="q9">Q9 Dono linha?</option>
+                        <option value="q10">Q10 Solução?</option>
+                        <option value="q11">Q11 Usaria mais?</option>
+                        <option value="q12">Q12 Fiscaliza?</option>
+                        <option value="q13">Q13 Denunciar?</option>
+                    </select>
+                </div>
+                <p id="question-title" class="text-xs font-bold text-slate-500">—</p>
+                <div id="question-breakdown" class="space-y-2"></div>
+            </section>
+
+            <section class="lg:col-span-2 bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden text-left flex flex-col min-h-[520px]">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                        <i data-lucide="inbox" class="text-slate-600"></i> Respostas
+                    </h2>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <span id="rows-count">0</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
+                            <tr>
+                                <th class="px-6 py-4">Data/Hora</th>
+                                <th class="px-6 py-4">Região</th>
+                                <th class="px-6 py-4">Linha</th>
+                                <th class="px-6 py-4">Bairro</th>
+                                <th class="px-6 py-4">Nome</th>
+                                <th class="px-6 py-4">Resumo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 px-2 pb-[calc(0.5rem+var(--sab))] z-50">
+        <div class="flex justify-between items-center w-full max-w-md mx-auto">
+            <a href="admin-news.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="newspaper" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Notícias</span>
+            </a>
+            <a href="admin-painel.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="layout-dashboard" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Evidências</span>
+            </a>
+            <a href="admin-enquete.html" class="nav-link active flex flex-col items-center gap-1 text-blue-600 transition-colors p-2 rounded-xl bg-blue-50">
+                <i data-lucide="message-square" size="20" class="fill-current"></i>
+                <span class="text-[9px] font-black uppercase">Enquetes</span>
+            </a>
+            <a href="landpage.html" class="nav-link flex flex-col items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors p-2">
+                <i data-lucide="info" size="20"></i>
+                <span class="text-[9px] font-black uppercase">Sobre</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js?v=3";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
+        const appId = 'sentinela-stp';
+
+        function escapeHtml(value) {
+            const s = value == null ? '' : String(value);
+            return s.replace(/[&<>"']/g, (c) => {
+                if (c === '&') return '&amp;';
+                if (c === '<') return '&lt;';
+                if (c === '>') return '&gt;';
+                if (c === '"') return '&quot;';
+                return '&#39;';
+            });
+        }
+
+        function parseWhen(resp) {
+            if (resp.createdAt && resp.createdAt.seconds) return resp.createdAt.seconds * 1000;
+            if (typeof resp.clientAtMs === 'number') return resp.clientAtMs;
+            return null;
+        }
+
+        function fmtDate(ms) {
+            if (!ms) return '—';
+            try { return new Date(ms).toLocaleString('pt-BR'); } catch { return '—'; }
+        }
+
+        const QUESTION_META = {
+            q1: { title: 'Após ~40 min: zumbido/dor de cabeça?', options: { NUNCA: 'Nunca', AS_VEZES: 'Às vezes', FREQUENTE: 'Frequente', SEMPRE: 'Sempre' } },
+            q2: { title: 'Tontura/cansaço por calor?', options: { NUNCA: 'Nunca', AS_VEZES: 'Às vezes', FREQUENTE: 'Frequente', SEMPRE: 'Sempre' } },
+            q3: { title: 'Barulho atrapalha conversa/música?', options: { NAO_AFETA: 'Não afeta', ATRAPALHA_UM_POUCO: 'Atrapalha um pouco', ATRAPALHA_MUITO: 'Atrapalha muito', IMPOSSIVEL: 'Impossível' } },
+            q4: { title: 'Estresse por condições do veículo?', options: { NAO: 'Não', POUCO: 'Um pouco', MUITO: 'Muito', NAO_SEI: 'Não sei' } },
+            q5: { title: 'Subsídio: sente melhorias?', options: { NAO_SABIA: 'Não sabia', SABIA_VOLTA_MELHORIAS: 'Volta em melhorias', SABIA_NAO_VOLTA: 'Não vejo melhorias', NAO_SEI: 'Não sei' } },
+            q6: { title: 'Aceitaria viajar em pé?', options: { SIM: 'Sim', DEPENDE: 'Depende', NAO: 'Não', NAO_SEI: 'Não sei' } },
+            q7: { title: 'Quanto do salário vai pro transporte?', options: { MENOS_5: '<5%', ENTRE_5_10: '5–10%', ENTRE_10_20: '10–20%', ENTRE_20_30: '20–30%', MAIS_30: '>30%', NAO_SEI: 'Não sei' } },
+            q8: { title: 'Centro/áreas nobres: ônibus melhores?', options: { SIM_MELHORES_NO_CENTRO: 'Sim, melhores no Centro', NAO_PARECIDO: 'Parecido em toda a cidade', NAO_REPAREI: 'Não reparei', DEPENDE: 'Depende da linha' } },
+            q9: { title: 'Sabe quem “manda” na sua linha?', options: { SIM: 'Sim', NAO: 'Não', NAO_TENHO_CERTEZA: 'Não tenho certeza' } },
+            q10: { title: 'Ônibus é solução ou mal necessário?', options: { SOLUCAO: 'Solução', MAL_NECESSARIO: 'Mal necessário', DEPENDE: 'Depende', NAO_SEI: 'Não sei' } },
+            q11: { title: 'Se grátis/silencioso/refrigerado: usaria mais?', options: { SIM: 'Sim', TALVEZ: 'Talvez', NAO: 'Não', NAO_TENHO: 'Não tenho carro/moto' } },
+            q12: { title: 'Prefeitura fiscaliza de verdade?', options: { FISCALIZA: 'Fiscaliza', ACREDITA_EMPRESA: 'Acredita na empresa', NAO_SEI: 'Não sei' } },
+            q13: { title: 'Topa denunciar calor/ruído?', options: { SIM: 'Sim', DEPENDE: 'Depende', NAO: 'Não', JA_FACO: 'Já faço' } }
+        };
+
+        let allRows = [];
+        let filteredRows = [];
+        let currentPeriod = 'todos';
+
+        const statTotal = document.getElementById('stat-total');
+        const statNorte = document.getElementById('stat-norte');
+        const statSul = document.getElementById('stat-sul');
+        const statCont = document.getElementById('stat-continente');
+        const statCentro = document.getElementById('stat-centro');
+        const statLatest = document.getElementById('stat-latest');
+        const rowsCountEl = document.getElementById('rows-count');
+        const tableBody = document.getElementById('table-body');
+        const searchEl = document.getElementById('table-search');
+        const regionFilterEl = document.getElementById('region-filter');
+        const questionSelectEl = document.getElementById('question-select');
+        const questionTitleEl = document.getElementById('question-title');
+        const questionBreakdownEl = document.getElementById('question-breakdown');
+
+        const btnHoje = document.getElementById('filter-hoje');
+        const btn7d = document.getElementById('filter-7d');
+        const btn30d = document.getElementById('filter-30d');
+        const btnTodos = document.getElementById('filter-todos');
+        const exportJsonBtn = document.getElementById('export-json');
+        const exportCsvBtn = document.getElementById('export-csv');
+
+        function setPeriod(period) {
+            currentPeriod = period;
+            [btnHoje, btn7d, btn30d, btnTodos].forEach((b) => b.classList.remove('filter-btn-active'));
+            const map = { hoje: btnHoje, '7d': btn7d, '30d': btn30d, todos: btnTodos };
+            map[period].classList.add('filter-btn-active');
+            applyFilters();
+        }
+
+        function getPeriodStartMs() {
+            const now = new Date();
+            if (currentPeriod === 'hoje') return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            if (currentPeriod === '7d') return now.getTime() - 7 * 24 * 3600 * 1000;
+            if (currentPeriod === '30d') return now.getTime() - 30 * 24 * 3600 * 1000;
+            return null;
+        }
+
+        function applyFilters() {
+            const term = (searchEl.value || '').toLowerCase().trim();
+            const region = regionFilterEl.value || '';
+            const startMs = getPeriodStartMs();
+
+            filteredRows = allRows.filter((r) => {
+                const when = parseWhen(r) || 0;
+                if (startMs && when < startMs) return false;
+                if (region && (r.eixoRegiao || '') !== region) return false;
+                if (!term) return true;
+                const hay = [
+                    r.eixoRegiao,
+                    r.linha,
+                    r.bairro,
+                    r.nome,
+                    r.q9Familia,
+                    r.audit && r.audit.deviceId
+                ].map((v) => (v == null ? '' : String(v))).join(' ').toLowerCase();
+                return hay.includes(term);
+            });
+
+            renderStats();
+            renderTable();
+            renderQuestionBreakdown();
+        }
+
+        function renderStats() {
+            const total = filteredRows.length;
+            const byReg = { Norte: 0, Sul: 0, Continente: 0, Centro: 0 };
+            let latest = null;
+            filteredRows.forEach((r) => {
+                const reg = r.eixoRegiao;
+                if (byReg[reg] != null) byReg[reg] += 1;
+                const when = parseWhen(r);
+                if (when != null) latest = latest == null ? when : Math.max(latest, when);
+            });
+
+            statTotal.textContent = String(total);
+            statNorte.textContent = String(byReg.Norte);
+            statSul.textContent = String(byReg.Sul);
+            statCont.textContent = String(byReg.Continente);
+            statCentro.textContent = String(byReg.Centro);
+            statLatest.textContent = latest ? fmtDate(latest) : '—';
+        }
+
+        function renderTable() {
+            rowsCountEl.textContent = String(filteredRows.length);
+            tableBody.innerHTML = '';
+
+            const slice = filteredRows.slice().sort((a, b) => (parseWhen(b) || 0) - (parseWhen(a) || 0)).slice(0, 500);
+            slice.forEach((r) => {
+                const when = fmtDate(parseWhen(r));
+                const region = escapeHtml(r.eixoRegiao || '—');
+                const linha = escapeHtml(r.linha || '—');
+                const bairro = escapeHtml(r.bairro || '—');
+                const nome = escapeHtml(r.nome || '—');
+
+                const summary = [
+                    r.q1 ? `Saúde:${r.q1}` : null,
+                    r.q2 ? `Calor:${r.q2}` : null,
+                    r.q4 ? `Estresse:${r.q4}` : null,
+                    r.q11 ? `Usaria+:${r.q11}` : null,
+                    r.q12 ? `Fiscaliza:${r.q12}` : null
+                ].filter(Boolean).join(' • ');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-slate-700 font-bold whitespace-nowrap">${escapeHtml(when)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${region}</td>
+                    <td class="px-6 py-4 max-w-[220px] truncate" title="${linha}">${linha}</td>
+                    <td class="px-6 py-4 max-w-[160px] truncate" title="${bairro}">${bairro}</td>
+                    <td class="px-6 py-4 max-w-[160px] truncate" title="${nome}">${nome}</td>
+                    <td class="px-6 py-4 text-[10px] font-mono text-slate-500 max-w-[360px] truncate" title="${escapeHtml(summary)}">${escapeHtml(summary || '—')}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function renderQuestionBreakdown() {
+            const qKey = questionSelectEl.value;
+            const meta = QUESTION_META[qKey];
+            if (!meta) return;
+
+            questionTitleEl.textContent = meta.title;
+            questionBreakdownEl.innerHTML = '';
+
+            const counts = {};
+            Object.keys(meta.options).forEach((k) => counts[k] = 0);
+            let unknown = 0;
+
+            filteredRows.forEach((r) => {
+                const v = r[qKey];
+                if (v && counts[v] != null) counts[v] += 1;
+                else unknown += 1;
+            });
+
+            const total = filteredRows.length || 1;
+            const rows = Object.keys(meta.options).map((k) => {
+                return { key: k, label: meta.options[k], count: counts[k] || 0 };
+            });
+
+            if (unknown) rows.push({ key: 'UNKNOWN', label: 'Sem resposta', count: unknown });
+
+            rows.sort((a, b) => b.count - a.count);
+
+            rows.forEach((row) => {
+                const pct = Math.round((row.count / total) * 100);
+                const el = document.createElement('div');
+                el.className = 'bg-slate-50 border border-slate-200 rounded-2xl p-3';
+                el.innerHTML = `
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-xs font-black text-slate-800 truncate">${escapeHtml(row.label)}</div>
+                            <div class="text-[10px] font-mono text-slate-500">${escapeHtml(row.key)}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-black text-slate-900 tabular-nums">${row.count}</div>
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${pct}%</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-600" style="width:${pct}%"></div>
+                    </div>
+                `;
+                questionBreakdownEl.appendChild(el);
+            });
+        }
+
+        function exportJson() {
+            const payload = {
+                exportedAt: new Date().toISOString(),
+                total: filteredRows.length,
+                items: filteredRows
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'admin_enquetes_export.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function toCsvValue(v) {
+            const s = v == null ? '' : String(v);
+            const safe = s.replace(/"/g, '""');
+            return `"${safe}"`;
+        }
+
+        function exportCsv() {
+            const headers = ['createdAt', 'clientAtMs', 'eixoRegiao', 'linha', 'bairro', 'nome', 'q1','q2','q3','q4','q5','q6','q7','q8','q9','q9Familia','q10','q11','q12','q13'];
+            const lines = [headers.join(',')];
+            filteredRows.forEach((r) => {
+                const when = fmtDate(parseWhen(r));
+                const row = {
+                    createdAt: when,
+                    clientAtMs: r.clientAtMs != null ? r.clientAtMs : '',
+                    eixoRegiao: r.eixoRegiao || '',
+                    linha: r.linha || '',
+                    bairro: r.bairro || '',
+                    nome: r.nome || '',
+                    q1: r.q1 || '',
+                    q2: r.q2 || '',
+                    q3: r.q3 || '',
+                    q4: r.q4 || '',
+                    q5: r.q5 || '',
+                    q6: r.q6 || '',
+                    q7: r.q7 || '',
+                    q8: r.q8 || '',
+                    q9: r.q9 || '',
+                    q9Familia: r.q9Familia || '',
+                    q10: r.q10 || '',
+                    q11: r.q11 || '',
+                    q12: r.q12 || '',
+                    q13: r.q13 || ''
+                };
+                lines.push(headers.map((h) => toCsvValue(row[h])).join(','));
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'admin_enquetes_export.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function setupUi() {
+            btnHoje.addEventListener('click', () => setPeriod('hoje'));
+            btn7d.addEventListener('click', () => setPeriod('7d'));
+            btn30d.addEventListener('click', () => setPeriod('30d'));
+            btnTodos.addEventListener('click', () => setPeriod('todos'));
+            searchEl.addEventListener('input', () => applyFilters());
+            regionFilterEl.addEventListener('change', () => applyFilters());
+            questionSelectEl.addEventListener('change', () => renderQuestionBreakdown());
+            exportJsonBtn.addEventListener('click', () => exportJson());
+            exportCsvBtn.addEventListener('click', () => exportCsv());
+        }
+
+        function loadData() {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'enquetes'), orderBy('clientAtMs', 'desc'), limit(2000));
+            onSnapshot(q, (snapshot) => {
+                allRows = [];
+                snapshot.forEach((d) => allRows.push({ id: d.id, ...d.data() }));
+                applyFilters();
+            }, (err) => {
+                console.error(err);
+                const syncStatus = document.getElementById('sync-status');
+                if (syncStatus) syncStatus.innerHTML = `<span class="text-red-400">Erro ao carregar</span>`;
+            });
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user || user.isAnonymous) {
+                if (user) signOut(auth);
+                window.location.href = 'login.html?redirect=admin-enquete.html';
+                return;
+            }
+            document.body.classList.remove('opacity-0');
+            const syncStatus = document.getElementById('sync-status');
+            const emailEl = document.getElementById('user-email');
+            const safeEmail = escapeHtml(user.email || '');
+            if (syncStatus) syncStatus.innerHTML = `<span class="flex items-center gap-2 text-green-400"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Admin Conectado</span>`;
+            if (emailEl) emailEl.textContent = safeEmail;
+            setupUi();
+            loadData();
+            lucide.createIcons();
+        });
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                signOut(auth).finally(() => window.location.href = 'login.html');
+            });
+        }
+    </script>
+
+    <script>
+        lucide.createIcons();
+    </script>
+    <script src="version-display.js"></script>
+</body>
+</html>
+
