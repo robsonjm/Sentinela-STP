@@ -9,7 +9,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: calc(5rem + var(--sab)); }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .step-enter { animation: stepIn 160ms ease-out; }
+        @keyframes stepIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0px); } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] overflow-hidden flex flex-col">
@@ -46,7 +50,7 @@
         </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto overscroll-contain max-w-md mx-auto w-full p-4 space-y-4">
+    <main class="flex-1 overflow-hidden max-w-md mx-auto w-full p-4 pb-28 flex flex-col gap-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
             <div class="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                 🎤 Questionário de Soberania Urbana
@@ -55,19 +59,22 @@
                 <p class="text-sm font-bold text-slate-200 leading-relaxed">
                     Responda em etapas curtas. Leva ~1 min.
                 </p>
-                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <span id="step-counter">1/6</span>
+                <div class="text-right">
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <span id="step-counter">1/15</span>
+                    </div>
+                    <div id="step-eta" class="text-[10px] font-black text-slate-500 uppercase tracking-widest">~1 min</div>
                 </div>
             </div>
             <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div id="step-progress" class="h-full bg-blue-600 w-[16%] transition-all"></div>
+                <div id="step-progress" class="h-full bg-blue-600 w-[7%] transition-all"></div>
             </div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 As respostas ficam disponíveis apenas para o time administrador.
             </p>
         </div>
 
-        <form id="enquete-form" class="space-y-4">
+        <form id="enquete-form" class="flex-1 min-h-0 flex flex-col justify-center space-y-4">
             <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4" data-step="1">
                 <h2 class="text-sm font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                     <i data-lucide="id-card" class="text-blue-500" size="16"></i> Identificação (Opcional)
@@ -438,6 +445,7 @@
             </div>
 
             <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3" data-step="6">
+                <div id="summary" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200"></div>
                 <label class="flex items-start gap-3 text-xs font-bold text-slate-200">
                     <input id="consent" type="checkbox" class="accent-blue-600 mt-1" required>
                     <span>Concordo em enviar estas respostas para uso em ações públicas (como abaixo-assinado) e análises técnicas, sem expor meus dados pessoais.</span>
@@ -448,10 +456,12 @@
                 <p id="submit-status" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center"></p>
             </div>
             
-            <div class="sticky bottom-3">
-                <div class="flex gap-2">
-                    <button id="prev-step" type="button" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl hidden">Voltar</button>
-                    <button id="next-step" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl">Próximo</button>
+            <div class="fixed bottom-[calc(0.75rem+var(--sab))] left-4 right-4 max-w-md mx-auto z-50">
+                <div class="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-2 shadow-2xl">
+                    <div class="flex gap-2">
+                        <button id="prev-step" type="button" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl hidden">Voltar</button>
+                        <button id="next-step" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl">Próximo</button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -538,6 +548,8 @@
         ].map((name) => document.querySelector(`.q-step[data-q="${name}"]`)).filter(Boolean);
         const stepCounter = document.getElementById('step-counter');
         const stepProgress = document.getElementById('step-progress');
+        const stepEta = document.getElementById('step-eta');
+        const summaryEl = document.getElementById('summary');
         const prevBtn = document.getElementById('prev-step');
         const nextBtn = document.getElementById('next-step');
         const submitBtn = document.getElementById('submit-btn');
@@ -588,6 +600,31 @@
         let currentStep = 1;
         const totalSteps = 1 /* Identificação */ + qSteps.length /* 13 perguntas */ + 1 /* Consentimento */;
 
+        function animateStep(el) {
+            if (!el) return;
+            el.classList.remove('step-enter');
+            void el.offsetWidth;
+            el.classList.add('step-enter');
+        }
+
+        function formatEta(stepsLeft) {
+            const seconds = Math.max(0, stepsLeft) * 4;
+            if (seconds < 60) return `~${seconds}s`;
+            return `~${Math.ceil(seconds / 60)} min`;
+        }
+
+        function updateSummary() {
+            if (!summaryEl) return;
+            const answered = qSteps.reduce((acc, qEl) => {
+                const qName = qEl.getAttribute('data-q');
+                return acc + (qName && isQuestionAnswered(qName) ? 1 : 0);
+            }, 0);
+            const eixo = readValue('eixo_regiao') || '—';
+            const linha = readValue('linha');
+            const meta = linha ? ` • ${linha}` : '';
+            summaryEl.textContent = `Respostas: ${answered}/${qSteps.length} • ${eixo}${meta}`;
+        }
+
         function updateStepperUI() {
             // Show only the relevant container for this phase:
             // Phase 1 => identificação (data-step="1")
@@ -607,8 +644,11 @@
 
             if (currentStep === 1) {
                 ident && (ident.style.display = 'block');
+                animateStep(ident);
             } else if (currentStep === totalSteps) {
                 consent && (consent.style.display = 'block');
+                updateSummary();
+                animateStep(consent);
             } else {
                 const qIndex = currentStep - 2; // 0-based index within qSteps
                 const qEl = qSteps[qIndex];
@@ -620,12 +660,14 @@
                         // Hide all q-steps inside, show only current
                         parentAxis.querySelectorAll('.q-step').forEach((el) => el.style.display = 'none');
                         qEl.style.display = 'block';
+                        animateStep(parentAxis);
                     }
                 }
             }
 
             stepCounter.textContent = `${currentStep}/${totalSteps}`;
             stepProgress.style.width = `${Math.round((currentStep/totalSteps)*100)}%`;
+            if (stepEta) stepEta.textContent = formatEta(totalSteps - currentStep);
             prevBtn.classList.toggle('hidden', currentStep === 1);
             nextBtn.textContent = currentStep === totalSteps ? 'Finalizar' : 'Próximo';
             updateNextState();
@@ -664,7 +706,6 @@
         prevBtn.addEventListener('click', () => {
             if (currentStep > 1) currentStep--;
             updateStepperUI();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         nextBtn.addEventListener('click', () => {
@@ -672,9 +713,8 @@
                 if (!isStepValid(currentStep)) return;
                 currentStep++;
                 updateStepperUI();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
-                if (!isStepValid(6)) return;
+                if (!isStepValid(totalSteps)) return;
                 form.requestSubmit();
             }
         });
