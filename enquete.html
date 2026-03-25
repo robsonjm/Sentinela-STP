@@ -47,20 +47,28 @@
     </header>
 
     <main class="flex-1 overflow-y-auto overscroll-contain max-w-md mx-auto w-full p-4 space-y-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
             <div class="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                 🎤 Questionário de Soberania Urbana
             </div>
-            <p class="text-sm font-bold text-slate-200 leading-relaxed">
-                Objetivo: transformar a reclamação em evidência técnica e política. Público-alvo: usuários do transporte coletivo de Florianópolis (Eixos Norte, Sul e Continente).
-            </p>
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-bold text-slate-200 leading-relaxed">
+                    Responda em etapas curtas. Leva ~1 min.
+                </p>
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span id="step-counter">1/6</span>
+                </div>
+            </div>
+            <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div id="step-progress" class="h-full bg-blue-600 w-[16%] transition-all"></div>
+            </div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 As respostas ficam disponíveis apenas para o time administrador.
             </p>
         </div>
 
         <form id="enquete-form" class="space-y-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4" data-step="1">
                 <h2 class="text-sm font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                     <i data-lucide="id-card" class="text-blue-500" size="16"></i> Identificação (Opcional)
                 </h2>
@@ -91,17 +99,17 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4" data-step="2">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Eixo 1: Saúde Sensorial (Lei 8.080/90)</h2>
-                        <p class="text-xs font-bold text-slate-400">Humanizar os dados de decibéis e temperatura do app.</p>
+                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Saúde Sensorial</h2>
+                        <p class="text-xs font-bold text-slate-400">Barulho, calor e estresse no ônibus.</p>
                     </div>
                     <i data-lucide="ear" class="text-blue-500" size="18"></i>
                 </div>
 
                 <div class="space-y-3">
-                    <label class="block text-xs font-bold text-slate-200">Ao descer do ônibus após uma viagem de 40 minutos, você sente algum zumbido no ouvido ou dor de cabeça leve?</label>
+                    <label class="block text-xs font-bold text-slate-200">Após ~40 min, sente zumbido ou dor de cabeça leve?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q1" value="NUNCA" class="peer hidden" required>
@@ -121,7 +129,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Você já sentiu tontura ou excesso de cansaço devido ao calor dentro do veículo, mesmo em dias que não são de pico de verão?</label>
+                    <label class="block text-xs font-bold text-slate-200">Já sentiu tontura/cansaço por calor dentro do ônibus?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q2" value="NUNCA" class="peer hidden" required>
@@ -141,7 +149,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Como o barulho do motor afeta sua capacidade de conversar ou ouvir música/podcast durante o trajeto?</label>
+                    <label class="block text-xs font-bold text-slate-200">Como o barulho afeta conversa/música?</label>
                     <div class="grid grid-cols-1 gap-2">
                         <label class="block">
                             <input type="radio" name="q3" value="NAO_AFETA" class="peer hidden" required>
@@ -161,7 +169,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Você sente que o seu nível de estresse aumenta especificamente por causa das condições do veículo (trepidação, barulho, calor)?</label>
+                    <label class="block text-xs font-bold text-slate-200">Seu estresse aumenta pelas condições do veículo?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q4" value="NAO" class="peer hidden" required>
@@ -183,17 +191,17 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4" data-step="3">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Eixo 2: Mais-valia e Economia Popular</h2>
-                        <p class="text-xs font-bold text-slate-400">Mostrar que o passageiro paga duas vezes (tarifa + imposto).</p>
+                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Economia Popular</h2>
+                        <p class="text-xs font-bold text-slate-400">Tarifa, subsídio e bolso do passageiro.</p>
                     </div>
                     <i data-lucide="wallet" class="text-blue-500" size="18"></i>
                 </div>
 
                 <div class="space-y-3">
-                    <label class="block text-xs font-bold text-slate-200">Você sabia que, além da sua passagem, a Prefeitura paga quase R$ 10,00 extras por quilômetro rodado para a empresa? Você sente que esse dinheiro volta em melhorias?</label>
+                    <label class="block text-xs font-bold text-slate-200">Sobre o subsídio da Prefeitura, você sente melhorias?</label>
                     <div class="grid grid-cols-1 gap-2">
                         <label class="block">
                             <input type="radio" name="q5" value="NAO_SABIA" class="peer hidden" required>
@@ -213,7 +221,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Se você soubesse que um único ônibus lotado lucra o equivalente a um carro popular por dia, você aceitaria viajar em pé?</label>
+                    <label class="block text-xs font-bold text-slate-200">Sabendo do lucro alto, aceitaria viajar em pé?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q6" value="SIM" class="peer hidden" required>
@@ -233,7 +241,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Quanto do seu salário mensal fica comprometido com o transporte (contando passagens de lazer e família)?</label>
+                    <label class="block text-xs font-bold text-slate-200">Quanto do seu salário vai para transporte?</label>
                     <div class="grid grid-cols-1 gap-2">
                         <label class="block">
                             <input type="radio" name="q7" value="MENOS_5" class="peer hidden" required>
@@ -263,17 +271,17 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4" data-step="4">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Eixo 3: Território e Apartheid (Lobby)</h2>
-                        <p class="text-xs font-bold text-slate-400">Evidenciar o loteamento das 5 famílias.</p>
+                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Território</h2>
+                        <p class="text-xs font-bold text-slate-400">Diferenças de frota e “donos” de linhas.</p>
                     </div>
                     <i data-lucide="map-pinned" class="text-blue-500" size="18"></i>
                 </div>
 
                 <div class="space-y-3">
-                    <label class="block text-xs font-bold text-slate-200">Você já notou se os ônibus que circulam no Centro e áreas nobres são mais novos ou silenciosos do que os que atendem o seu bairro no Sul/Norte da ilha?</label>
+                    <label class="block text-xs font-bold text-slate-200">Ônibus no Centro/nobre são melhores?</label>
                     <div class="grid grid-cols-1 gap-2">
                         <label class="block">
                             <input type="radio" name="q8" value="SIM_MELHORES_NO_CENTRO" class="peer hidden" required>
@@ -293,7 +301,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Você sabe o nome da família que é dona da linha que você usa todo dia?</label>
+                    <label class="block text-xs font-bold text-slate-200">Você sabe quem “manda” na sua linha?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q9" value="SIM" class="peer hidden" required>
@@ -313,7 +321,7 @@
                         <input id="q9_familia" placeholder="Digite o sobrenome da família" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-slate-600">
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Para você, o ônibus é uma solução de transporte ou apenas um mal necessário enquanto você não consegue comprar um carro ou moto?</label>
+                    <label class="block text-xs font-bold text-slate-200">Ônibus pra você é solução ou “mal necessário”?</label>
                     <div class="grid grid-cols-1 gap-2">
                         <label class="block">
                             <input type="radio" name="q10" value="SOLUCAO" class="peer hidden" required>
@@ -335,17 +343,17 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4" data-step="5">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Eixo 4: Direito à Cidade</h2>
-                        <p class="text-xs font-bold text-slate-400">Mobilizar para Tarifa Zero e Salubridade.</p>
+                        <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Direito à Cidade</h2>
+                        <p class="text-xs font-bold text-slate-400">Tarifa Zero e fiscalização.</p>
                     </div>
                     <i data-lucide="landmark" class="text-blue-500" size="18"></i>
                 </div>
 
                 <div class="space-y-3">
-                    <label class="block text-xs font-bold text-slate-200">Se o ônibus fosse gratuito, silencioso e refrigerado, você deixaria o seu carro ou moto em casa com mais frequência?</label>
+                    <label class="block text-xs font-bold text-slate-200">Se grátis, silencioso e refrigerado, usaria mais?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q11" value="SIM" class="peer hidden" required>
@@ -365,7 +373,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Você acredita que a Prefeitura fiscaliza de verdade o que acontece dentro do ônibus, ou ela apenas acredita no que a empresa diz?</label>
+                    <label class="block text-xs font-bold text-slate-200">A Prefeitura fiscaliza de verdade o que acontece?</label>
                     <div class="grid grid-cols-1 gap-2">
                         <label class="block">
                             <input type="radio" name="q12" value="FISCALIZA" class="peer hidden" required>
@@ -381,7 +389,7 @@
                         </label>
                     </div>
 
-                    <label class="block text-xs font-bold text-slate-200">Você estaria disposto a usar o seu celular por 1 minuto para denunciar uma infração de calor ou barulho se soubesse que isso vira uma multa real para a empresa?</label>
+                    <label class="block text-xs font-bold text-slate-200">Topa usar o celular 1 min para denunciar calor/ruído?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="block">
                             <input type="radio" name="q13" value="SIM" class="peer hidden" required>
@@ -403,7 +411,7 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+            <div class="enq-step bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3" data-step="6">
                 <label class="flex items-start gap-3 text-xs font-bold text-slate-200">
                     <input id="consent" type="checkbox" class="accent-blue-600 mt-1" required>
                     <span>Concordo em enviar estas respostas para uso em ações públicas (como abaixo-assinado) e análises técnicas, sem expor meus dados pessoais.</span>
@@ -412,6 +420,13 @@
                     <i data-lucide="send" size="16"></i> Enviar Respostas
                 </button>
                 <p id="submit-status" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center"></p>
+            </div>
+            
+            <div class="sticky bottom-3">
+                <div class="flex gap-2">
+                    <button id="prev-step" type="button" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl hidden">Voltar</button>
+                    <button id="next-step" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl">Próximo</button>
+                </div>
             </div>
         </form>
     </main>
@@ -491,6 +506,11 @@
         const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
 
         const form = document.getElementById('enquete-form');
+        const steps = Array.from(document.querySelectorAll('.enq-step'));
+        const stepCounter = document.getElementById('step-counter');
+        const stepProgress = document.getElementById('step-progress');
+        const prevBtn = document.getElementById('prev-step');
+        const nextBtn = document.getElementById('next-step');
         const submitBtn = document.getElementById('submit-btn');
         const submitStatus = document.getElementById('submit-status');
         const authStatus = document.getElementById('auth-status');
@@ -532,7 +552,69 @@
                 q9Wrap.classList.add('hidden');
                 q9FamiliaEl.value = '';
             }
+            updateNextState();
         });
+
+        let currentStep = 1;
+        const totalSteps = steps.length;
+
+        function updateStepperUI() {
+            steps.forEach((el) => {
+                const idx = Number(el.getAttribute('data-step'));
+                el.style.display = idx === currentStep ? 'block' : 'none';
+            });
+            stepCounter.textContent = `${currentStep}/${totalSteps}`;
+            stepProgress.style.width = `${Math.round((currentStep/totalSteps)*100)}%`;
+            prevBtn.classList.toggle('hidden', currentStep === 1);
+            nextBtn.textContent = currentStep === totalSteps ? 'Finalizar' : 'Próximo';
+            updateNextState();
+        }
+
+        function requiredNamesForStep(stepIdx) {
+            if (stepIdx === 2) return ['q1','q2','q3','q4'];
+            if (stepIdx === 3) return ['q5','q6','q7'];
+            if (stepIdx === 4) return ['q8','q9','q10'];
+            if (stepIdx === 5) return ['q11','q12','q13'];
+            if (stepIdx === 6) return ['consent'];
+            return [];
+        }
+
+        function isStepValid(stepIdx) {
+            if (stepIdx === 6) {
+                return document.getElementById('consent')?.checked;
+            }
+            const names = requiredNamesForStep(stepIdx);
+            return names.every((n) => {
+                const checked = form.querySelector(`input[name="${n}"]:checked`);
+                return !!checked;
+            });
+        }
+
+        function updateNextState() {
+            nextBtn.disabled = !isStepValid(currentStep);
+            nextBtn.classList.toggle('opacity-50', nextBtn.disabled);
+            nextBtn.classList.toggle('cursor-not-allowed', nextBtn.disabled);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) currentStep--;
+            updateStepperUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                if (!isStepValid(currentStep)) return;
+                currentStep++;
+                updateStepperUI();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                if (!isStepValid(6)) return;
+                form.requestSubmit();
+            }
+        });
+
+        updateStepperUI();
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -579,6 +661,8 @@
                 await addDoc(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'enquetes'), payload);
                 form.reset();
                 submitStatus.textContent = 'Enviado com sucesso.';
+                currentStep = totalSteps;
+                updateStepperUI();
             } catch (err) {
                 console.error(err);
                 submitStatus.textContent = 'Erro ao enviar.';
