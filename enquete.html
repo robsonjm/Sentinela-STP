@@ -102,16 +102,84 @@
 
                 <div class="space-y-3">
                     <label class="block text-xs font-bold text-slate-200">Ao descer do ônibus após uma viagem de 40 minutos, você sente algum zumbido no ouvido ou dor de cabeça leve?</label>
-                    <textarea id="q1" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q1" value="NUNCA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Nunca</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q1" value="AS_VEZES" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Às vezes</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q1" value="FREQUENTE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Frequentemente</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q1" value="SEMPRE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sempre</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Você já sentiu tontura ou excesso de cansaço devido ao calor dentro do veículo, mesmo em dias que não são de pico de verão?</label>
-                    <textarea id="q2" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q2" value="NUNCA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Nunca</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q2" value="AS_VEZES" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Às vezes</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q2" value="FREQUENTE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Frequentemente</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q2" value="SEMPRE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sempre</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Como o barulho do motor afeta sua capacidade de conversar ou ouvir música/podcast durante o trajeto?</label>
-                    <textarea id="q3" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q3" value="NAO_AFETA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não afeta</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q3" value="ATRAPALHA_UM_POUCO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Atrapalha um pouco</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q3" value="ATRAPALHA_MUITO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Atrapalha muito</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q3" value="IMPOSSIVEL" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Impossível (ruído extremo)</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Você sente que o seu nível de estresse aumenta especificamente por causa das condições do veículo (trepidação, barulho, calor)?</label>
-                    <textarea id="q4" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q4" value="NAO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q4" value="POUCO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Um pouco</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q4" value="MUITO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Muito</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q4" value="NAO_SEI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sei</div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -126,13 +194,72 @@
 
                 <div class="space-y-3">
                     <label class="block text-xs font-bold text-slate-200">Você sabia que, além da sua passagem, a Prefeitura paga quase R$ 10,00 extras por quilômetro rodado para a empresa? Você sente que esse dinheiro volta em melhorias?</label>
-                    <textarea id="q5" required rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q5" value="NAO_SABIA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sabia</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q5" value="SABIA_VOLTA_MELHORIAS" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sabia e acho que volta em melhorias</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q5" value="SABIA_NAO_VOLTA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sabia e não vejo melhorias</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q5" value="NAO_SEI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sei opinar</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Se você soubesse que um único ônibus lotado lucra o equivalente a um carro popular por dia, você aceitaria viajar em pé?</label>
-                    <textarea id="q6" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q6" value="SIM" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sim</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q6" value="DEPENDE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Depende</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q6" value="NAO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q6" value="NAO_SEI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sei</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Quanto do seu salário mensal fica comprometido com o transporte (contando passagens de lazer e família)?</label>
-                    <textarea id="q7" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q7" value="MENOS_5" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Menos de 5%</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q7" value="ENTRE_5_10" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Entre 5% e 10%</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q7" value="ENTRE_10_20" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Entre 10% e 20%</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q7" value="ENTRE_20_30" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Entre 20% e 30%</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q7" value="MAIS_30" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Mais de 30%</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q7" value="NAO_SEI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sei</div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -147,13 +274,64 @@
 
                 <div class="space-y-3">
                     <label class="block text-xs font-bold text-slate-200">Você já notou se os ônibus que circulam no Centro e áreas nobres são mais novos ou silenciosos do que os que atendem o seu bairro no Sul/Norte da ilha?</label>
-                    <textarea id="q8" required rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q8" value="SIM_MELHORES_NO_CENTRO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sim, são melhores no Centro/áreas nobres</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q8" value="NAO_PARECIDO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não, é parecido em toda a cidade</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q8" value="NAO_REPAREI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não reparei</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q8" value="DEPENDE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Depende da linha</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Você sabe o nome da família que é dona da linha que você usa todo dia?</label>
-                    <textarea id="q9" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q9" value="SIM" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sim</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q9" value="NAO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não</div>
+                        </label>
+                        <label class="block col-span-2">
+                            <input type="radio" name="q9" value="NAO_TENHO_CERTEZA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não tenho certeza</div>
+                        </label>
+                    </div>
+                    <div id="q9_familia_wrap" class="hidden space-y-1">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Qual família? (Opcional)</label>
+                        <input id="q9_familia" placeholder="Digite o sobrenome da família" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-slate-600">
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Para você, o ônibus é uma solução de transporte ou apenas um mal necessário enquanto você não consegue comprar um carro ou moto?</label>
-                    <textarea id="q10" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q10" value="SOLUCAO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Solução de transporte</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q10" value="MAL_NECESSARIO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Mal necessário</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q10" value="DEPENDE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Depende</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q10" value="NAO_SEI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sei</div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -168,19 +346,66 @@
 
                 <div class="space-y-3">
                     <label class="block text-xs font-bold text-slate-200">Se o ônibus fosse gratuito, silencioso e refrigerado, você deixaria o seu carro ou moto em casa com mais frequência?</label>
-                    <textarea id="q11" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q11" value="SIM" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sim</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q11" value="TALVEZ" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Talvez</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q11" value="NAO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q11" value="NAO_TENHO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não tenho carro/moto</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Você acredita que a Prefeitura fiscaliza de verdade o que acontece dentro do ônibus, ou ela apenas acredita no que a empresa diz?</label>
-                    <textarea id="q12" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q12" value="FISCALIZA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Fiscaliza de verdade</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q12" value="ACREDITA_EMPRESA" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Mais acredita no que a empresa diz</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q12" value="NAO_SEI" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não sei</div>
+                        </label>
+                    </div>
 
                     <label class="block text-xs font-bold text-slate-200">Você estaria disposto a usar o seu celular por 1 minuto para denunciar uma infração de calor ou barulho se soubesse que isso vira uma multa real para a empresa?</label>
-                    <textarea id="q13" required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-blue-600 resize-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block">
+                            <input type="radio" name="q13" value="SIM" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Sim</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q13" value="DEPENDE" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Depende</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q13" value="NAO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Não</div>
+                        </label>
+                        <label class="block">
+                            <input type="radio" name="q13" value="JA_FACO" class="peer hidden" required>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-black text-slate-200 peer-checked:bg-blue-600 peer-checked:border-blue-500 transition-colors">Já faço isso</div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
                 <label class="flex items-start gap-3 text-xs font-bold text-slate-200">
-                    <input id="consent" type="checkbox" class="accent-blue-600 mt-1">
+                    <input id="consent" type="checkbox" class="accent-blue-600 mt-1" required>
                     <span>Concordo em enviar estas respostas para uso em ações públicas (como abaixo-assinado) e análises técnicas, sem expor meus dados pessoais.</span>
                 </label>
                 <button id="submit-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-black uppercase text-xs tracking-widest py-4 rounded-2xl shadow-lg shadow-blue-900/50 transition-all flex items-center justify-center gap-2">
@@ -291,19 +516,37 @@
             return el && el.value != null ? String(el.value).trim() : '';
         };
 
-        const readTextarea = (id) => {
-            const el = document.getElementById(id);
-            return el && el.value != null ? String(el.value).trim() : '';
+        const readRadio = (name) => {
+            const el = form.querySelector(`input[name="${name}"]:checked`);
+            return el && el.value != null ? String(el.value) : '';
         };
+
+        const q9Wrap = document.getElementById('q9_familia_wrap');
+        const q9FamiliaEl = document.getElementById('q9_familia');
+        form.addEventListener('change', (e) => {
+            if (!(e.target instanceof HTMLInputElement)) return;
+            if (e.target.name !== 'q9') return;
+            const v = readRadio('q9');
+            if (v === 'SIM') q9Wrap.classList.remove('hidden');
+            else {
+                q9Wrap.classList.add('hidden');
+                q9FamiliaEl.value = '';
+            }
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!user) return;
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
 
             submitBtn.disabled = true;
             submitStatus.textContent = 'Enviando...';
 
             const payload = {
+                schemaVersion: 2,
                 ownerUid: user.uid,
                 createdAt: serverTimestamp(),
                 clientAtMs: Date.now(),
@@ -312,19 +555,20 @@
                 bairro: readValue('bairro'),
                 nome: readValue('nome'),
                 consent: !!document.getElementById('consent')?.checked,
-                q1: readTextarea('q1'),
-                q2: readTextarea('q2'),
-                q3: readTextarea('q3'),
-                q4: readTextarea('q4'),
-                q5: readTextarea('q5'),
-                q6: readTextarea('q6'),
-                q7: readTextarea('q7'),
-                q8: readTextarea('q8'),
-                q9: readTextarea('q9'),
-                q10: readTextarea('q10'),
-                q11: readTextarea('q11'),
-                q12: readTextarea('q12'),
-                q13: readTextarea('q13'),
+                q1: readRadio('q1'),
+                q2: readRadio('q2'),
+                q3: readRadio('q3'),
+                q4: readRadio('q4'),
+                q5: readRadio('q5'),
+                q6: readRadio('q6'),
+                q7: readRadio('q7'),
+                q8: readRadio('q8'),
+                q9: readRadio('q9'),
+                q9Familia: readValue('q9_familia'),
+                q10: readRadio('q10'),
+                q11: readRadio('q11'),
+                q12: readRadio('q12'),
+                q13: readRadio('q13'),
                 audit: {
                     deviceId: getDeviceId(),
                     ua: navigator.userAgent

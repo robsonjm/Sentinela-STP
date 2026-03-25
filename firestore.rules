@@ -50,6 +50,9 @@ service cloud.firestore {
 
     match /artifacts/sentinela-stp/public/data/enquetes/{respId} {
       allow create: if request.auth != null &&
+        request.resource.data.keys().hasOnly(['schemaVersion','ownerUid','createdAt','clientAtMs','eixoRegiao','linha','bairro','nome','consent','q1','q2','q3','q4','q5','q6','q7','q8','q9','q9Familia','q10','q11','q12','q13','audit']) &&
+        request.resource.data.schemaVersion is int &&
+        request.resource.data.schemaVersion == 2 &&
         request.resource.data.ownerUid == request.auth.uid &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.clientAtMs is int &&
@@ -57,24 +60,38 @@ service cloud.firestore {
         request.resource.data.eixoRegiao.size() <= 20 &&
         request.resource.data.linha is string &&
         request.resource.data.linha.size() <= 120 &&
+        request.resource.data.linha.matches('^[^<>]{0,120}$') &&
         request.resource.data.bairro is string &&
         request.resource.data.bairro.size() <= 80 &&
+        request.resource.data.bairro.matches('^[^<>]{0,80}$') &&
         request.resource.data.nome is string &&
         request.resource.data.nome.size() <= 80 &&
+        request.resource.data.nome.matches('^[^<>]{0,80}$') &&
         request.resource.data.consent is bool &&
-        request.resource.data.q1 is string && request.resource.data.q1.size() <= 1200 &&
-        request.resource.data.q2 is string && request.resource.data.q2.size() <= 1200 &&
-        request.resource.data.q3 is string && request.resource.data.q3.size() <= 1200 &&
-        request.resource.data.q4 is string && request.resource.data.q4.size() <= 1200 &&
-        request.resource.data.q5 is string && request.resource.data.q5.size() <= 1200 &&
-        request.resource.data.q6 is string && request.resource.data.q6.size() <= 1200 &&
-        request.resource.data.q7 is string && request.resource.data.q7.size() <= 1200 &&
-        request.resource.data.q8 is string && request.resource.data.q8.size() <= 1200 &&
-        request.resource.data.q9 is string && request.resource.data.q9.size() <= 1200 &&
-        request.resource.data.q10 is string && request.resource.data.q10.size() <= 1200 &&
-        request.resource.data.q11 is string && request.resource.data.q11.size() <= 1200 &&
-        request.resource.data.q12 is string && request.resource.data.q12.size() <= 1200 &&
-        request.resource.data.q13 is string && request.resource.data.q13.size() <= 1200;
+        request.resource.data.q1 is string && request.resource.data.q1.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q2 is string && request.resource.data.q2.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q3 is string && request.resource.data.q3.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q4 is string && request.resource.data.q4.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q5 is string && request.resource.data.q5.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q6 is string && request.resource.data.q6.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q7 is string && request.resource.data.q7.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q8 is string && request.resource.data.q8.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q9 is string && request.resource.data.q9.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q10 is string && request.resource.data.q10.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q11 is string && request.resource.data.q11.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q12 is string && request.resource.data.q12.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q13 is string && request.resource.data.q13.matches('^[A-Z0-9_]{1,40}$') &&
+        request.resource.data.q9Familia is string &&
+        ((request.resource.data.q9 != 'SIM' && request.resource.data.q9Familia.size() == 0) ||
+         (request.resource.data.q9 == 'SIM' && request.resource.data.q9Familia.size() <= 80 && request.resource.data.q9Familia.matches('^[^<>]{0,80}$'))) &&
+        request.resource.data.audit is map &&
+        request.resource.data.audit.keys().hasOnly(['deviceId','ua']) &&
+        request.resource.data.audit.deviceId is string &&
+        request.resource.data.audit.deviceId.size() <= 80 &&
+        request.resource.data.audit.deviceId.matches('^[^<>]{1,80}$') &&
+        request.resource.data.audit.ua is string &&
+        request.resource.data.audit.ua.size() <= 300 &&
+        request.resource.data.audit.ua.matches('^[^<>]{1,300}$');
       allow read: if request.auth != null && request.auth.token.email != null;
       allow update, delete: if false;
     }
