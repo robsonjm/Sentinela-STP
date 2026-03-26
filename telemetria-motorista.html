@@ -344,6 +344,7 @@
         const alertBanner = document.getElementById('alert-banner');
         const alertText = document.getElementById('alert-text');
         const dismissAlertBtn = document.getElementById('dismiss-alert');
+        let alertAutoHideTimer = null;
         
         const permissionsBtn = document.getElementById('permissions-btn');
         const startBtn = document.getElementById('start-btn');
@@ -422,13 +423,17 @@
             return 2 * R * Math.asin(Math.min(1, Math.sqrt(x)));
         }
         
-        function showAlert(message) {
+        function showAlert(message, autoHideMs = 4500) {
             alertText.textContent = message;
             alertBanner.classList.remove('hidden');
+            if (alertAutoHideTimer) clearTimeout(alertAutoHideTimer);
+            alertAutoHideTimer = setTimeout(() => hideAlert(), autoHideMs);
         }
         
         function hideAlert() {
             alertBanner.classList.add('hidden');
+            if (alertAutoHideTimer) clearTimeout(alertAutoHideTimer);
+            alertAutoHideTimer = null;
         }
         
         function addEvent(kind, payload) {
