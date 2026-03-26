@@ -13,8 +13,9 @@
         :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
         body { font-family: 'Inter', sans-serif; padding-bottom: calc(5rem + var(--sab)); }
         @media (min-width: 1024px) { body { padding-bottom: 0; } }
-        #map { height: 56vh; min-height: 320px; }
-        @media (min-width: 1024px) { #map { height: 100%; min-height: 0; } }
+        #map-wrap { height: 56vh; min-height: 320px; }
+        #map { height: 100%; min-height: 0; }
+        @media (min-width: 1024px) { #map-wrap { height: 100%; min-height: 0; } }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
