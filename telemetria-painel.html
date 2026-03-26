@@ -87,7 +87,46 @@
                         </div>
                     </div>
                     <div class="flex-1 min-h-0">
-                        <div id="map"></div>
+                        <div id="map-wrap" class="relative">
+                            <div id="map"></div>
+                            <div id="replay-controls" class="absolute left-3 top-3 z-[500] bg-white/90 backdrop-blur border border-slate-200 rounded-2xl shadow-lg p-3 w-[260px]">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Replay</p>
+                                    <div class="flex items-center gap-2">
+                                        <select id="replay-speed" class="bg-white border border-slate-200 rounded-xl px-2 py-1 text-[10px] font-black text-slate-700 uppercase tracking-widest outline-none">
+                                            <option value="0.5">0.5x</option>
+                                            <option value="1" selected>1x</option>
+                                            <option value="2">2x</option>
+                                            <option value="4">4x</option>
+                                        </select>
+                                        <button id="replay-toggle" type="button" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl transition-colors">
+                                            <i data-lucide="play" size="14"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input id="replay-slider" type="range" min="0" max="0" value="0" step="1000" class="w-full accent-blue-600" disabled>
+                                </div>
+                                <div class="mt-2 flex items-center justify-between gap-3">
+                                    <span id="replay-time" class="text-[10px] font-black text-slate-600 uppercase tracking-widest tabular-nums">00:00</span>
+                                    <label class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600">
+                                        <input id="replay-follow" type="checkbox" class="accent-blue-600">
+                                        Seguir
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="g-chart-card" class="absolute right-3 top-3 z-[500] bg-white/90 backdrop-blur border border-slate-200 rounded-2xl shadow-lg p-3 w-[320px]">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">G / dB</p>
+                                    <span id="g-chart-value" class="text-[10px] font-black uppercase tracking-widest text-slate-600 tabular-nums">—</span>
+                                </div>
+                                <svg id="g-chart" viewBox="0 0 320 120" class="mt-2 w-full h-[120px]"></svg>
+                                <div class="mt-2 flex items-center justify-between gap-3">
+                                    <span id="g-chart-range" class="text-[10px] font-black uppercase tracking-widest text-slate-500 tabular-nums">—</span>
+                                    <span id="g-chart-hint" class="text-[10px] font-black uppercase tracking-widest text-slate-400">Picos = buracos</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
                         <div class="flex items-center gap-2 flex-wrap">
@@ -218,6 +257,7 @@
         const routeLayer = L.layerGroup().addTo(map);
         const alertsDbLayer = L.layerGroup().addTo(map);
         const alertsGLayer = L.layerGroup().addTo(map);
+        const replayLayer = L.layerGroup().addTo(map);
 
         function escapeText(value) {
             return value == null ? '' : String(value);
@@ -342,6 +382,378 @@
             routeLayer.clearLayers();
             alertsDbLayer.clearLayers();
             alertsGLayer.clearLayers();
+            replayLayer.clearLayers();
+            stopReplay();
+            renderGChart([], [], null, null);
+        }
+
+        const replayToggleBtn = document.getElementById('replay-toggle');
+        const replaySliderEl = document.getElementById('replay-slider');
+        const replayTimeEl = document.getElementById('replay-time');
+        const replaySpeedEl = document.getElementById('replay-speed');
+        const replayFollowEl = document.getElementById('replay-follow');
+
+        const gChartSvg = document.getElementById('g-chart');
+        const gChartValueEl = document.getElementById('g-chart-value');
+        const gChartRangeEl = document.getElementById('g-chart-range');
+
+        const replayState = {
+            playing: false,
+            speed: 1,
+            startTs: null,
+            endTs: null,
+            tMs: 0,
+            gps: [],
+            samples: [],
+            raf: null,
+            lastFrameAt: null,
+            marker: null,
+            cursor: null,
+            cursorDot: null,
+            chart: {
+                viewW: 320,
+                viewH: 120,
+                padL: 26,
+                padR: 26,
+                padT: 10,
+                padB: 18,
+                gMax: 2,
+                dbMin: 30,
+                dbMax: 110,
+                startTs: null,
+                endTs: null,
+                hasDb: false
+            }
+        };
+
+        function fmtMmSs(ms) {
+            const s = Math.max(0, Math.floor(ms / 1000));
+            const mm = String(Math.floor(s / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${mm}:${ss}`;
+        }
+
+        function clamp(n, min, max) {
+            return Math.max(min, Math.min(max, n));
+        }
+
+        function bisectByTs(arr, ts) {
+            let lo = 0;
+            let hi = arr.length - 1;
+            while (lo < hi) {
+                const mid = Math.floor((lo + hi + 1) / 2);
+                if (arr[mid].ts <= ts) lo = mid;
+                else hi = mid - 1;
+            }
+            return lo;
+        }
+
+        function nearestByTs(arr, ts) {
+            if (!arr.length) return null;
+            const i = bisectByTs(arr, ts);
+            const a = arr[i];
+            const b = i + 1 < arr.length ? arr[i + 1] : null;
+            if (!b) return a;
+            return Math.abs(a.ts - ts) <= Math.abs(b.ts - ts) ? a : b;
+        }
+
+        function stopReplay() {
+            replayState.playing = false;
+            replayState.lastFrameAt = null;
+            if (replayState.raf) cancelAnimationFrame(replayState.raf);
+            replayState.raf = null;
+            if (replayToggleBtn) {
+                replayToggleBtn.innerHTML = '<i data-lucide="play" size="14"></i>';
+                lucide.createIcons();
+            }
+        }
+
+        function setReplayTimeMs(nextMs, fromUser = false) {
+            if (replayState.startTs == null || replayState.endTs == null) return;
+            const dur = Math.max(0, replayState.endTs - replayState.startTs);
+            replayState.tMs = clamp(nextMs, 0, dur);
+            if (replaySliderEl) replaySliderEl.value = String(Math.round(replayState.tMs));
+            if (replayTimeEl) replayTimeEl.textContent = fmtMmSs(replayState.tMs);
+
+            const ts = replayState.startTs + replayState.tMs;
+            if (replayState.gps.length >= 2 && replayState.marker) {
+                const idx = bisectByTs(replayState.gps, ts);
+                const p1 = replayState.gps[idx];
+                const p2 = idx + 1 < replayState.gps.length ? replayState.gps[idx + 1] : null;
+                let lat = p1.lat;
+                let lng = p1.lng;
+                if (p2 && p2.ts > p1.ts) {
+                    const f = clamp((ts - p1.ts) / (p2.ts - p1.ts), 0, 1);
+                    lat = p1.lat + (p2.lat - p1.lat) * f;
+                    lng = p1.lng + (p2.lng - p1.lng) * f;
+                }
+                replayState.marker.setLatLng([lat, lng]);
+                if (replayFollowEl && replayFollowEl.checked && !fromUser) {
+                    map.panTo([lat, lng], { animate: true, duration: 0.25 });
+                }
+            }
+
+            updateChartCursor(ts);
+        }
+
+        function tickReplay(now) {
+            if (!replayState.playing) return;
+            const last = replayState.lastFrameAt == null ? now : replayState.lastFrameAt;
+            replayState.lastFrameAt = now;
+            const dt = Math.max(0, now - last);
+            const step = dt * replayState.speed;
+            setReplayTimeMs(replayState.tMs + step);
+            const dur = replayState.endTs - replayState.startTs;
+            if (replayState.tMs >= dur) {
+                stopReplay();
+                return;
+            }
+            replayState.raf = requestAnimationFrame(tickReplay);
+        }
+
+        function renderGChart(gSeries, dbSeries, startTs, endTs) {
+            if (!gChartSvg) return;
+            gChartSvg.innerHTML = '';
+            replayState.chart.startTs = startTs;
+            replayState.chart.endTs = endTs;
+            replayState.chart.hasDb = dbSeries.length > 0;
+
+            const W = replayState.chart.viewW;
+            const H = replayState.chart.viewH;
+            const L = replayState.chart.padL;
+            const R = replayState.chart.padR;
+            const T = replayState.chart.padT;
+            const B = replayState.chart.padB;
+            const iw = W - L - R;
+            const ih = H - T - B;
+
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('x', '0');
+            bg.setAttribute('y', '0');
+            bg.setAttribute('width', String(W));
+            bg.setAttribute('height', String(H));
+            bg.setAttribute('rx', '12');
+            bg.setAttribute('fill', '#ffffff');
+            bg.setAttribute('opacity', '0.0');
+            gChartSvg.appendChild(bg);
+
+            if (!gSeries.length || startTs == null || endTs == null || endTs <= startTs) {
+                if (gChartValueEl) gChartValueEl.textContent = '—';
+                if (gChartRangeEl) gChartRangeEl.textContent = 'Sem dados';
+                return;
+            }
+
+            const gMax = Math.max(1.5, ...gSeries.map((p) => p.g || 0));
+            replayState.chart.gMax = Math.min(6, Math.max(2, gMax * 1.15));
+
+            const xForTs = (ts) => L + ((ts - startTs) / (endTs - startTs)) * iw;
+            const yForG = (g) => T + (1 - clamp(g / replayState.chart.gMax, 0, 1)) * ih;
+            const yForDb = (db) => T + (1 - clamp((db - replayState.chart.dbMin) / (replayState.chart.dbMax - replayState.chart.dbMin), 0, 1)) * ih;
+
+            const grid = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            grid.setAttribute('fill', 'none');
+            grid.setAttribute('stroke', '#e2e8f0');
+            grid.setAttribute('stroke-width', '1');
+            const gLines = 4;
+            let d = '';
+            for (let i = 0; i <= gLines; i++) {
+                const y = T + (ih / gLines) * i;
+                d += `M ${L} ${y} L ${W - R} ${y} `;
+            }
+            grid.setAttribute('d', d.trim());
+            gChartSvg.appendChild(grid);
+
+            const makePath = (pts, yFn) => {
+                const maxPts = 220;
+                const step = Math.max(1, Math.floor(pts.length / maxPts));
+                let path = '';
+                for (let i = 0; i < pts.length; i += step) {
+                    const p = pts[i];
+                    const x = xForTs(p.ts);
+                    const y = yFn(p.value);
+                    path += `${path ? 'L' : 'M'} ${x.toFixed(2)} ${y.toFixed(2)} `;
+                }
+                return path.trim();
+            };
+
+            const gPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            gPath.setAttribute('fill', 'none');
+            gPath.setAttribute('stroke', '#f97316');
+            gPath.setAttribute('stroke-width', '2.5');
+            gPath.setAttribute('stroke-linecap', 'round');
+            gPath.setAttribute('stroke-linejoin', 'round');
+            gPath.setAttribute('d', makePath(gSeries.map((p) => ({ ts: p.ts, value: p.g })), yForG));
+            gChartSvg.appendChild(gPath);
+
+            if (dbSeries.length) {
+                const dbPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                dbPath.setAttribute('fill', 'none');
+                dbPath.setAttribute('stroke', '#2563eb');
+                dbPath.setAttribute('stroke-width', '2');
+                dbPath.setAttribute('stroke-dasharray', '4 4');
+                dbPath.setAttribute('stroke-linecap', 'round');
+                dbPath.setAttribute('stroke-linejoin', 'round');
+                dbPath.setAttribute('d', makePath(dbSeries.map((p) => ({ ts: p.ts, value: p.db })), yForDb));
+                gChartSvg.appendChild(dbPath);
+            }
+
+            const axisLeft = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            axisLeft.setAttribute('x', String(L));
+            axisLeft.setAttribute('y', String(H - 4));
+            axisLeft.setAttribute('fill', '#64748b');
+            axisLeft.setAttribute('font-size', '10');
+            axisLeft.setAttribute('font-weight', '900');
+            axisLeft.textContent = `0–${replayState.chart.gMax.toFixed(1)}G`;
+            gChartSvg.appendChild(axisLeft);
+
+            const axisRight = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            axisRight.setAttribute('x', String(W - R));
+            axisRight.setAttribute('y', String(H - 4));
+            axisRight.setAttribute('fill', '#64748b');
+            axisRight.setAttribute('font-size', '10');
+            axisRight.setAttribute('font-weight', '900');
+            axisRight.setAttribute('text-anchor', 'end');
+            axisRight.textContent = dbSeries.length ? `${replayState.chart.dbMin}–${replayState.chart.dbMax}dB` : '';
+            gChartSvg.appendChild(axisRight);
+
+            const cursor = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            cursor.setAttribute('x1', String(L));
+            cursor.setAttribute('x2', String(L));
+            cursor.setAttribute('y1', String(T));
+            cursor.setAttribute('y2', String(T + ih));
+            cursor.setAttribute('stroke', '#0f172a');
+            cursor.setAttribute('stroke-width', '1');
+            cursor.setAttribute('opacity', '0.25');
+            gChartSvg.appendChild(cursor);
+
+            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dot.setAttribute('cx', String(L));
+            dot.setAttribute('cy', String(T + ih));
+            dot.setAttribute('r', '3.5');
+            dot.setAttribute('fill', '#0f172a');
+            dot.setAttribute('opacity', '0.6');
+            gChartSvg.appendChild(dot);
+
+            replayState.cursor = cursor;
+            replayState.cursorDot = dot;
+
+            if (gChartRangeEl) gChartRangeEl.textContent = `MAX ${gMax.toFixed(2)}G`;
+        }
+
+        function updateChartCursor(ts) {
+            if (!replayState.cursor || !replayState.cursorDot) return;
+            if (replayState.chart.startTs == null || replayState.chart.endTs == null) return;
+            const startTs = replayState.chart.startTs;
+            const endTs = replayState.chart.endTs;
+            if (endTs <= startTs) return;
+            const W = replayState.chart.viewW;
+            const L = replayState.chart.padL;
+            const R = replayState.chart.padR;
+            const T = replayState.chart.padT;
+            const B = replayState.chart.padB;
+            const iw = W - L - R;
+            const ih = replayState.chart.viewH - T - B;
+            const x = L + ((ts - startTs) / (endTs - startTs)) * iw;
+            const cx = clamp(x, L, W - R);
+            replayState.cursor.setAttribute('x1', String(cx));
+            replayState.cursor.setAttribute('x2', String(cx));
+
+            const nearest = nearestByTs(replayState.samples, ts);
+            const g = nearest && nearest.g != null ? Number(nearest.g) : null;
+            if (Number.isFinite(g)) {
+                const y = T + (1 - clamp(g / replayState.chart.gMax, 0, 1)) * ih;
+                replayState.cursorDot.setAttribute('cx', String(cx));
+                replayState.cursorDot.setAttribute('cy', String(y));
+            }
+
+            const db = nearest && nearest.db != null ? Number(nearest.db) : null;
+            const gTxt = Number.isFinite(g) ? `${g.toFixed(2)}G` : '—';
+            const dbTxt = Number.isFinite(db) ? `${Math.round(db)}dB` : '—';
+            if (gChartValueEl) gChartValueEl.textContent = `${gTxt} • ${dbTxt}`;
+        }
+
+        function initReplay(computed) {
+            stopReplay();
+            replayLayer.clearLayers();
+            replayState.marker = null;
+            replayState.startTs = null;
+            replayState.endTs = null;
+            replayState.tMs = 0;
+
+            const gps = (computed.gps || []).filter((p) => p && p.lat != null && p.lng != null && p.ts != null)
+                .map((p) => ({ lat: Number(p.lat), lng: Number(p.lng), ts: Number(p.ts) }))
+                .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && Number.isFinite(p.ts))
+                .sort((a, b) => a.ts - b.ts);
+
+            const samples = (computed.samples || []).filter((s) => s && s.ts != null)
+                .map((s) => ({ ts: Number(s.ts), g: s.g == null ? null : Number(s.g), db: s.db == null ? null : Number(s.db) }))
+                .filter((s) => Number.isFinite(s.ts))
+                .sort((a, b) => a.ts - b.ts);
+
+            replayState.gps = gps;
+            replayState.samples = samples;
+
+            if (gps.length >= 2) {
+                replayState.startTs = gps[0].ts;
+                replayState.endTs = gps[gps.length - 1].ts;
+                const start = gps[0];
+                const m = L.circleMarker([start.lat, start.lng], { radius: 8, color: '#0f172a', weight: 2, fillColor: '#f59e0b', fillOpacity: 1 });
+                replayLayer.addLayer(m);
+                replayState.marker = m;
+                if (replaySliderEl) {
+                    replaySliderEl.disabled = false;
+                    replaySliderEl.min = '0';
+                    replaySliderEl.max = String(Math.max(0, replayState.endTs - replayState.startTs));
+                    replaySliderEl.value = '0';
+                }
+                if (replayTimeEl) replayTimeEl.textContent = '00:00';
+            } else {
+                if (replaySliderEl) {
+                    replaySliderEl.disabled = true;
+                    replaySliderEl.min = '0';
+                    replaySliderEl.max = '0';
+                    replaySliderEl.value = '0';
+                }
+                if (replayTimeEl) replayTimeEl.textContent = '—';
+            }
+
+            const startTs = replayState.startTs != null ? replayState.startTs : (samples.length ? samples[0].ts : null);
+            const endTs = replayState.endTs != null ? replayState.endTs : (samples.length ? samples[samples.length - 1].ts : null);
+            const gSeries = samples.filter((s) => Number.isFinite(s.g));
+            const dbSeries = samples.filter((s) => Number.isFinite(s.db));
+            renderGChart(gSeries, dbSeries, startTs, endTs);
+            if (startTs != null) updateChartCursor(startTs);
+        }
+
+        if (replayToggleBtn) {
+            replayToggleBtn.addEventListener('click', () => {
+                if (!replayState.gps.length || replayState.startTs == null || replayState.endTs == null) return;
+                if (replayState.playing) {
+                    stopReplay();
+                } else {
+                    replayState.playing = true;
+                    replayState.lastFrameAt = null;
+                    replayState.speed = replaySpeedEl ? Number(replaySpeedEl.value) || 1 : 1;
+                    replayToggleBtn.innerHTML = '<i data-lucide="pause" size="14"></i>';
+                    lucide.createIcons();
+                    replayState.raf = requestAnimationFrame(tickReplay);
+                }
+            });
+        }
+
+        if (replaySpeedEl) {
+            replaySpeedEl.addEventListener('change', () => {
+                replayState.speed = Number(replaySpeedEl.value) || 1;
+            });
+        }
+
+        if (replaySliderEl) {
+            replaySliderEl.addEventListener('input', () => {
+                if (!replayState.gps.length || replayState.startTs == null || replayState.endTs == null) return;
+                stopReplay();
+                const v = Number(replaySliderEl.value) || 0;
+                setReplayTimeMs(v, true);
+            });
         }
 
         function renderEventsList(items) {
@@ -651,6 +1063,7 @@
                 });
             }
 
+            initReplay(computed);
             renderEventsList(computed.events || []);
             downloadTripBtn.disabled = false;
             deleteTripBtn.disabled = false;
