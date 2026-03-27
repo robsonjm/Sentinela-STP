@@ -347,6 +347,47 @@
         </div>
     </div>
 
+    <div id="edit-modal" class="fixed inset-0 z-[9998] hidden bg-black/40 backdrop-blur-sm p-4 md:p-8">
+        <div class="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div class="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+                <div class="min-w-0">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Correção</p>
+                    <h3 class="text-lg font-black text-slate-900 tracking-tight truncate">Editar Veículo e Linha</h3>
+                </div>
+                <button id="edit-close" type="button" class="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                    <i data-lucide="x" size="14"></i> Fechar
+                </button>
+            </div>
+            <div class="p-5 md:p-6 space-y-4">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Veículo</label>
+                            <input id="edit-prefixo" class="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ex: 1234">
+                        </div>
+                        <div class="space-y-1 relative">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Linha</label>
+                            <input id="edit-linha" class="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ex: 330 TI Lagoa">
+                            <div id="edit-suggest" class="hidden absolute left-0 right-0 top-[calc(100%+0.25rem)] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50"></div>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-3">
+                        <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            ID: <span id="edit-id" class="font-mono text-slate-600">—</span>
+                        </div>
+                        <div id="edit-status" class="text-[10px] font-black text-slate-400 uppercase tracking-widest"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2">
+                    <button id="edit-cancel" type="button" class="bg-white hover:bg-slate-50 text-slate-800 font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all border border-slate-200">Cancelar</button>
+                    <button id="edit-save" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="save" size="14"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Image Preview Modal -->
     <div id="image-modal" class="fixed inset-0 z-[9999] hidden bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" onclick="closeImageModal()">
         <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
@@ -457,10 +498,13 @@
         markersGroup.on('clustermouseover', a => a.layer.spiderfy());
 
         let allLogs = [];
+        let logsById = {};
         let currentPeriod = 'todos';
         let lastFilteredLogs = [];
         let actionsByLineKey = {};
         let reportLine = '';
+        let knownLines = [];
+        let adminEmail = '';
 
         // Auth Check
         onAuthStateChanged(auth, (user) => {
@@ -472,6 +516,7 @@
                 document.body.classList.remove('opacity-0');
                 const syncStatus = document.getElementById('sync-status');
                 const safeEmail = escapeHtml(user.email || '');
+                adminEmail = user.email || '';
                 if (syncStatus) syncStatus.innerHTML = `
                     <div class="flex flex-col items-end">
                         <span class="flex items-center gap-1 text-green-400">
@@ -498,7 +543,13 @@
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'evidencias'), limit(1000));
             onSnapshot(q, (snapshot) => {
                 allLogs = [];
-                snapshot.forEach(doc => allLogs.push({ id: doc.id, ...doc.data() }));
+                logsById = {};
+                snapshot.forEach(doc => {
+                    const row = { id: doc.id, ...doc.data() };
+                    allLogs.push(row);
+                    logsById[row.id] = row;
+                });
+                knownLines = Array.from(new Set(allLogs.map((l) => (l.linha || '')).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
                 renderDashboard();
             });
         }
@@ -763,6 +814,9 @@
                                 <p class="text-[9px] text-slate-300 mt-3 text-right">${safeData} às ${safeHora}</p>
                                 
                                 <div class="mt-3 pt-3 border-t border-slate-100 text-center">
+                                    <button data-edit-id="${safeIdAttr}" class="text-[10px] font-black text-slate-700 uppercase hover:bg-slate-100 px-3 py-1 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto mb-2">
+                                        <i data-lucide="pencil" size="12"></i> Editar
+                                    </button>
                                     <button data-delete-id="${safeIdAttr}" class="text-[10px] font-black text-red-500 uppercase hover:bg-red-50 px-3 py-1 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto">
                                         <i data-lucide="trash-2" size="12"></i> Excluir
                                     </button>
@@ -778,6 +832,10 @@
                             const deleteBtn = root.querySelector('[data-delete-id]');
                             if (deleteBtn) {
                                 deleteBtn.addEventListener('click', () => window.deleteRecord(log.id));
+                            }
+                            const editBtn = root.querySelector('[data-edit-id]');
+                            if (editBtn) {
+                                editBtn.addEventListener('click', () => openEditModal(log.id));
                             }
 
                             if (safeFoto) {
@@ -820,6 +878,9 @@
                         ${safeFotoCell ? `<button data-img-src="${escapeHtml(safeFotoCell)}" class="mt-2 text-[10px] text-blue-500 underline flex items-center gap-1"><i data-lucide="image" size="12"></i> Ver Foto</button>` : ''}
                     </td>
                     <td class="px-6 py-4 text-right">
+                        <button data-edit-id="${safeIdCellAttr}" class="text-slate-400 hover:text-slate-700 transition-colors p-2 hover:bg-slate-50 rounded-full" title="Editar">
+                            <i data-lucide="pencil" size="16"></i>
+                        </button>
                         <button data-delete-id="${safeIdCellAttr}" class="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full" title="Excluir">
                             <i data-lucide="trash-2" size="16"></i>
                         </button>
@@ -827,6 +888,10 @@
                 `;
                 tableBody.appendChild(row);
 
+                const editBtn = row.querySelector('[data-edit-id]');
+                if (editBtn) {
+                    editBtn.addEventListener('click', () => openEditModal(log.id));
+                }
                 const deleteBtn = row.querySelector('[data-delete-id]');
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', () => window.deleteRecord(log.id));
@@ -1154,6 +1219,171 @@
                 if (repSaveStatusEl) repSaveStatusEl.textContent = 'Erro ao salvar.';
             }
         });
+
+        const editModal = document.getElementById('edit-modal');
+        const editCloseBtn = document.getElementById('edit-close');
+        const editCancelBtn = document.getElementById('edit-cancel');
+        const editSaveBtn = document.getElementById('edit-save');
+        const editPrefixoEl = document.getElementById('edit-prefixo');
+        const editLinhaEl = document.getElementById('edit-linha');
+        const editIdEl = document.getElementById('edit-id');
+        const editStatusEl = document.getElementById('edit-status');
+        const editSuggestEl = document.getElementById('edit-suggest');
+
+        let editTargetId = '';
+        let editOriginal = { prefixo: '', linha: '' };
+
+        function setEditOpen(open) {
+            if (!editModal) return;
+            editModal.classList.toggle('hidden', !open);
+            if (open) lucide.createIcons();
+        }
+
+        function closeEditModal() {
+            setEditOpen(false);
+            editTargetId = '';
+            if (editStatusEl) editStatusEl.textContent = '';
+            hideLineSuggestions();
+        }
+
+        function normalizeText(s) {
+            return (s == null ? '' : String(s))
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function levenshtein(a, b) {
+            const s = a || '';
+            const t = b || '';
+            if (s === t) return 0;
+            if (!s.length) return t.length;
+            if (!t.length) return s.length;
+            const v0 = new Array(t.length + 1);
+            const v1 = new Array(t.length + 1);
+            for (let i = 0; i <= t.length; i++) v0[i] = i;
+            for (let i = 0; i < s.length; i++) {
+                v1[0] = i + 1;
+                for (let j = 0; j < t.length; j++) {
+                    const cost = s[i] === t[j] ? 0 : 1;
+                    v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+                }
+                for (let j = 0; j <= t.length; j++) v0[j] = v1[j];
+            }
+            return v1[t.length];
+        }
+
+        function scoreCandidate(query, candidate) {
+            const q = normalizeText(query);
+            const c = normalizeText(candidate);
+            if (!q || !c) return 0;
+            if (c === q) return 2;
+            let score = 0;
+            if (c.startsWith(q)) score += 1.2;
+            if (c.includes(q)) score += 0.8;
+            const dist = levenshtein(q, c);
+            const ratio = 1 - dist / Math.max(1, Math.max(q.length, c.length));
+            score += ratio;
+            return score;
+        }
+
+        function showLineSuggestions(query) {
+            if (!editSuggestEl) return;
+            const q = (query || '').trim();
+            if (q.length < 2) {
+                hideLineSuggestions();
+                return;
+            }
+            const top = knownLines
+                .map((line) => ({ line, s: scoreCandidate(q, line) }))
+                .filter((x) => x.s > 0.6)
+                .sort((a, b) => b.s - a.s)
+                .slice(0, 6);
+
+            if (!top.length) {
+                hideLineSuggestions();
+                return;
+            }
+
+            editSuggestEl.innerHTML = top.map((x) => `
+                <button type="button" data-suggest="${escapeHtml(x.line)}" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors">
+                    <div class="text-xs font-black text-slate-800">${escapeHtml(x.line)}</div>
+                    <div class="text-[10px] font-mono text-slate-400">aproximação ${(x.s).toFixed(2)}</div>
+                </button>
+            `).join('');
+            editSuggestEl.classList.remove('hidden');
+            editSuggestEl.querySelectorAll('[data-suggest]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const v = btn.getAttribute('data-suggest') || '';
+                    editLinhaEl.value = v;
+                    hideLineSuggestions();
+                });
+            });
+        }
+
+        function hideLineSuggestions() {
+            if (!editSuggestEl) return;
+            editSuggestEl.classList.add('hidden');
+            editSuggestEl.innerHTML = '';
+        }
+
+        function openEditModal(id) {
+            const log = logsById[id];
+            if (!log) return;
+            editTargetId = id;
+            editOriginal = { prefixo: String(log.prefixo || ''), linha: String(log.linha || '') };
+            if (editPrefixoEl) editPrefixoEl.value = editOriginal.prefixo;
+            if (editLinhaEl) editLinhaEl.value = editOriginal.linha;
+            if (editIdEl) editIdEl.textContent = id;
+            if (editStatusEl) editStatusEl.textContent = '';
+            setEditOpen(true);
+            if (editLinhaEl) showLineSuggestions(editLinhaEl.value);
+        }
+
+        async function saveEdits() {
+            if (!editTargetId) return;
+            const nextPrefixo = (editPrefixoEl.value || '').trim();
+            const nextLinha = (editLinhaEl.value || '').trim();
+            const changed = nextPrefixo !== editOriginal.prefixo || nextLinha !== editOriginal.linha;
+            if (!changed) {
+                closeEditModal();
+                return;
+            }
+
+            if (editSaveBtn) editSaveBtn.disabled = true;
+            if (editStatusEl) editStatusEl.textContent = 'Salvando...';
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'evidencias', editTargetId), {
+                    prefixo: nextPrefixo,
+                    linha: nextLinha,
+                    adminEdit: {
+                        correctedAt: serverTimestamp(),
+                        correctedBy: adminEmail || null
+                    }
+                }, { merge: true });
+                if (editStatusEl) editStatusEl.textContent = 'Salvo.';
+                setTimeout(() => closeEditModal(), 350);
+            } catch (e) {
+                console.error(e);
+                if (editStatusEl) editStatusEl.textContent = 'Erro ao salvar.';
+            } finally {
+                if (editSaveBtn) editSaveBtn.disabled = false;
+            }
+        }
+
+        if (editCloseBtn) editCloseBtn.addEventListener('click', closeEditModal);
+        if (editCancelBtn) editCancelBtn.addEventListener('click', closeEditModal);
+        if (editModal) editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+        if (editLinhaEl) {
+            editLinhaEl.addEventListener('input', () => showLineSuggestions(editLinhaEl.value));
+            editLinhaEl.addEventListener('blur', () => setTimeout(hideLineSuggestions, 150));
+            editLinhaEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveEdits(); } });
+        }
+        if (editPrefixoEl) editPrefixoEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveEdits(); } });
+        if (editSaveBtn) editSaveBtn.addEventListener('click', saveEdits);
 
         document.getElementById('table-search').oninput = function(e) {
             const term = e.target.value.toLowerCase();
