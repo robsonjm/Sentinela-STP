@@ -504,6 +504,7 @@
         let actionsByLineKey = {};
         let reportLine = '';
         let knownLines = [];
+        let officialLines = [];
         let adminEmail = '';
 
         // Auth Check
@@ -526,6 +527,7 @@
                         <span class="text-[9px] text-slate-500 font-mono mt-0.5">${safeEmail}</span>
                     </div>
                 `;
+                loadOfficialLines();
                 loadData();
                 loadDemandas();
             }
@@ -552,6 +554,34 @@
                 knownLines = Array.from(new Set(allLogs.map((l) => (l.linha || '')).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
                 renderDashboard();
             });
+        }
+
+        async function loadOfficialLines() {
+            async function fetchLinesFrom(url) {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) return [];
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const datalist = doc.getElementById('fenix-lines');
+                if (!datalist) return [];
+                const values = Array.from(datalist.querySelectorAll('option'))
+                    .map((o) => o.getAttribute('value') || '')
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                return Array.from(new Set(values));
+            }
+
+            try {
+                const fromMotorista = await fetchLinesFrom('telemetria-motorista.html');
+                if (fromMotorista.length) {
+                    officialLines = fromMotorista;
+                    return;
+                }
+                const fromEnquete = await fetchLinesFrom('enquete.html');
+                if (fromEnquete.length) officialLines = fromEnquete;
+            } catch {
+                officialLines = [];
+            }
         }
 
         function safeDocId(value) {
@@ -1297,7 +1327,8 @@
                 hideLineSuggestions();
                 return;
             }
-            const top = knownLines
+            const source = officialLines.length ? officialLines : knownLines;
+            const top = source
                 .map((line) => ({ line, s: scoreCandidate(q, line) }))
                 .filter((x) => x.s > 0.6)
                 .sort((a, b) => b.s - a.s)
