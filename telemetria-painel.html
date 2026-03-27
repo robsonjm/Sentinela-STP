@@ -19,6 +19,13 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .live-div-icon.leaflet-div-icon { background: transparent; border: 0; width: auto !important; height: auto !important; }
+        .live-marker { transform: translate(-50%, -100%); display: inline-flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+        .live-bus { width: 22px; height: 22px; border-radius: 9999px; border: 2px solid #0f172a; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(15,23,42,0.12); }
+        .live-bus svg { stroke: #ffffff; }
+        .live-label-inner { width: max-content; max-width: 320px; background: rgba(255,255,255,0.96); border: 1px solid #e2e8f0; border-radius: 12px; padding: 6px 10px; font-size: 11px; font-weight: 800; text-transform: none; letter-spacing: 0; color: #0f172a; box-shadow: 0 2px 8px rgba(15,23,42,0.12); text-align: center; white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.2; }
+        .live-peak-db { width: 10px; height: 10px; border-radius: 9999px; background: #ef4444; border: 2px solid #0f172a; }
+        .live-peak-g { width: 10px; height: 10px; border-radius: 9999px; background: #f97316; border: 2px solid #0f172a; }
     </style>
 </head>
 <body class="h-[100svh] flex flex-col opacity-0 transition-opacity duration-500 bg-slate-50">
@@ -147,6 +154,9 @@
                             <button id="fit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2">
                                 <i data-lucide="maximize" size="14"></i> Ajustar
                             </button>
+                            <button id="live-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2">
+                                <i data-lucide="radio" size="14"></i> Ao vivo
+                            </button>
                             <button id="download-trip-btn" class="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2" disabled>
                                 <i data-lucide="download" size="14"></i> JSON
                             </button>
@@ -234,6 +244,7 @@
         const toggleAlertsDbEl = document.getElementById('toggle-alerts-db');
         const toggleAlertsGEl = document.getElementById('toggle-alerts-g');
         const fitBtn = document.getElementById('fit-btn');
+        const liveBtn = document.getElementById('live-btn');
         const downloadTripBtn = document.getElementById('download-trip-btn');
         const deleteTripBtn = document.getElementById('delete-trip-btn');
 
@@ -262,9 +273,37 @@
         const alertsDbLayer = L.layerGroup().addTo(map);
         const alertsGLayer = L.layerGroup().addTo(map);
         const replayLayer = L.layerGroup().addTo(map);
+        const liveLayer = L.layerGroup().addTo(map);
+        const liveTrailsLayer = L.layerGroup().addTo(map);
+        const liveAlertsLayer = L.layerGroup().addTo(map);
+
+        const FLORIPA_BOUNDS = L.latLngBounds(
+            L.latLng(-27.74, -48.68),
+            L.latLng(-27.40, -48.31)
+        );
 
         function escapeText(value) {
             return value == null ? '' : String(value);
+        }
+
+        function escapeHtml(value) {
+            const s = value == null ? '' : String(value);
+            return s.replace(/[&<>"']/g, (c) => {
+                if (c === '&') return '&amp;';
+                if (c === '<') return '&lt;';
+                if (c === '>') return '&gt;';
+                if (c === '"') return '&quot;';
+                return '&#39;';
+            });
+        }
+
+        function lucideSvg(name, attrs) {
+            try {
+                if (lucide && lucide.icons && lucide.icons[name]) {
+                    return lucide.createElement(lucide.icons[name], attrs || {}).outerHTML;
+                }
+            } catch {}
+            return '';
         }
 
         function fmtKm(value) {
@@ -387,8 +426,199 @@
             alertsDbLayer.clearLayers();
             alertsGLayer.clearLayers();
             replayLayer.clearLayers();
+            liveLayer.clearLayers();
+            liveTrailsLayer.clearLayers();
             stopReplay();
             renderGChart([], [], null, null);
+        }
+
+        const replayControlsEl = document.getElementById('replay-controls');
+        const gChartCardEl = document.getElementById('g-chart-card');
+
+        const liveState = {
+            enabled: false,
+            maxTrips: 12,
+            ttlMs: 2 * 60 * 1000,
+            trailMs: 10 * 60 * 1000,
+            tripsUnsub: null,
+            cleanupTimer: null,
+            tripWatchers: {}
+        };
+
+        function hashColor(text) {
+            const s = escapeText(text || '');
+            let h = 0;
+            for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
+            const hue = Math.abs(h) % 360;
+            return `hsl(${hue} 80% 45%)`;
+        }
+
+        function stopLive() {
+            liveState.enabled = false;
+            if (liveBtn) {
+                liveBtn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2';
+                liveBtn.innerHTML = '<i data-lucide="radio" size="14"></i> Ao vivo';
+                lucide.createIcons();
+            }
+            if (replayControlsEl) replayControlsEl.classList.remove('hidden');
+            if (gChartCardEl) gChartCardEl.classList.remove('hidden');
+
+            if (liveState.tripsUnsub) liveState.tripsUnsub();
+            liveState.tripsUnsub = null;
+            if (liveState.cleanupTimer) clearInterval(liveState.cleanupTimer);
+            liveState.cleanupTimer = null;
+            Object.values(liveState.tripWatchers).forEach((w) => {
+                if (w && w.unsub) w.unsub();
+            });
+            liveState.tripWatchers = {};
+            liveLayer.clearLayers();
+            liveTrailsLayer.clearLayers();
+            liveAlertsLayer.clearLayers();
+        }
+
+        function removeLiveTrip(tripId) {
+            const w = liveState.tripWatchers[tripId];
+            if (!w) return;
+            if (w.unsub) w.unsub();
+            if (w.marker) liveLayer.removeLayer(w.marker);
+            if (w.trail) liveTrailsLayer.removeLayer(w.trail);
+            if (w.alertsGroup) liveAlertsLayer.removeLayer(w.alertsGroup);
+            delete liveState.tripWatchers[tripId];
+        }
+
+        function ensureLiveTripWatcher(tripDoc) {
+            const tripId = tripDoc.id;
+            if (!tripId) return;
+            if (liveState.tripWatchers[tripId]) return;
+            const meta = tripDoc.meta || {};
+            const line = escapeText(meta.linha || 'Linha');
+            const prefix = escapeText(meta.prefixo || 'S/N');
+            const color = hashColor(line);
+
+            const busSvg = lucideSvg('bus-front', { width: 14, height: 14, 'stroke-width': 2 }) || lucideSvg('bus', { width: 14, height: 14, 'stroke-width': 2 });
+            const labelIcon = L.divIcon({
+                className: 'live-div-icon',
+                html: `<div class="live-marker"><div class="live-label-inner">${escapeHtml(line)} • #${escapeHtml(prefix)}</div><div class="live-bus" style="background:${color}">${busSvg || '<span style=&quot;color:#fff;font-weight:900;font-size:10px;line-height:1;&quot;>BUS</span>'}</div></div>`,
+                iconSize: [0, 0],
+                iconAnchor: [0, 0]
+            });
+            const marker = L.marker([-27.5945, -48.5477], { icon: labelIcon, zIndexOffset: 1000, interactive: false });
+            liveLayer.addLayer(marker);
+
+            const trail = L.polyline([], { color, weight: 4, opacity: 0.75 });
+            liveTrailsLayer.addLayer(trail);
+            const alertsGroup = L.layerGroup().addTo(liveAlertsLayer);
+
+            const chunksCol = collection(db, ...BASE, tripId, 'chunks');
+            const q = query(chunksCol, orderBy('createdAt', 'desc'), limit(1));
+            const unsub = onSnapshot(q, (snap) => {
+                if (snap.empty) return;
+                const d = snap.docs[0];
+                const chunkId = d.id;
+                const data = d.data() || {};
+                const gps = Array.isArray(data.gps) ? data.gps : [];
+                if (!gps.length) return;
+                if (liveState.tripWatchers[tripId] && liveState.tripWatchers[tripId].lastChunkId === chunkId) return;
+                const points = gps
+                    .filter((p) => p && p.lat != null && p.lng != null)
+                    .map((p) => ({ lat: Number(p.lat), lng: Number(p.lng), ts: Number(p.ts) }))
+                    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+                if (!points.length) return;
+
+                const w = liveState.tripWatchers[tripId];
+                if (!w) return;
+                w.lastChunkId = chunkId;
+                w.lastSeenAt = Date.now();
+
+                if (!w.trailPoints) w.trailPoints = [];
+                w.trailPoints = w.trailPoints.concat(points);
+                const minTs = Date.now() - liveState.trailMs;
+                w.trailPoints = w.trailPoints.filter((p) => !p.ts || p.ts >= minTs);
+                const latlngs = w.trailPoints.map((p) => L.latLng(p.lat, p.lng));
+                w.trail.setLatLngs(latlngs);
+
+                const last = points[points.length - 1];
+                w.marker.setLatLng([last.lat, last.lng]);
+
+                const evs = Array.isArray(data.events) ? data.events : [];
+                evs.forEach((e) => {
+                    const tag = e && e.tag ? String(e.tag) : '';
+                    const lat = Number(e.lat);
+                    const lng = Number(e.lng);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    const isDb = tag === 'dB' || tag === 'DB' || tag.toUpperCase() === 'DB';
+                    const isG = tag === 'G' || tag === 'g';
+                    if (!isDb && !isG) return;
+                    const css = isDb ? 'live-peak-db' : 'live-peak-g';
+                    const icon = L.divIcon({ className: css });
+                    const m = L.marker([lat, lng], { icon, zIndexOffset: 900 });
+                    alertsGroup.addLayer(m);
+                    setTimeout(() => {
+                        alertsGroup.removeLayer(m);
+                    }, 120000);
+                });
+            });
+
+            liveState.tripWatchers[tripId] = {
+                tripId,
+                marker,
+                trail,
+                alertsGroup,
+                unsub,
+                lastSeenAt: Date.now(),
+                lastChunkId: null
+            };
+        }
+
+        function startLive() {
+            liveState.enabled = true;
+            if (liveBtn) {
+                liveBtn.className = 'bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2';
+                liveBtn.innerHTML = '<i data-lucide="pause" size="14"></i> Parar';
+                lucide.createIcons();
+            }
+            if (replayControlsEl) replayControlsEl.classList.add('hidden');
+            if (gChartCardEl) gChartCardEl.classList.add('hidden');
+
+            selectedTripId = null;
+            selectedTrip = null;
+            selectedTripChunks = [];
+            selectedTripComputed = null;
+            setActiveTripItem('');
+            renderMapAndDetails(null, { gps: [], events: [], maxDb: null, maxG: null, alertDbPoints: [], alertGPoints: [] });
+            liveLayer.clearLayers();
+            liveTrailsLayer.clearLayers();
+            Object.keys(liveState.tripWatchers).forEach((id) => removeLiveTrip(id));
+            map.fitBounds(FLORIPA_BOUNDS, { padding: [24, 24] });
+
+            const tripsCol = collection(db, ...BASE);
+            const tripsQ = query(tripsCol, orderBy('startedAtMs', 'desc'), limit(60));
+            liveState.tripsUnsub = onSnapshot(tripsQ, (snap) => {
+                const now = Date.now();
+                const active = [];
+                snap.forEach((d) => {
+                    const row = { id: d.id, ...d.data() };
+                    if (!row || row.status !== 'active') return;
+                    active.push(row);
+                });
+                active.sort((a, b) => (Number(b.startedAtMs) || 0) - (Number(a.startedAtMs) || 0));
+                const limited = active.slice(0, liveState.maxTrips);
+                const keep = new Set(limited.map((t) => t.id));
+                Object.keys(liveState.tripWatchers).forEach((id) => {
+                    const w = liveState.tripWatchers[id];
+                    const stale = w && w.lastSeenAt && now - w.lastSeenAt > liveState.ttlMs;
+                    if (!keep.has(id) || stale) removeLiveTrip(id);
+                });
+                limited.forEach((t) => ensureLiveTripWatcher(t));
+            });
+
+            liveState.cleanupTimer = setInterval(() => {
+                const now = Date.now();
+                Object.keys(liveState.tripWatchers).forEach((id) => {
+                    const w = liveState.tripWatchers[id];
+                    if (w && w.lastSeenAt && now - w.lastSeenAt > liveState.ttlMs) removeLiveTrip(id);
+                });
+            }, 8000);
         }
 
         const replayToggleBtn = document.getElementById('replay-toggle');
@@ -1118,6 +1348,7 @@
         }
 
         async function selectTrip(tripId) {
+            if (liveState.enabled) stopLive();
             selectedTripId = tripId;
             setActiveTripItem(tripId);
             downloadTripBtn.disabled = true;
@@ -1167,6 +1398,10 @@
             eventsFilterGBtn.addEventListener('click', () => setEventsFilter('g'));
 
             fitBtn.addEventListener('click', () => {
+                if (liveState.enabled) {
+                    map.fitBounds(FLORIPA_BOUNDS, { padding: [24, 24] });
+                    return;
+                }
                 const poly = routeLayer.getLayers().find((l) => l instanceof L.Polyline);
                 if (poly) {
                     try {
@@ -1174,6 +1409,13 @@
                     } catch {}
                 }
             });
+
+            if (liveBtn) {
+                liveBtn.addEventListener('click', () => {
+                    if (liveState.enabled) stopLive();
+                    else startLive();
+                });
+            }
 
             downloadTripBtn.addEventListener('click', () => {
                 if (!selectedTrip) return;
@@ -1224,7 +1466,7 @@
             onSnapshot(q, (snap) => {
                 trips = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
                 renderTrips();
-                if (!selectedTripId && trips.length > 0) {
+                if (!liveState.enabled && !selectedTripId && trips.length > 0) {
                     selectTrip(trips[0].id);
                 }
             }, (err) => {
