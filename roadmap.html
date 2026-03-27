@@ -286,8 +286,9 @@
                             g.items.forEach(item => {
                                 if (item.proposals) {
                                     item.proposals.forEach(p => {
-                                        if (p.unitValue === undefined) p.unitValue = p.value || 0;
-                                        if (p.quantity === undefined) p.quantity = 1;
+                                        p.unitValue = Number(p.unitValue ?? p.value) || 0;
+                                        p.quantity = Number(p.quantity) || 1;
+                                        p.value = Number(p.value) || (p.unitValue * p.quantity);
                                     });
                                 }
                             });
@@ -595,16 +596,16 @@
                                     <div class="space-y-1">
                                         <label class="text-[9px] font-black text-slate-500 uppercase">Valor Unitário</label>
                                         ${isEditMode ? 
-                                            `<input type="number" class="edit-input text-sm font-bold text-blue-400" value="${p.unitValue || 0}" onchange="updateProposal(${pIdx}, 'unitValue', Number(this.value))">` :
-                                            `<p class="text-sm font-bold text-blue-400">R$ ${(p.unitValue || 0).toLocaleString('pt-BR')}</p>`
+                                            `<input type="number" class="edit-input text-sm font-bold text-blue-400" value="${Number(p.unitValue) || 0}" onchange="updateProposal(${pIdx}, 'unitValue', Number(this.value))">` :
+                                            `<p class="text-sm font-bold text-blue-400">R$ ${(Number(p.unitValue) || 0).toLocaleString('pt-BR')}</p>`
                                         }
                                     </div>
                                     <div class="space-y-1">
                                         <label class="text-[9px] font-black text-slate-500 uppercase">Quantidade</label>
                                         <div class="flex items-center gap-2">
                                             ${isEditMode ? 
-                                                `<input type="number" class="edit-input text-sm font-bold text-blue-400 w-20" value="${p.quantity || 1}" onchange="updateProposal(${pIdx}, 'quantity', Number(this.value))">` :
-                                                `<p class="text-sm font-bold text-blue-400">${p.quantity || 1}</p>`
+                                                `<input type="number" class="edit-input text-sm font-bold text-blue-400 w-20" value="${Number(p.quantity) || 1}" onchange="updateProposal(${pIdx}, 'quantity', Number(this.value))">` :
+                                                `<p class="text-sm font-bold text-blue-400">${Number(p.quantity) || 1}</p>`
                                             }
                                         </div>
                                     </div>
@@ -612,7 +613,7 @@
                                     <div class="col-span-1 md:col-span-3 flex justify-between items-center bg-black/20 p-3 rounded-xl">
                                         <div class="flex flex-col">
                                             <label class="text-[8px] font-black text-slate-600 uppercase">Valor Total da Proposta</label>
-                                            <p class="text-lg font-black text-blue-500">R$ ${(p.value || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                                            <p class="text-lg font-black text-blue-500">R$ ${(Number(p.value) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                                         </div>
                                         <button onclick="useProposalValue(${pIdx})" class="admin-only bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-blue-900/20">
                                             Usar este valor
@@ -704,8 +705,9 @@
             // Cálculo do Orçamento Total
             let totalBudget = 0;
             appData.budgetGroups.forEach(g => {
-                g.items.forEach(i => totalBudget += i.value);
+                g.items.forEach(i => totalBudget += (Number(i.value) || 0));
             });
+            const safeProgress = Math.max(0, Math.min(100, Number(appData.progress) || 0));
             
             // Cálculo Countdown Dinâmico (D-Days Futuros)
             const today = new Date();
@@ -799,9 +801,9 @@
                     <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
                         <div class="bg-slate-950/80 p-6 rounded-3xl border border-slate-800 text-center flex-1 min-w-[160px]">
                             <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Status Geral</p>
-                            ${isEditMode ? `<input type="number" class="edit-input text-center text-green-500 font-black" value="${appData.progress}" onchange="appData.progress=this.value; render()">` : `<p class="text-2xl font-black text-green-500 italic">${appData.progress}%</p>`}
+                            ${isEditMode ? `<input type="number" class="edit-input text-center text-green-500 font-black" value="${safeProgress}" onchange="appData.progress=this.value; render()">` : `<p class="text-2xl font-black text-green-500 italic">${safeProgress}%</p>`}
                             <div class="w-full bg-slate-800 h-1.5 mt-2 rounded-full overflow-hidden">
-                                <div class="bg-green-500 h-full transition-all duration-1000" style="width: ${appData.progress}%"></div>
+                                <div class="bg-green-500 h-full transition-all duration-1000" style="width: ${safeProgress}%"></div>
                             </div>
                         </div>
                         <div class="bg-slate-950 p-0 rounded-3xl text-center flex-1 shadow-lg shadow-black/40 min-w-[160px] flex items-center justify-center overflow-hidden border border-slate-800">
@@ -854,6 +856,10 @@
                                     if (linkedGroup && task.budgetItemId) {
                                         budgetItem = linkedGroup.items.find(item => item.label === task.budgetItemId);
                                     }
+                                    const safeTaskTitle = escapeHtml(task.title);
+                                    const safeMilestoneDate = escapeHtml(task.milestoneDate);
+                                    const safeMilestoneTitle = escapeHtml(task.milestoneTitle);
+                                    const safeBudgetLabel = budgetItem ? escapeHtml(budgetItem.label) : '';
 
                                     return `
                                         <li class="flex flex-col gap-2 p-4 bg-slate-950/50 rounded-2xl border border-slate-800 group hover:border-blue-500/30 transition-all">
@@ -863,20 +869,20 @@
                                                         <i data-lucide="circle" size="16"></i>
                                                     </button>
                                                     <div class="flex flex-col">
-                                                        <span class="text-sm font-bold text-slate-200">${task.title}</span>
+                                                        <span class="text-sm font-bold text-slate-200">${safeTaskTitle}</span>
                                                         ${budgetItem ? `
                                                             <div class="flex items-center gap-1 mt-0.5">
                                                                 <i data-lucide="banknote" size="8" class="text-purple-400"></i>
-                                                                <span class="text-[8px] font-black text-purple-400/80 uppercase">Custo: ${budgetItem.label}</span>
+                                                                <span class="text-[8px] font-black text-purple-400/80 uppercase">Custo: ${safeBudgetLabel}</span>
                                                             </div>
                                                         ` : ''}
                                                     </div>
                                                 </div>
-                                                <span class="text-[8px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded-full border border-blue-500/20 uppercase">${task.milestoneDate}</span>
+                                                <span class="text-[8px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded-full border border-blue-500/20 uppercase">${safeMilestoneDate}</span>
                                             </div>
                                             <div class="flex items-center gap-2 mt-1">
                                                 <i data-lucide="milestone" size="10" class="text-slate-500"></i>
-                                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Vinculado a: ${task.milestoneTitle}</span>
+                                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Vinculado a: ${safeMilestoneTitle}</span>
                                             </div>
                                         </li>
                                     `;
@@ -895,13 +901,14 @@
                         </div>
                         <div class="space-y-8">
                             ${appData.budgetGroups.map((group, gIdx) => {
-                                const groupTotal = group.items.reduce((acc, curr) => acc + curr.value, 0);
+                                const groupTotal = group.items.reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
+                                const safeGroupName = escapeHtml(group.name);
                                 return `
                                     <div class="space-y-4 bg-slate-900/20 p-4 rounded-3xl border border-slate-800/50">
                                         <div class="flex justify-between items-center">
                                             ${isEditMode ? 
-                                                `<input class="edit-input text-xs font-black text-purple-300 uppercase" value="${group.name}" onchange="appData.budgetGroups[${gIdx}].name=this.value">` : 
-                                                `<h4 class="text-xs font-black text-purple-300 uppercase tracking-widest">${group.name}</h4>`
+                                                `<input class="edit-input text-xs font-black text-purple-300 uppercase" value="${safeGroupName}" onchange="appData.budgetGroups[${gIdx}].name=this.value">` : 
+                                                `<h4 class="text-xs font-black text-purple-300 uppercase tracking-widest">${safeGroupName}</h4>`
                                             }
                                             <div class="flex items-center gap-2">
                                                 <button onclick="addBudgetItem(${gIdx})" class="admin-only text-purple-500/50 hover:text-purple-500"><i data-lucide="plus-circle" size="14"></i></button>
@@ -910,13 +917,15 @@
                                         </div>
                                         
                                         <div class="space-y-3">
-                                            ${group.items.map((item, iIdx) => `
+                                            ${group.items.map((item, iIdx) => {
+                                                const safeItemLabel = escapeHtml(item.label);
+                                                return `
                                                 <div class="flex justify-between items-end border-b border-slate-800 pb-2 group">
                                                     <div class="flex flex-col flex-1">
                                                         <div class="flex items-center gap-2">
                                                             ${isEditMode ? 
-                                                                `<input class="edit-input text-[10px] font-black" value="${item.label}" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].label=this.value">` : 
-                                                                `<p class="text-[10px] font-black text-slate-500 uppercase">${item.label}</p>`
+                                                                `<input class="edit-input text-[10px] font-black" value="${safeItemLabel}" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].label=this.value">` : 
+                                                                `<p class="text-[10px] font-black text-slate-500 uppercase">${safeItemLabel}</p>`
                                                             }
                                                             <button onclick="openProposalsModal(${gIdx}, ${iIdx})" class="text-slate-700 hover:text-blue-400 transition-colors">
                                                                 <i data-lucide="info" size="10"></i>
@@ -925,17 +934,18 @@
                                                     </div>
                                                     <div class="flex items-center gap-2">
                                                         ${isEditMode ? 
-                                                            `<input type="number" class="edit-input text-right text-sm font-bold" value="${item.value}" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].value=Number(this.value); render()">` : 
-                                                            `<p class="text-sm font-bold text-slate-200">R$ ${item.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`
+                                                            `<input type="number" class="edit-input text-right text-sm font-bold" value="${Number(item.value) || 0}" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].value=Number(this.value); render()">` : 
+                                                            `<p class="text-sm font-bold text-slate-200">R$ ${(Number(item.value) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`
                                                         }
                                                         <button onclick="removeBudgetItem(${gIdx}, ${iIdx})" class="admin-only text-red-500/50 hover:text-red-500"><i data-lucide="trash-2" size="14"></i></button>
                                                     </div>
                                                 </div>
-                                            `).join('')}
+                                            `;
+                                            }).join('')}
                                         </div>
 
                                         <div class="flex justify-between items-center pt-2">
-                                            <p class="text-[9px] font-black text-slate-500 uppercase">Subtotal ${group.name}</p>
+                                            <p class="text-[9px] font-black text-slate-500 uppercase">Subtotal ${safeGroupName}</p>
                                             <p class="text-xs font-black text-slate-300">R$ ${groupTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                                         </div>
                                     </div>
@@ -956,6 +966,7 @@
 
                     ${appData.milestones.map((ms, i) => {
                         const isEven = i % 2 === 0;
+                        const status = (ms.status === 'completed' || ms.status === 'in-progress' || ms.status === 'future') ? ms.status : 'future';
                         return `
                         <!-- Hover Zone to add BEFORE this milestone -->
                         ${isEditMode ? `
@@ -978,7 +989,7 @@
                             </div>
                             
                             <!-- Dot Central -->
-                            <div class="status-dot ${ms.status} hidden md:block"></div>
+                            <div class="status-dot ${status} hidden md:block"></div>
                             
                             <!-- Lado Direito -->
                             <div class="md:w-[45%] ${isEven ? 'order-1 md:order-2 flex justify-center md:justify-start' : 'text-left order-2'}">
@@ -1024,6 +1035,12 @@
             const completedTasks = tasks.filter(t => t.completed).length;
             const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
             const linkedGroup = appData.budgetGroups.find(g => g.id === ms.budgetGroupId);
+            const safeMsDate = escapeHtml(ms.date);
+            const safeTargetDate = escapeHtml(ms.targetDate || '');
+            const safeMsTitle = escapeHtml(ms.title);
+            const safeMsDesc = escapeHtml(ms.desc);
+            const safeLinkedGroupName = linkedGroup ? escapeHtml(linkedGroup.name) : '';
+            const safeTags = (ms.tags || []).map((t) => escapeHtml(t));
 
             return `
                 <div class="milestone-card bg-slate-900/40 p-8 rounded-[2.5rem] space-y-4">
@@ -1031,22 +1048,22 @@
                         <div class="flex flex-col gap-1">
                             ${isEditMode ? `
                                 <div class="flex flex-col gap-2">
-                                    <input class="edit-input text-[10px] font-black text-blue-400" value="${ms.date}" onchange="appData.milestones[${i}].date=this.value" placeholder="Texto da Data (Ex: 17 de Março)">
-                                    <input type="date" class="edit-input text-[10px] font-black text-slate-400" value="${ms.targetDate || ''}" onchange="appData.milestones[${i}].targetDate=this.value">
+                                    <input class="edit-input text-[10px] font-black text-blue-400" value="${safeMsDate}" onchange="appData.milestones[${i}].date=this.value" placeholder="Texto da Data (Ex: 17 de Março)">
+                                    <input type="date" class="edit-input text-[10px] font-black text-slate-400" value="${safeTargetDate}" onchange="appData.milestones[${i}].targetDate=this.value">
                                 </div>
-                            ` : `<span class="text-[10px] font-black ${ms.status === 'completed' ? 'text-green-500' : 'text-blue-400'} uppercase tracking-widest">${ms.date}</span>`}
+                            ` : `<span class="text-[10px] font-black ${ms.status === 'completed' ? 'text-green-500' : 'text-blue-400'} uppercase tracking-widest">${safeMsDate}</span>`}
                         </div>
                         
                         ${linkedGroup ? `
                             <div class="flex items-center gap-1.5 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
                                 <i data-lucide="link" size="10" class="text-purple-400"></i>
-                                <span class="text-[8px] font-black text-purple-400 uppercase">${linkedGroup.name}</span>
+                                <span class="text-[8px] font-black text-purple-400 uppercase">${safeLinkedGroupName}</span>
                             </div>
                         ` : ''}
                     </div>
 
-                    ${isEditMode ? `<input class="edit-input text-2xl font-black italic" value="${ms.title}" onchange="appData.milestones[${i}].title=this.value">` : `<h3 class="text-2xl font-black italic uppercase">${ms.title}</h3>`}
-                    ${isEditMode ? `<textarea class="edit-input text-sm text-slate-400" onchange="appData.milestones[${i}].desc=this.value">${ms.desc}</textarea>` : `<p class="text-sm text-slate-400 leading-relaxed">${ms.desc}</p>`}
+                    ${isEditMode ? `<input class="edit-input text-2xl font-black italic" value="${safeMsTitle}" onchange="appData.milestones[${i}].title=this.value">` : `<h3 class="text-2xl font-black italic uppercase">${safeMsTitle}</h3>`}
+                    ${isEditMode ? `<textarea class="edit-input text-sm text-slate-400" onchange="appData.milestones[${i}].desc=this.value">${safeMsDesc}</textarea>` : `<p class="text-sm text-slate-400 leading-relaxed">${safeMsDesc}</p>`}
                     
                     <!-- Barra de Progresso do Marco -->
                     <div class="space-y-1.5">
@@ -1072,6 +1089,8 @@
                                 if (linkedGroup && task.budgetItemId) {
                                     budgetItem = linkedGroup.items.find(item => item.label === task.budgetItemId);
                                 }
+                                const safeTaskTitle = escapeHtml(task.title);
+                                const safeBudgetLabel = budgetItem ? escapeHtml(budgetItem.label) : '';
 
                                 return `
                                     <div class="flex flex-col gap-1.5 p-2 bg-slate-950/30 rounded-xl border border-white/5 group">
@@ -1081,8 +1100,8 @@
                                                     <i data-lucide="${task.completed ? 'check-circle' : 'circle'}" size="14"></i>
                                                 </button>
                                                 ${isEditMode ? 
-                                                    `<input class="edit-input text-[11px] font-medium" value="${task.title}" onchange="appData.milestones[${i}].tasks[${tIdx}].title=this.value">` : 
-                                                    `<span class="text-[11px] font-medium ${task.completed ? 'text-slate-500 line-through' : 'text-slate-300'}">${task.title}</span>`
+                                                    `<input class="edit-input text-[11px] font-medium" value="${safeTaskTitle}" onchange="appData.milestones[${i}].tasks[${tIdx}].title=this.value">` : 
+                                                    `<span class="text-[11px] font-medium ${task.completed ? 'text-slate-500 line-through' : 'text-slate-300'}">${safeTaskTitle}</span>`
                                                 }
                                             </div>
                                             <button onclick="removeTask(${i}, ${tIdx})" class="admin-only opacity-0 group-hover:opacity-100 text-red-500/50 hover:text-red-500 transition-all">
@@ -1097,14 +1116,17 @@
                                                 <select class="bg-transparent text-[8px] text-purple-400 border-none outline-none cursor-pointer" 
                                                         onchange="appData.milestones[${i}].tasks[${tIdx}].budgetItemId=this.value; render()">
                                                     <option value="">Vincular custo...</option>
-                                                    ${linkedGroup.items.map(item => `<option value="${item.label}" ${task.budgetItemId === item.label ? 'selected' : ''}>${item.label} (R$ ${item.value.toLocaleString()})</option>`).join('')}
+                                                    ${linkedGroup.items.map(item => {
+                                                        const safeLabel = escapeHtml(item.label);
+                                                        return `<option value="${safeLabel}" ${task.budgetItemId === item.label ? 'selected' : ''}>${safeLabel} (R$ ${(Number(item.value) || 0).toLocaleString()})</option>`;
+                                                    }).join('')}
                                                 </select>
                                             </div>
                                         ` : (budgetItem ? `
                                             <div class="flex items-center gap-2 ml-6">
                                                 <div class="flex items-center gap-1 bg-purple-500/5 px-2 py-0.5 rounded border border-purple-500/10">
                                                     <i data-lucide="banknote" size="8" class="text-purple-400"></i>
-                                                    <span class="text-[8px] font-bold text-purple-400/80 uppercase">${budgetItem.label}</span>
+                                                    <span class="text-[8px] font-bold text-purple-400/80 uppercase">${safeBudgetLabel}</span>
                                                 </div>
                                             </div>
                                         ` : '')}
@@ -1115,7 +1137,7 @@
                     </div>
 
                     <div class="flex flex-wrap ${i % 2 === 0 ? 'justify-end' : 'justify-start'} gap-2 pt-2">
-                        ${ms.tags.map(tag => `<span class="badge bg-slate-800 text-slate-400 border-slate-700">${tag}</span>`).join('')}
+                        ${safeTags.map(tag => `<span class="badge bg-slate-800 text-slate-400 border-slate-700">${tag}</span>`).join('')}
                         ${isEditMode ? `<button class="text-[9px] text-blue-500 underline" onclick="const t=prompt('Nova Tag'); if(t) {appData.milestones[${i}].tags.push(t); render();}">+ tag</button>` : ''}
                     </div>
 
@@ -1130,7 +1152,11 @@
                                 <label class="text-[8px] font-black text-slate-500 uppercase text-center">Vincular Orçamento</label>
                                 <select class="bg-slate-900 text-[10px] text-slate-400 border border-slate-700 rounded p-1" onchange="appData.milestones[${i}].budgetGroupId=this.value; render()">
                                     <option value="">Sem vínculo</option>
-                                    ${appData.budgetGroups.map(g => `<option value="${g.id}" ${ms.budgetGroupId === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
+                                    ${appData.budgetGroups.map(g => {
+                                        const safeId = escapeHtml(g.id);
+                                        const safeName = escapeHtml(g.name);
+                                        return `<option value="${safeId}" ${ms.budgetGroupId === g.id ? 'selected' : ''}>${safeName}</option>`;
+                                    }).join('')}
                                 </select>
                             </div>
                         </div>
@@ -1145,11 +1171,12 @@
                 'activity', 'zap', 'target', 'users', 'star', 'alert-circle', 
                 'clock', 'calendar', 'file-text', 'map', 'camera', 'bus', 'settings'
             ];
+            const icon = icons.includes(ms.icon) ? ms.icon : 'circle';
             
             return `
                 <div class="flex flex-col items-center gap-3">
                     <div class="p-4 ${ms.status === 'completed' ? 'bg-green-600/10 text-green-500 border-green-600/20' : ms.status === 'in-progress' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 'bg-slate-800 text-slate-500 border-slate-700'} rounded-full border">
-                        <i data-lucide="${ms.icon || 'circle'}" size="32"></i>
+                        <i data-lucide="${icon}" size="32"></i>
                     </div>
                     ${isEditMode ? `
                         <select class="bg-slate-900 text-[10px] border border-slate-700 rounded px-1 py-0.5 text-slate-400 outline-none focus:border-blue-500" 
