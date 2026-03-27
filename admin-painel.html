@@ -182,9 +182,14 @@
             </div>
 
             <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col max-h-[580px]">
-                <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2 mb-4">
-                    <i data-lucide="alert-octagon" class="text-red-600"></i> Hall da Vergonha
-                </h2>
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                        <i data-lucide="alert-octagon" class="text-red-600"></i> Hall da Vergonha
+                    </h2>
+                    <button id="open-report-btn" type="button" class="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="file-text" size="14"></i> Relatório
+                    </button>
+                </div>
                 <div id="ranking-list" class="space-y-3 flex-1 overflow-y-auto pr-2 no-scrollbar text-left">
                 </div>
             </div>
@@ -215,6 +220,132 @@
             </div>
         </div>
     </main>
+
+    <div id="report-modal" class="fixed inset-0 z-[9998] hidden bg-black/40 backdrop-blur-sm p-4 md:p-8">
+        <div class="max-w-6xl mx-auto bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden h-full flex flex-col">
+            <div class="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+                <div class="min-w-0">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Relatório</p>
+                    <h3 id="report-title" class="text-lg font-black text-slate-900 tracking-tight truncate">Denúncias por Linha</h3>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                    <select id="report-line" class="text-xs border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-600 bg-white">
+                        <option value="">Todas as linhas</option>
+                    </select>
+                    <button id="report-copy" type="button" class="bg-white hover:bg-slate-50 text-slate-800 font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all border border-slate-200 flex items-center gap-2">
+                        <i data-lucide="copy" size="14"></i> Copiar
+                    </button>
+                    <button id="report-print" type="button" class="bg-white hover:bg-slate-50 text-slate-800 font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all border border-slate-200 flex items-center gap-2">
+                        <i data-lucide="printer" size="14"></i> Imprimir
+                    </button>
+                    <button id="report-close" type="button" class="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="x" size="14"></i> Fechar
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 min-h-0 overflow-y-auto p-5 md:p-8 space-y-6">
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Denúncias</p>
+                        <h3 id="rep-total" class="text-3xl font-black text-slate-800">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-red-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Ruído Crítico</p>
+                        <h3 id="rep-critical" class="text-3xl font-black text-red-600">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-orange-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Quebras</p>
+                        <h3 id="rep-breakdowns" class="text-3xl font-black text-orange-600">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-purple-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Atrasos</p>
+                        <h3 id="rep-delays" class="text-3xl font-black text-purple-600">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-yellow-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Lotação</p>
+                        <h3 id="rep-crowd" class="text-3xl font-black text-yellow-600">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-4 border-l-blue-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Período</p>
+                        <h3 id="rep-period" class="text-sm font-black text-blue-700">—</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
+                            <h4 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                                <i data-lucide="list-check" class="text-slate-600"></i> Compilação
+                            </h4>
+                            <span id="rep-lines-count" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">—</span>
+                        </div>
+                        <div id="rep-bullets" class="p-6 space-y-3"></div>
+                    </div>
+
+                    <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
+                            <h4 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                                <i data-lucide="clipboard-list" class="text-slate-600"></i> Demandas e Ações
+                            </h4>
+                            <button id="rep-save" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                                <i data-lucide="save" size="14"></i> Salvar
+                            </button>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                                    <select id="rep-status" class="w-full text-xs border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-600 bg-white">
+                                        <option value="NOVO">Novo</option>
+                                        <option value="EM_ANDAMENTO">Em andamento</option>
+                                        <option value="RESOLVIDO">Resolvido</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Responsável</label>
+                                    <input id="rep-owner" class="w-full text-xs border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ex: Gabinete X / SMTT">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atualizado</label>
+                                    <div id="rep-updated" class="w-full text-xs border border-slate-200 rounded-xl px-4 py-2 bg-slate-50 text-slate-600 font-bold">—</div>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Medidas / Encaminhamentos</label>
+                                <textarea id="rep-notes" rows="6" class="w-full text-xs border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Resumo das medidas solicitadas, encaminhamentos, prazos, evidências..."></textarea>
+                            </div>
+                            <div id="rep-save-status" class="text-[10px] font-black text-slate-400 uppercase tracking-widest"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
+                        <h4 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                            <i data-lucide="table" class="text-slate-600"></i> Linhas (Top)
+                        </h4>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Clique para abrir</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
+                                <tr>
+                                    <th class="px-6 py-4">Linha</th>
+                                    <th class="px-6 py-4">Denúncias</th>
+                                    <th class="px-6 py-4">Ruído crítico</th>
+                                    <th class="px-6 py-4">Quebras</th>
+                                    <th class="px-6 py-4">Atrasos</th>
+                                    <th class="px-6 py-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-lines-table" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Image Preview Modal -->
     <div id="image-modal" class="fixed inset-0 z-[9999] hidden bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" onclick="closeImageModal()">
@@ -260,7 +391,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { initializeFirestore, collection, query, limit, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, collection, query, limit, onSnapshot, deleteDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { firebaseConfig } from "./js/config.js?v=3";
 
         function escapeHtml(value) {
@@ -327,6 +458,9 @@
 
         let allLogs = [];
         let currentPeriod = 'todos';
+        let lastFilteredLogs = [];
+        let actionsByLineKey = {};
+        let reportLine = '';
 
         // Auth Check
         onAuthStateChanged(auth, (user) => {
@@ -348,6 +482,7 @@
                     </div>
                 `;
                 loadData();
+                loadDemandas();
             }
         });
 
@@ -366,6 +501,60 @@
                 snapshot.forEach(doc => allLogs.push({ id: doc.id, ...doc.data() }));
                 renderDashboard();
             });
+        }
+
+        function safeDocId(value) {
+            const s = value == null ? '' : String(value);
+            try {
+                const b64 = btoa(unescape(encodeURIComponent(s)));
+                return `line_${b64.replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
+            } catch {
+                return `line_${String(Date.now())}`;
+            }
+        }
+
+        function loadDemandas() {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'admin', 'demandas'), limit(500));
+            onSnapshot(q, (snapshot) => {
+                actionsByLineKey = {};
+                snapshot.forEach((d) => {
+                    actionsByLineKey[d.id] = { id: d.id, ...d.data() };
+                });
+                renderReport();
+            });
+        }
+
+        function getPeriodLabel() {
+            if (currentPeriod === 'hoje') return 'Hoje';
+            if (currentPeriod === 'semana') return '7 dias';
+            if (currentPeriod === 'mes') return 'Mês';
+            return 'Todo o período';
+        }
+
+        function getFilteredLogsForReport() {
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - 7);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            return allLogs.filter(log => {
+                let logDate;
+                if (log.timestamp && log.timestamp.seconds) {
+                    logDate = new Date(log.timestamp.seconds * 1000);
+                } else if (log.data) {
+                    const parts = String(log.data).split('/');
+                    if (parts.length === 3) {
+                        logDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+                    } else {
+                        logDate = new Date(String(log.data));
+                    }
+                }
+                if (!logDate || isNaN(logDate.getTime())) return false;
+                if (currentPeriod === 'hoje') return logDate >= startOfDay;
+                if (currentPeriod === 'semana') return logDate >= startOfWeek;
+                if (currentPeriod === 'mes') return logDate >= startOfMonth;
+                return true;
+            }).sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
         }
 
         window.deleteRecord = async (id) => {
@@ -426,6 +615,7 @@
                 if (currentPeriod === 'mes') return logDate >= startOfMonth;
                 return true;
             }).sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+            lastFilteredLogs = filteredLogs;
 
             filteredLogs.forEach(log => {
                 totals.total++;
@@ -654,8 +844,9 @@
                 .map(([id, stats]) => ({ id, ...stats, score: (stats.count) + (stats.breakCount * 5) + (stats.delaySum * 2) }))
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 8).forEach((bus, index) => {
-                    const item = document.createElement('div');
-                    item.className = "bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center";
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = "w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center hover:bg-slate-100 transition-colors";
                     const safeBusId = escapeHtml(bus.id);
                     const safeBusLine = escapeHtml(bus.line);
                     item.innerHTML = `
@@ -670,6 +861,7 @@
                             <span class="text-xs font-black text-red-600">${bus.score} pts</span>
                         </div>
                     `;
+                    item.addEventListener('click', () => openReport(bus.line || ''));
                     rankingList.appendChild(item);
                 });
 
@@ -680,8 +872,288 @@
             document.getElementById('stat-critical').innerText = totals.criticalNoise;
             document.getElementById('stat-buses').innerText = Object.keys(busRegistry).length;
 
+            renderReport();
             lucide.createIcons();
         }
+
+        const reportModal = document.getElementById('report-modal');
+        const reportOpenBtn = document.getElementById('open-report-btn');
+        const reportCloseBtn = document.getElementById('report-close');
+        const reportLineEl = document.getElementById('report-line');
+        const reportTitleEl = document.getElementById('report-title');
+        const reportCopyBtn = document.getElementById('report-copy');
+        const reportPrintBtn = document.getElementById('report-print');
+
+        const repTotalEl = document.getElementById('rep-total');
+        const repCriticalEl = document.getElementById('rep-critical');
+        const repBreakEl = document.getElementById('rep-breakdowns');
+        const repDelayEl = document.getElementById('rep-delays');
+        const repCrowdEl = document.getElementById('rep-crowd');
+        const repPeriodEl = document.getElementById('rep-period');
+        const repLinesCountEl = document.getElementById('rep-lines-count');
+        const repBulletsEl = document.getElementById('rep-bullets');
+        const repLinesTableEl = document.getElementById('rep-lines-table');
+
+        const repStatusEl = document.getElementById('rep-status');
+        const repOwnerEl = document.getElementById('rep-owner');
+        const repNotesEl = document.getElementById('rep-notes');
+        const repUpdatedEl = document.getElementById('rep-updated');
+        const repSaveBtn = document.getElementById('rep-save');
+        const repSaveStatusEl = document.getElementById('rep-save-status');
+
+        function setReportOpen(open) {
+            if (!reportModal) return;
+            reportModal.classList.toggle('hidden', !open);
+            if (open) lucide.createIcons();
+        }
+
+        function openReport(line) {
+            reportLine = line || '';
+            if (reportLineEl) reportLineEl.value = reportLine;
+            setReportOpen(true);
+            renderReport();
+        }
+
+        function closeReport() {
+            setReportOpen(false);
+        }
+
+        function ensureReportLineOptions() {
+            if (!reportLineEl) return;
+            const logs = getFilteredLogsForReport();
+            const lines = Array.from(new Set(logs.map((l) => (l.linha || '')).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const current = reportLineEl.value || '';
+            reportLineEl.innerHTML = '<option value="">Todas as linhas</option>' + lines.map((l) => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+            reportLineEl.value = current;
+        }
+
+        function fmtUpdated(action) {
+            const ts = action && action.updatedAt && action.updatedAt.seconds ? action.updatedAt.seconds * 1000 : null;
+            if (!ts) return '—';
+            try { return new Date(ts).toLocaleString('pt-BR'); } catch { return '—'; }
+        }
+
+        function getActionForLine(line) {
+            const id = safeDocId(line || '');
+            return actionsByLineKey[id] || null;
+        }
+
+        function countBy(arr, keyFn) {
+            const out = {};
+            arr.forEach((x) => {
+                const k = keyFn(x);
+                if (!k) return;
+                out[k] = (out[k] || 0) + 1;
+            });
+            return out;
+        }
+
+        function topEntries(obj, n) {
+            return Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n);
+        }
+
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+            }
+        }
+
+        function buildMarkdownReport(line, logs, totals) {
+            const title = line ? `Relatório de Denúncias — ${line}` : 'Relatório de Denúncias — Consolidado';
+            const linesCount = Array.from(new Set(logs.map((l) => l.linha).filter(Boolean))).length;
+            const byType = countBy(logs, (l) => l.tipo_evento || 'Ruído Elevado');
+            const bySintomas = countBy(logs, (l) => l.sintomas || '');
+            const quotes = logs.map((l) => l.relato_pessoal).filter(Boolean).slice(0, 10);
+            const action = line ? getActionForLine(line) : null;
+
+            const md = [];
+            md.push(`# ${title}`);
+            md.push('');
+            md.push(`Período: ${getPeriodLabel()}`);
+            md.push('');
+            md.push('Resumo:');
+            md.push(`- Denúncias: ${totals.total}`);
+            md.push(`- Ruído crítico (>=85dB): ${totals.criticalNoise}`);
+            md.push(`- Quebras: ${totals.breakdowns}`);
+            md.push(`- Atrasos: ${totals.delays}`);
+            md.push(`- Lotação: ${totals.crowd}`);
+            md.push(`- Linhas no recorte: ${linesCount}`);
+            md.push('');
+            md.push('Principais categorias:');
+            topEntries(byType, 8).forEach(([k, v]) => md.push(`- ${k}: ${v}`));
+            md.push('');
+            md.push('Sintomas mais citados:');
+            topEntries(bySintomas, 8).forEach(([k, v]) => md.push(`- ${k}: ${v}`));
+            md.push('');
+            if (quotes.length) {
+                md.push('Relatos (amostra):');
+                quotes.forEach((q) => md.push(`- "${String(q).replace(/\\s+/g, ' ').trim()}"`));
+                md.push('');
+            }
+            if (line) {
+                const st = action && action.status ? action.status : 'NOVO';
+                const ow = action && action.owner ? action.owner : '';
+                const nt = action && action.notes ? action.notes : '';
+                md.push('Controle de Demandas:');
+                md.push(`- Status: ${st}`);
+                if (ow) md.push(`- Responsável: ${ow}`);
+                if (nt) {
+                    md.push('');
+                    md.push('Encaminhamentos:');
+                    md.push(nt);
+                    md.push('');
+                }
+            }
+            return md.join('\\n');
+        }
+
+        function renderReport() {
+            if (!reportModal || reportModal.classList.contains('hidden')) return;
+            const logsAll = lastFilteredLogs && lastFilteredLogs.length ? lastFilteredLogs : getFilteredLogsForReport();
+            ensureReportLineOptions();
+
+            const logs = reportLine ? logsAll.filter((l) => (l.linha || '') === reportLine) : logsAll;
+            const totals = { total: 0, breakdowns: 0, delays: 0, crowd: 0, criticalNoise: 0 };
+            logs.forEach((log) => {
+                totals.total++;
+                const dbValue = parseInt(log.ruido_db) || 0;
+                const type = log.tipo_evento || "Ruído Elevado";
+                if (type === "Quebra de Veículo") totals.breakdowns++;
+                if (type === "Atraso Crítico") totals.delays++;
+                if (type === "Lotação Excessiva") totals.crowd++;
+                if (dbValue >= 85) totals.criticalNoise++;
+            });
+
+            if (reportTitleEl) reportTitleEl.textContent = reportLine ? `Relatório — ${reportLine}` : 'Relatório — Consolidado';
+            if (repTotalEl) repTotalEl.textContent = String(totals.total);
+            if (repCriticalEl) repCriticalEl.textContent = String(totals.criticalNoise);
+            if (repBreakEl) repBreakEl.textContent = String(totals.breakdowns);
+            if (repDelayEl) repDelayEl.textContent = String(totals.delays);
+            if (repCrowdEl) repCrowdEl.textContent = String(totals.crowd);
+            if (repPeriodEl) repPeriodEl.textContent = getPeriodLabel();
+
+            const uniqueLines = Array.from(new Set(logs.map((l) => l.linha).filter(Boolean)));
+            if (repLinesCountEl) repLinesCountEl.textContent = reportLine ? '1 linha' : `${uniqueLines.length} linhas`;
+
+            const byType = countBy(logs, (l) => l.tipo_evento || 'Ruído Elevado');
+            const bySintomas = countBy(logs, (l) => l.sintomas || '');
+            const quotes = logs.map((l) => l.relato_pessoal).filter(Boolean).slice(0, 8);
+
+            if (repBulletsEl) {
+                repBulletsEl.innerHTML = '';
+                const mk = (title, items) => {
+                    const block = document.createElement('div');
+                    block.className = 'bg-slate-50 border border-slate-200 rounded-2xl p-4';
+                    const head = document.createElement('p');
+                    head.className = 'text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2';
+                    head.textContent = title;
+                    block.appendChild(head);
+                    const ul = document.createElement('div');
+                    ul.className = 'space-y-1';
+                    items.forEach((it) => {
+                        const p = document.createElement('p');
+                        p.className = 'text-xs font-bold text-slate-700';
+                        p.textContent = it;
+                        ul.appendChild(p);
+                    });
+                    block.appendChild(ul);
+                    repBulletsEl.appendChild(block);
+                };
+                mk('Categorias', topEntries(byType, 8).map(([k, v]) => `${k}: ${v}`));
+                mk('Sintomas', topEntries(bySintomas, 8).map(([k, v]) => `${k}: ${v}`));
+                if (quotes.length) mk('Relatos (amostra)', quotes.map((q) => `"${String(q).replace(/\\s+/g, ' ').trim()}"`));
+            }
+
+            if (repLinesTableEl) {
+                const byLine = {};
+                logsAll.forEach((l) => {
+                    const line = l.linha || '';
+                    if (!line) return;
+                    if (!byLine[line]) byLine[line] = { line, total: 0, critical: 0, breakdowns: 0, delays: 0, crowd: 0 };
+                    const dbValue = parseInt(l.ruido_db) || 0;
+                    const type = l.tipo_evento || "Ruído Elevado";
+                    byLine[line].total += 1;
+                    if (dbValue >= 85) byLine[line].critical += 1;
+                    if (type === "Quebra de Veículo") byLine[line].breakdowns += 1;
+                    if (type === "Atraso Crítico") byLine[line].delays += 1;
+                    if (type === "Lotação Excessiva") byLine[line].crowd += 1;
+                });
+                const rows = Object.values(byLine).sort((a, b) => b.total - a.total).slice(0, 40);
+                repLinesTableEl.innerHTML = '';
+                rows.forEach((r) => {
+                    const action = getActionForLine(r.line);
+                    const status = action && action.status ? action.status : 'NOVO';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 cursor-pointer';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-black text-slate-800">${escapeHtml(r.line)}</td>
+                        <td class="px-6 py-4 tabular-nums">${r.total}</td>
+                        <td class="px-6 py-4 tabular-nums">${r.critical}</td>
+                        <td class="px-6 py-4 tabular-nums">${r.breakdowns}</td>
+                        <td class="px-6 py-4 tabular-nums">${r.delays}</td>
+                        <td class="px-6 py-4 text-[10px] font-black uppercase tracking-widest">${escapeHtml(status)}</td>
+                    `;
+                    tr.addEventListener('click', () => openReport(r.line));
+                    repLinesTableEl.appendChild(tr);
+                });
+            }
+
+            const action = reportLine ? getActionForLine(reportLine) : null;
+            if (repStatusEl) repStatusEl.value = action && action.status ? action.status : 'NOVO';
+            if (repOwnerEl) repOwnerEl.value = action && action.owner ? action.owner : '';
+            if (repNotesEl) repNotesEl.value = action && action.notes ? action.notes : '';
+            if (repUpdatedEl) repUpdatedEl.textContent = action ? fmtUpdated(action) : '—';
+            if (repSaveStatusEl) repSaveStatusEl.textContent = reportLine ? '' : 'Selecione uma linha para registrar ações.';
+            if (repSaveBtn) repSaveBtn.disabled = !reportLine;
+        }
+
+        if (reportOpenBtn) reportOpenBtn.addEventListener('click', () => openReport(''));
+        if (reportCloseBtn) reportCloseBtn.addEventListener('click', closeReport);
+        if (reportModal) reportModal.addEventListener('click', (e) => { if (e.target === reportModal) closeReport(); });
+        if (reportLineEl) reportLineEl.addEventListener('change', () => openReport(reportLineEl.value || ''));
+        if (reportPrintBtn) reportPrintBtn.addEventListener('click', () => window.print());
+        if (reportCopyBtn) reportCopyBtn.addEventListener('click', async () => {
+            const logsAll = lastFilteredLogs && lastFilteredLogs.length ? lastFilteredLogs : getFilteredLogsForReport();
+            const logs = reportLine ? logsAll.filter((l) => (l.linha || '') === reportLine) : logsAll;
+            const totals = { total: 0, breakdowns: 0, delays: 0, crowd: 0, criticalNoise: 0 };
+            logs.forEach((log) => {
+                totals.total++;
+                const dbValue = parseInt(log.ruido_db) || 0;
+                const type = log.tipo_evento || "Ruído Elevado";
+                if (type === "Quebra de Veículo") totals.breakdowns++;
+                if (type === "Atraso Crítico") totals.delays++;
+                if (type === "Lotação Excessiva") totals.crowd++;
+                if (dbValue >= 85) totals.criticalNoise++;
+            });
+            const md = buildMarkdownReport(reportLine, logs, totals);
+            await copyText(md);
+        });
+
+        if (repSaveBtn) repSaveBtn.addEventListener('click', async () => {
+            if (!reportLine) return;
+            if (repSaveStatusEl) repSaveStatusEl.textContent = 'Salvando...';
+            try {
+                const id = safeDocId(reportLine);
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'admin', 'demandas', id), {
+                    line: reportLine,
+                    status: repStatusEl.value,
+                    owner: (repOwnerEl.value || '').trim(),
+                    notes: (repNotesEl.value || '').trim(),
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+                if (repSaveStatusEl) repSaveStatusEl.textContent = 'Salvo.';
+            } catch (e) {
+                console.error(e);
+                if (repSaveStatusEl) repSaveStatusEl.textContent = 'Erro ao salvar.';
+            }
+        });
 
         document.getElementById('table-search').oninput = function(e) {
             const term = e.target.value.toLowerCase();

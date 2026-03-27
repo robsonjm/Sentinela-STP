@@ -96,6 +96,10 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /artifacts/sentinela-stp/public/admin/demandas/{docId} {
+      allow read, write: if request.auth != null && request.auth.token.email != null;
+    }
+
     // 4. Configurações Globais (Se houver)
     match /artifacts/sentinela-stp/public/config/{configId} {
       allow read: if true;
