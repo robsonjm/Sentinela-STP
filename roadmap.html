@@ -225,6 +225,15 @@
         </div>
     </div>
 
+    <div id="exec-modal-overlay" class="modal-overlay" onclick="if(event.target === this) closeExecutionModal()">
+        <div class="modal-content p-8 relative">
+            <button onclick="closeExecutionModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                <i data-lucide="x"></i>
+            </button>
+            <div id="exec-modal-body"></div>
+        </div>
+    </div>
+
     <!-- Botão do Editor -->
     <div class="fab">
         <button onclick="toggleEditMode()" class="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-2xl flex items-center gap-2 font-black uppercase text-xs tracking-widest transition-all scale-100 hover:scale-110">
@@ -284,6 +293,32 @@
                     if (data.budgetGroups) {
                         data.budgetGroups.forEach(g => {
                             g.items.forEach(item => {
+                                if (!item.execution || typeof item.execution !== 'object') {
+                                    item.execution = { status: "PLANEJADO" };
+                                }
+                                const st = item.execution.status;
+                                const allowed = st === "PLANEJADO" || st === "EM_EXECUCAO" || st === "CONCLUIDO" || st === "CANCELADO";
+                                if (!allowed) item.execution.status = "PLANEJADO";
+                                if (item.execution.selectedProposalIndex !== null && item.execution.selectedProposalIndex !== undefined) {
+                                    item.execution.selectedProposalIndex = Number(item.execution.selectedProposalIndex);
+                                    if (!Number.isFinite(item.execution.selectedProposalIndex)) item.execution.selectedProposalIndex = null;
+                                }
+                                if (item.execution.executedValue !== null && item.execution.executedValue !== undefined) {
+                                    item.execution.executedValue = Number(item.execution.executedValue);
+                                    if (!Number.isFinite(item.execution.executedValue)) item.execution.executedValue = null;
+                                }
+                                if (item.execution.executedAt !== null && item.execution.executedAt !== undefined) {
+                                    item.execution.executedAt = String(item.execution.executedAt);
+                                }
+                                if (item.execution.vendor !== null && item.execution.vendor !== undefined) {
+                                    item.execution.vendor = String(item.execution.vendor);
+                                }
+                                if (item.execution.notes !== null && item.execution.notes !== undefined) {
+                                    item.execution.notes = String(item.execution.notes);
+                                }
+                                if (item.execution.asset !== null && item.execution.asset !== undefined && typeof item.execution.asset !== 'object') {
+                                    item.execution.asset = null;
+                                }
                                 if (item.proposals) {
                                     item.proposals.forEach(p => {
                                         p.unitValue = Number(p.unitValue ?? p.value) || 0;
@@ -330,6 +365,20 @@
                 if (c === '"') return '&quot;';
                 return '&#39;';
             });
+        }
+
+        function sanitizeHref(value) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return '#';
+            if (s.startsWith('#')) return s;
+            if (s.startsWith('/') || s.startsWith('./') || s.startsWith('../')) return s;
+            try {
+                const u = new URL(s, window.location.origin);
+                if (u.protocol !== 'http:' && u.protocol !== 'https:') return '#';
+                return u.toString();
+            } catch {
+                return '#';
+            }
         }
 
         // ESTADO INICIAL DA APLICAÇÃO (Fallback)
@@ -448,7 +497,7 @@
         }
 
         function addBudgetItem(groupIndex) {
-            appData.budgetGroups[groupIndex].items.push({ label: "Novo Item", value: 0 });
+            appData.budgetGroups[groupIndex].items.push({ label: "Novo Item", value: 0, execution: { status: "PLANEJADO", selectedProposalIndex: null, executedValue: null, executedAt: "", vendor: "", notes: "", asset: null } });
             render();
         }
 
@@ -517,6 +566,262 @@
             appData.budgetGroups[gIdx].items[iIdx].value = proposal.value;
             render();
             renderProposalsModal();
+        }
+
+        let currentExecItem = null;
+
+        function sanitizeExecStatus(value) {
+            const s = value == null ? '' : String(value);
+            if (s === 'PLANEJADO' || s === 'EM_EXECUCAO' || s === 'CONCLUIDO' || s === 'CANCELADO') return s;
+            return 'PLANEJADO';
+        }
+
+        function execStatusLabel(status) {
+            if (status === 'EM_EXECUCAO') return 'Em execução';
+            if (status === 'CONCLUIDO') return 'Concluído';
+            if (status === 'CANCELADO') return 'Cancelado';
+            return 'Planejado';
+        }
+
+        function execStatusBadge(status) {
+            const st = sanitizeExecStatus(status);
+            const label = execStatusLabel(st);
+            if (st === 'CONCLUIDO') return `<span class="text-[8px] font-black px-2 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-widest">${label}</span>`;
+            if (st === 'EM_EXECUCAO') return `<span class="text-[8px] font-black px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-widest">${label}</span>`;
+            if (st === 'CANCELADO') return `<span class="text-[8px] font-black px-2 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 uppercase tracking-widest">${label}</span>`;
+            return `<span class="text-[8px] font-black px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-widest">${label}</span>`;
+        }
+
+        function ensureExecutionObject(item) {
+            if (!item.execution || typeof item.execution !== 'object') {
+                item.execution = { status: 'PLANEJADO', selectedProposalIndex: null, executedValue: null, executedAt: '', vendor: '', notes: '', asset: null };
+            }
+            if (item.execution.selectedProposalIndex !== null && item.execution.selectedProposalIndex !== undefined) {
+                item.execution.selectedProposalIndex = Number(item.execution.selectedProposalIndex);
+                if (!Number.isFinite(item.execution.selectedProposalIndex)) item.execution.selectedProposalIndex = null;
+            }
+            item.execution.status = sanitizeExecStatus(item.execution.status);
+            return item.execution;
+        }
+
+        function openExecutionModal(gIdx, iIdx) {
+            currentExecItem = { gIdx, iIdx };
+            const item = appData.budgetGroups[gIdx].items[iIdx];
+            ensureExecutionObject(item);
+            document.getElementById('exec-modal-overlay').classList.add('active');
+            renderExecutionModal();
+        }
+
+        function closeExecutionModal() {
+            document.getElementById('exec-modal-overlay').classList.remove('active');
+            currentExecItem = null;
+        }
+
+        function onExecProposalChange(val) {
+            if (!currentExecItem) return;
+            const { gIdx, iIdx } = currentExecItem;
+            const item = appData.budgetGroups[gIdx].items[iIdx];
+            const exec = ensureExecutionObject(item);
+            if (val === 'manual') {
+                exec.selectedProposalIndex = null;
+                renderExecutionModal();
+                return;
+            }
+            const idx = Number(val);
+            if (!Number.isFinite(idx)) return;
+            exec.selectedProposalIndex = idx;
+            const p = (item.proposals || [])[idx];
+            if (p) {
+                exec.executedValue = Number(p.value) || exec.executedValue;
+                exec.vendor = String(p.company || exec.vendor || '');
+            }
+            renderExecutionModal();
+        }
+
+        function onExecAssetToggle(checked) {
+            if (!currentExecItem) return;
+            const { gIdx, iIdx } = currentExecItem;
+            const item = appData.budgetGroups[gIdx].items[iIdx];
+            const exec = ensureExecutionObject(item);
+            if (checked) {
+                if (!exec.asset) exec.asset = { type: 'PERMANENTE', qty: 1, location: '', custodian: '', evidenceLink: '' };
+            } else {
+                exec.asset = null;
+            }
+            renderExecutionModal();
+        }
+
+        function saveExecution() {
+            if (!currentExecItem) return;
+            const { gIdx, iIdx } = currentExecItem;
+            const item = appData.budgetGroups[gIdx].items[iIdx];
+            const exec = ensureExecutionObject(item);
+
+            exec.status = sanitizeExecStatus(document.getElementById('exec-status').value);
+            const selected = document.getElementById('exec-proposal').value;
+            exec.selectedProposalIndex = selected === 'manual' ? null : Number(selected);
+            if (!Number.isFinite(exec.selectedProposalIndex)) exec.selectedProposalIndex = null;
+            const val = Number(document.getElementById('exec-value').value);
+            exec.executedValue = Number.isFinite(val) ? val : null;
+            exec.executedAt = String(document.getElementById('exec-date').value || '');
+            exec.vendor = String(document.getElementById('exec-vendor').value || '');
+            exec.notes = String(document.getElementById('exec-notes').value || '');
+
+            const hasAsset = document.getElementById('exec-has-asset').checked;
+            if (hasAsset) {
+                if (!exec.asset) exec.asset = { type: 'PERMANENTE', qty: 1, location: '', custodian: '', evidenceLink: '' };
+                exec.asset.type = String(document.getElementById('exec-asset-type').value || 'PERMANENTE');
+                exec.asset.qty = Number(document.getElementById('exec-asset-qty').value) || 1;
+                exec.asset.location = String(document.getElementById('exec-asset-location').value || '');
+                exec.asset.custodian = String(document.getElementById('exec-asset-custodian').value || '');
+                exec.asset.evidenceLink = String(document.getElementById('exec-asset-evidence').value || '');
+            } else {
+                exec.asset = null;
+            }
+
+            saveData();
+            closeExecutionModal();
+        }
+
+        function renderExecutionModal() {
+            if (!currentExecItem) return;
+            const { gIdx, iIdx } = currentExecItem;
+            const group = appData.budgetGroups[gIdx];
+            const item = group.items[iIdx];
+            const exec = ensureExecutionObject(item);
+            const safeGroupName = escapeHtml(group.name || '');
+            const safeItemLabel = escapeHtml(item.label || '');
+            const planned = Number(item.value) || 0;
+            const executed = exec.executedValue == null ? '' : String(exec.executedValue);
+            const safeVendor = escapeHtml(exec.vendor || '');
+            const safeNotes = escapeHtml(exec.notes || '');
+            const safeDate = escapeHtml(exec.executedAt || '');
+
+            const proposals = item.proposals || [];
+            const proposalOptions = [
+                `<option value="manual"${exec.selectedProposalIndex == null ? ' selected' : ''}>Manual</option>`,
+                ...proposals.map((p, idx) => {
+                    const company = escapeHtml(p.company || `Proposta ${idx + 1}`);
+                    const val = Number(p.value) || 0;
+                    const selected = exec.selectedProposalIndex === idx ? ' selected' : '';
+                    return `<option value="${idx}"${selected}>${company} — R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</option>`;
+                })
+            ].join('');
+
+            const hasAsset = !!exec.asset;
+            const asset = exec.asset || { type: 'PERMANENTE', qty: 1, location: '', custodian: '', evidenceLink: '' };
+            const safeAssetLocation = escapeHtml(asset.location || '');
+            const safeAssetCustodian = escapeHtml(asset.custodian || '');
+            const safeAssetEvidence = escapeHtml(asset.evidenceLink || '');
+
+            document.getElementById('exec-modal-body').innerHTML = `
+                <div class="flex items-start justify-between gap-4">
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${safeGroupName}</p>
+                        <h3 class="text-xl font-black text-white italic">${safeItemLabel}</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${execStatusBadge(exec.status)}
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Planejado</p>
+                        <p class="text-lg font-black text-slate-200">R$ ${planned.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Executado</p>
+                        <p class="text-lg font-black text-green-400">${exec.executedValue == null ? '—' : `R$ ${(Number(exec.executedValue) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Status</label>
+                            <select id="exec-status" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none">
+                                <option value="PLANEJADO"${exec.status === 'PLANEJADO' ? ' selected' : ''}>Planejado</option>
+                                <option value="EM_EXECUCAO"${exec.status === 'EM_EXECUCAO' ? ' selected' : ''}>Em execução</option>
+                                <option value="CONCLUIDO"${exec.status === 'CONCLUIDO' ? ' selected' : ''}>Concluído</option>
+                                <option value="CANCELADO"${exec.status === 'CANCELADO' ? ' selected' : ''}>Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Proposta Executada</label>
+                            <select id="exec-proposal" onchange="onExecProposalChange(this.value)" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none">
+                                ${proposalOptions}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Valor Executado</label>
+                            <input id="exec-value" type="number" value="${escapeHtml(executed)}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none" placeholder="0">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Data</label>
+                            <input id="exec-date" type="date" value="${safeDate}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Fornecedor</label>
+                            <input id="exec-vendor" value="${safeVendor}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none" placeholder="Empresa / pessoa">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Observações</label>
+                        <textarea id="exec-notes" rows="4" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none" placeholder="NF, empenho, justificativas, prazos...">${safeNotes}</textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 bg-slate-950/40 border border-slate-800 rounded-2xl p-4">
+                        <div class="flex items-center gap-2">
+                            <input id="exec-has-asset" type="checkbox" class="accent-blue-600" ${hasAsset ? 'checked' : ''} onchange="onExecAssetToggle(this.checked)">
+                            <span class="text-xs font-black text-slate-200 uppercase tracking-widest">Gera Patrimônio</span>
+                        </div>
+                        <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest">${hasAsset ? 'Ativo' : '—'}</div>
+                    </div>
+
+                    ${hasAsset ? `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tipo</label>
+                                <select id="exec-asset-type" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none">
+                                    <option value="PERMANENTE"${asset.type === 'PERMANENTE' ? ' selected' : ''}>Bem permanente</option>
+                                    <option value="CONSUMO"${asset.type === 'CONSUMO' ? ' selected' : ''}>Consumo</option>
+                                    <option value="SERVICO"${asset.type === 'SERVICO' ? ' selected' : ''}>Serviço</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Quantidade</label>
+                                <input id="exec-asset-qty" type="number" value="${escapeHtml(String(Number(asset.qty) || 1))}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Evidência</label>
+                                <input id="exec-asset-evidence" value="${safeAssetEvidence}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none" placeholder="Link (Drive, nota, foto)">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Local</label>
+                                <input id="exec-asset-location" value="${safeAssetLocation}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none" placeholder="Onde está">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Responsável</label>
+                                <input id="exec-asset-custodian" value="${safeAssetCustodian}" class="w-full bg-slate-950/60 text-slate-200 border border-slate-800 rounded-xl px-4 py-2 text-xs outline-none" placeholder="Quem guarda/usa">
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <button onclick="closeExecutionModal()" class="bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black px-4 py-2 rounded-xl transition-all uppercase tracking-widest">Cancelar</button>
+                    <button onclick="saveExecution()" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-blue-900/20">Salvar</button>
+                </div>
+            `;
+
+            lucide.createIcons();
         }
 
         function addTask(msIndex) {
@@ -708,6 +1013,27 @@
                 g.items.forEach(i => totalBudget += (Number(i.value) || 0));
             });
             const safeProgress = Math.max(0, Math.min(100, Number(appData.progress) || 0));
+
+            let executedTotal = 0;
+            const executedEntries = [];
+            appData.budgetGroups.forEach((g) => {
+                (g.items || []).forEach((item) => {
+                    const exec = ensureExecutionObject(item);
+                    if (exec.status !== 'CONCLUIDO') return;
+                    const executedValue = exec.executedValue == null ? null : (Number(exec.executedValue) || 0);
+                    if (executedValue != null) executedTotal += executedValue;
+                    executedEntries.push({
+                        groupName: g.name || '',
+                        label: item.label || '',
+                        executedValue,
+                        executedAt: exec.executedAt || '',
+                        vendor: exec.vendor || '',
+                        notes: exec.notes || '',
+                        asset: exec.asset || null,
+                        proposal: exec.selectedProposalIndex != null && item.proposals && item.proposals[exec.selectedProposalIndex] ? item.proposals[exec.selectedProposalIndex] : null
+                    });
+                });
+            });
             
             // Cálculo Countdown Dinâmico (D-Days Futuros)
             const today = new Date();
@@ -919,6 +1245,13 @@
                                         <div class="space-y-3">
                                             ${group.items.map((item, iIdx) => {
                                                 const safeItemLabel = escapeHtml(item.label);
+                                                const exec = ensureExecutionObject(item);
+                                                const selectedProposal = exec.selectedProposalIndex != null && item.proposals && item.proposals[exec.selectedProposalIndex] ? item.proposals[exec.selectedProposalIndex] : null;
+                                                const selectedCompany = selectedProposal ? escapeHtml(selectedProposal.company || '') : '';
+                                                const selectedValue = selectedProposal ? (Number(selectedProposal.value) || 0) : null;
+                                                const executedValue = exec.executedValue == null ? null : (Number(exec.executedValue) || 0);
+                                                const safeExecutedAt = escapeHtml(exec.executedAt || '');
+                                                const safeVendor = escapeHtml(exec.vendor || '');
                                                 return `
                                                 <div class="flex justify-between items-end border-b border-slate-800 pb-2 group">
                                                     <div class="flex flex-col flex-1">
@@ -930,13 +1263,23 @@
                                                             <button onclick="openProposalsModal(${gIdx}, ${iIdx})" class="text-slate-700 hover:text-blue-400 transition-colors">
                                                                 <i data-lucide="info" size="10"></i>
                                                             </button>
+                                                            ${execStatusBadge(exec.status)}
                                                         </div>
+                                                        ${(exec.status === 'EM_EXECUCAO' || exec.status === 'CONCLUIDO') ? `
+                                                            <div class="flex flex-wrap items-center gap-2 mt-1">
+                                                                ${selectedCompany ? `<span class="text-[9px] font-black text-purple-400/80 uppercase tracking-widest">${selectedCompany}${selectedValue != null ? ` • R$ ${selectedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : ''}</span>` : ''}
+                                                                ${safeVendor ? `<span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Fornecedor: ${safeVendor}</span>` : ''}
+                                                                ${executedValue != null ? `<span class="text-[9px] font-black text-green-400 uppercase tracking-widest">Executado: R$ ${executedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>` : ''}
+                                                                ${safeExecutedAt ? `<span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">${safeExecutedAt}</span>` : ''}
+                                                            </div>
+                                                        ` : ''}
                                                     </div>
                                                     <div class="flex items-center gap-2">
                                                         ${isEditMode ? 
                                                             `<input type="number" class="edit-input text-right text-sm font-bold" value="${Number(item.value) || 0}" onchange="appData.budgetGroups[${gIdx}].items[${iIdx}].value=Number(this.value); render()">` : 
                                                             `<p class="text-sm font-bold text-slate-200">R$ ${(Number(item.value) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>`
                                                         }
+                                                        <button onclick="openExecutionModal(${gIdx}, ${iIdx})" class="admin-only text-blue-400/50 hover:text-blue-400"><i data-lucide="clipboard-check" size="14"></i></button>
                                                         <button onclick="removeBudgetItem(${gIdx}, ${iIdx})" class="admin-only text-red-500/50 hover:text-red-500"><i data-lucide="trash-2" size="14"></i></button>
                                                     </div>
                                                 </div>
@@ -955,6 +1298,66 @@
                             <div class="flex justify-between items-center p-4 bg-purple-600/10 rounded-2xl border border-purple-500/30 mt-4">
                                 <p class="text-xs font-black text-purple-400 uppercase tracking-widest">Total Geral</p>
                                 <p class="text-xl font-black text-purple-400 italic">R$ ${totalBudget.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                            </div>
+
+                            <div class="mt-6 bg-slate-950/30 border border-slate-800 rounded-2xl p-4 space-y-4">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="check-square" class="text-green-400"></i>
+                                        <p class="text-xs font-black text-slate-200 uppercase tracking-widest">Consolidados</p>
+                                    </div>
+                                    <p class="text-xs font-black text-green-400 italic">R$ ${executedTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                                </div>
+                                <div class="space-y-3">
+                                    ${executedEntries.length ? executedEntries.map((e) => {
+                                        const safeGroup = escapeHtml(e.groupName || '');
+                                        const safeLabel = escapeHtml(e.label || '');
+                                        const safeVendor = escapeHtml(e.vendor || '');
+                                        const safeDate = escapeHtml(e.executedAt || '');
+                                        const value = e.executedValue == null ? null : (Number(e.executedValue) || 0);
+                                        const p = e.proposal || null;
+                                        const safeCompany = p ? escapeHtml(p.company || '') : '';
+                                        const pVal = p ? (Number(p.value) || 0) : null;
+                                        const asset = e.asset || null;
+                                        const safeAssetType = asset ? escapeHtml(asset.type || '') : '';
+                                        const qty = asset ? (Number(asset.qty) || 1) : null;
+                                        const safeLoc = asset ? escapeHtml(asset.location || '') : '';
+                                        const safeCust = asset ? escapeHtml(asset.custodian || '') : '';
+                                        const ev = asset ? sanitizeHref(asset.evidenceLink || '') : '#';
+                                        const evLabel = asset && asset.evidenceLink ? escapeHtml(asset.evidenceLink) : '';
+                                        return `
+                                            <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="min-w-0">
+                                                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">${safeGroup}</p>
+                                                        <p class="text-sm font-black text-white truncate">${safeLabel}</p>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <p class="text-xs font-black text-green-400">${value == null ? '—' : `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+                                                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">${safeDate || ''}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 flex flex-wrap items-center gap-2">
+                                                    ${safeCompany ? `<span class="text-[9px] font-black text-purple-400/80 uppercase tracking-widest">${safeCompany}${pVal != null ? ` • R$ ${pVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : ''}</span>` : ''}
+                                                    ${safeVendor ? `<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Fornecedor: ${safeVendor}</span>` : ''}
+                                                </div>
+                                                ${asset ? `
+                                                    <div class="mt-3 bg-slate-950/40 border border-slate-800 rounded-xl p-3 space-y-2">
+                                                        <div class="flex items-center justify-between gap-3">
+                                                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Patrimônio</p>
+                                                            <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">${safeAssetType}${qty != null ? ` • ${qty} un` : ''}</span>
+                                                        </div>
+                                                        <div class="flex flex-wrap items-center gap-2">
+                                                            ${safeLoc ? `<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Local: ${safeLoc}</span>` : ''}
+                                                            ${safeCust ? `<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Responsável: ${safeCust}</span>` : ''}
+                                                            ${(ev !== '#' && evLabel) ? `<a href="${ev}" target="_blank" rel="noopener noreferrer" class="text-[9px] font-black text-blue-400 uppercase tracking-widest underline">Evidência</a>` : ''}
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('') : `<div class="text-center py-6 text-slate-500 text-xs font-bold uppercase tracking-widest">Nenhum item concluído ainda</div>`}
+                                </div>
                             </div>
                         </div>
                     </div>
