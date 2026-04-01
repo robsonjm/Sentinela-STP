@@ -171,6 +171,26 @@
             }
         }
 
+        function sanitizeIframeSrc(value) {
+            const s = value == null ? '' : String(value).trim();
+            if (!s) return null;
+            try {
+                const u = new URL(s, window.location.origin);
+                if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+                const host = (u.hostname || '').toLowerCase();
+                const allowed = (
+                    host.endsWith('youtube.com') ||
+                    host.endsWith('youtube-nocookie.com') ||
+                    host === 'youtu.be' ||
+                    host.endsWith('player.vimeo.com')
+                );
+                if (!allowed) return null;
+                return u.toString();
+            } catch {
+                return null;
+            }
+        }
+
         function sanitizeRichHtml(html) {
             const template = document.createElement('template');
             template.innerHTML = html == null ? '' : String(html);
@@ -180,12 +200,16 @@
                 'H2', 'H3', 'H4',
                 'UL', 'OL', 'LI',
                 'BLOCKQUOTE', 'HR',
-                'A', 'IMG'
+                'A', 'IMG',
+                'DIV', 'SPAN', 'SECTION',
+                'IFRAME'
             ]);
 
             const allowedAttrs = {
-                A: new Set(['href', 'title', 'target', 'rel']),
-                IMG: new Set(['src', 'alt', 'title'])
+                A: new Set(['href', 'title', 'target', 'rel', 'class']),
+                IMG: new Set(['src', 'alt', 'title', 'class']),
+                IFRAME: new Set(['src', 'allow', 'allowfullscreen', 'title', 'class']),
+                BLOCKQUOTE: new Set(['class', 'cite', 'data-instgrm-permalink', 'data-instgrm-version', 'data-video-id'])
             };
 
             const cleanElement = (el) => {
@@ -240,11 +264,45 @@
                     }
                 }
 
+                if (tag === 'IFRAME') {
+                    const src = sanitizeIframeSrc(el.getAttribute('src'));
+                    if (!src) {
+                        el.remove();
+                        return;
+                    }
+                    el.setAttribute('src', src);
+                    el.setAttribute('referrerpolicy', 'no-referrer');
+                    if (!el.hasAttribute('allowfullscreen')) el.setAttribute('allowfullscreen', '');
+                }
+
                 Array.from(el.children).forEach(cleanElement);
             };
 
             Array.from(template.content.querySelectorAll('*')).forEach(cleanElement);
             return template.innerHTML;
+        }
+
+        function ensureEmbedsProcessed(root) {
+            if (!root) return;
+            if (root.querySelector('.instagram-media')) {
+                if (!document.querySelector('script[src="https://www.instagram.com/embed.js"]')) {
+                    const s = document.createElement('script');
+                    s.src = 'https://www.instagram.com/embed.js';
+                    s.async = true;
+                    document.body.appendChild(s);
+                    s.onload = () => { try { if (window.instgrm) window.instgrm.Embeds.process(); } catch {} };
+                } else {
+                    try { if (window.instgrm) window.instgrm.Embeds.process(); } catch {}
+                }
+            }
+            if (root.querySelector('.tiktok-embed')) {
+                if (!document.querySelector('script[src="https://www.tiktok.com/embed.js"]')) {
+                    const s = document.createElement('script');
+                    s.src = 'https://www.tiktok.com/embed.js';
+                    s.async = true;
+                    document.body.appendChild(s);
+                }
+            }
         }
 
         // Scroll Effect Header
@@ -311,6 +369,7 @@
                     if (data.conteudo_html) {
                         const bodyEl = document.getElementById('article-body');
                         bodyEl.innerHTML = sanitizeRichHtml(data.conteudo_html);
+                        setTimeout(() => ensureEmbedsProcessed(bodyEl), 0);
                     } else {
                         // Fallback se não tiver conteúdo rico
                         document.getElementById('article-body').innerHTML = `<p class="italic text-slate-500">Conteúdo detalhado não disponível para visualização rápida. Consulte a fonte original.</p>`;
