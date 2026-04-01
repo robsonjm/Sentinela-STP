@@ -461,11 +461,13 @@
         import { 
             initializeFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, onSnapshot as firestoreOnSnapshot, writeBatch, Timestamp 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         import { firebaseConfig, imgbbConfig } from "./js/config.js?v=4";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, useFetchStreams: false });
+        const storage = getStorage(app);
 
         // Debug: Check onSnapshot
         console.log("Firestore initialized. onSnapshot type:", typeof firestoreOnSnapshot);
@@ -752,8 +754,7 @@
             }
         };
 
-        // ImgBB Upload & Cropper Logic
-    const IMGBB_API_KEY = imgbbConfig.apiKey; 
+        // Upload de Imagem (Firebase Storage) + Cropper
     let cropper;
         const imageUploadInput = document.getElementById('image-upload-input');
         const cropperModal = document.getElementById('cropper-modal');
@@ -829,40 +830,31 @@
 
             // Converter para Blob (JPEG 80% qualidade)
             canvas.toBlob((blob) => {
-                uploadToImgBB(blob, originalBtnContent);
+                uploadToFirebaseStorage(blob, originalBtnContent);
             }, 'image/jpeg', 0.8);
         };
 
-        function uploadToImgBB(imageBlob, originalBtnContent) {
-            confirmCropBtn.innerHTML = `<i data-lucide="upload-cloud" class="animate-spin" size="18"></i> Enviando...`;
-            lucide.createIcons();
-
-            const formData = new FormData();
-            formData.append('image', imageBlob);
-
-            return fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const imageUrl = data.data.url;
-                    insertTag(`<img src="${imageUrl}" alt="Imagem da matéria">`, '');
-                    closeCropper();
-                } else {
-                    throw new Error(data.error ? data.error.message : 'Erro desconhecido no upload');
-                }
-            })
-            .catch(error => {
-                console.error('Erro no upload:', error);
-                alert('Falha ao enviar imagem: ' + error.message);
-            })
-            .finally(() => {
+        async function uploadToFirebaseStorage(imageBlob, originalBtnContent) {
+            try {
+                confirmCropBtn.innerHTML = `<i data-lucide="upload-cloud" class="animate-spin" size="18"></i> Enviando...`;
+                lucide.createIcons();
+                const uid = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'anon';
+                const artId = editingId || 'draft';
+                const stamp = Date.now();
+                const path = `artifacts/sentinela-stp/public/news-assets/${artId}/${uid}_${stamp}.jpg`;
+                const ref = storageRef(storage, path);
+                await uploadBytes(ref, imageBlob, { contentType: 'image/jpeg' });
+                const url = await getDownloadURL(ref);
+                insertTag(`<img src="${url}" alt="Imagem da matéria">`, '');
+                closeCropper();
+            } catch (error) {
+                console.error('Erro no upload (Storage):', error);
+                alert('Falha ao enviar imagem para o Storage. Verifique as regras de acesso.');
+            } finally {
                 confirmCropBtn.disabled = false;
                 confirmCropBtn.innerHTML = originalBtnContent;
                 lucide.createIcons();
-            });
+            }
         }
 
         // Icon Picker Logic
