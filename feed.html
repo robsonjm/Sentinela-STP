@@ -759,14 +759,14 @@
             }
 
             const btn = event.currentTarget;
-            const container = btn.parentElement;
+            const reactionsContainer = btn.parentElement;
             const storageKey = `reacted_${docId}_${userId}`;
             const previousReaction = localStorage.getItem(storageKey);
             
             // --- ATUALIZAÇÃO OTIMISTA DA UI ---
             // 1. Reverter estado visual do botão anteriormente ativo (se houver e for diferente)
             if (previousReaction && previousReaction !== emojiType) {
-                const prevBtn = container.querySelector(`button[data-emoji-type="${previousReaction}"]`);
+                const prevBtn = reactionsContainer.querySelector(`button[data-emoji-type="${previousReaction}"]`);
                 if (prevBtn) {
                     // Resetar estilos
                     prevBtn.className = 'reaction-btn group flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-200 border border-transparent bg-slate-50 hover:bg-slate-100 grayscale opacity-60 hover:grayscale-0 hover:opacity-100';
@@ -852,8 +852,9 @@
                         badgeArea.appendChild(span);
                         lucide.createIcons();
                     }
-                    container.removeChild(card);
-                    insertSorted(container, card);
+                    const feedContainer = document.getElementById('infinite-feed');
+                    if (card.parentElement) card.parentElement.removeChild(card);
+                    if (feedContainer) insertSorted(feedContainer, card);
                 }
             } catch (e) {
                 console.error("Erro na reação:", e);
