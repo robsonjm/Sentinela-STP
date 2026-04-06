@@ -239,6 +239,8 @@
         const HISTORY_PREFETCH_PX = 1400;
         const HISTORY_PAGE_EVIDENCIAS = 10;
         const HISTORY_PAGE_ARTIGOS = 6;
+        const REACTION_WEIGHT_MS = 60000;
+        const HYPE_THRESHOLD = 5;
 
         let lastVisible = null;
         let lastVisibleNews = null;
@@ -462,45 +464,19 @@
         };
 
         const insertSorted = (container, element) => {
-            const timestamp = parseInt(element.dataset.timestamp || 0);
+            const getOrder = (el) => {
+                const ok = parseInt(el.dataset.orderKey || 0);
+                if (Number.isFinite(ok) && ok > 0) return ok;
+                return parseInt(el.dataset.timestamp || 0) || 0;
+            };
+            const orderKey = getOrder(element);
             const children = Array.from(container.children);
-            
-            // Encontrar o primeiro filho com timestamp MENOR (mais antigo)
-            // Porque queremos ordem DECRESCENTE (Mais novo no topo)
-            const nextElement = children.find(child => {
-                // Ignorar elementos sem timestamp (loaders, mensagens de erro)
-                if (!child.dataset.timestamp) return false;
-                const childTs = parseInt(child.dataset.timestamp);
-                return childTs < timestamp;
+            const nextElement = children.find((child) => {
+                if (!child.dataset) return false;
+                return getOrder(child) < orderKey;
             });
-
-            if (nextElement) {
-                container.insertBefore(element, nextElement);
-            } else {
-                // Se não achou ninguém mais antigo, ou a lista acabou, ou todos são mais novos (o que seria estranho se appendChild for o padrão)
-                // Se todos são mais novos, appendChild coloca no fim? Não, se todos são mais novos, nextElement seria null.
-                // Mas queremos colocar ANTES de alguém MAIS ANTIGO.
-                // Se todos na lista são MAIS NOVOS (ts > timestamp), então este elemento é o mais antigo de todos -> appendChild.
-                // Se todos na lista são MAIS ANTIGOS (ts < timestamp), então este elemento é o mais novo -> insertBefore(firstChild).
-                
-                // Correção da lógica:
-                // Lista: [100, 90, 80]
-                // Novo: 95.
-                // child=100 (100 < 95? False)
-                // child=90 (90 < 95? True) -> InsertBefore 90. Result: [100, 95, 90]. Correto.
-                
-                // Novo: 110.
-                // child=100 (100 < 110? True) -> InsertBefore 100. Result: [110, 100, 90]. Correto.
-                
-                // Novo: 70.
-                // child=100 (False)
-                // child=90 (False)
-                // child=80 (False)
-                // nextElement = undefined.
-                // AppendChild. Result: [100, 90, 80, 70]. Correto.
-                
-                container.appendChild(element);
-            }
+            if (nextElement) container.insertBefore(element, nextElement);
+            else container.appendChild(element);
         };
 
         // Configuração de Reações
@@ -679,6 +655,11 @@
             const reactions = item.reactions || {};
             const userId = getUserId();
             const userReaction = userId ? localStorage.getItem(`reacted_${item.id}_${userId}`) : null;
+            const totalReactions = Object.values(reactions).reduce((a, b) => a + (Number(b) || 0), 0);
+            const orderBoost = totalReactions * REACTION_WEIGHT_MS;
+            card.dataset.orderKey = (parseInt(card.dataset.timestamp) || 0) + orderBoost;
+            card.dataset.relatoId = item.id || '';
+            card.id = `relato-${item.id || Math.random().toString(36).slice(2)}`;
 
             const safePrefixo = escapeHtml(item.prefixo || 'S/N');
             const safeLinha = escapeHtml(item.linha || 'Linha Não Informada');
@@ -711,6 +692,18 @@
                 `;
             }
 
+            const hypeBadge = totalReactions >= HYPE_THRESHOLD ? `
+                <span class="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md">
+                    <i data-lucide="trending-up" size="12"></i> Em alta
+                </span>
+            ` : '';
+            const shareBtn = `
+                <button onclick="shareRelato('${item.id}')"
+                    class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                    <i data-lucide="share-2" size="12"></i> Compartilhar
+                </button>
+            `;
+
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-6 text-left">
                     <div>
@@ -720,6 +713,15 @@
                     <div class="flex flex-col items-end gap-2">
                         <span class="${noiseColor} text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm">${dbVal}dB</span>
                         <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">${safeTemp}°C</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">${hypeBadge}</div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Impulso</span>
+                        <div class="w-28 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500" style="width: ${Math.min(100, totalReactions * 12)}%"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative mb-6 text-left">
@@ -740,7 +742,10 @@
                         <span class="flex items-center gap-1"><i data-lucide="calendar" size="12"></i> ${safeData}</span>
                         <span class="flex items-center gap-1"><i data-lucide="clock" size="12"></i> ${safeHora}</span>
                     </div>
-                    <span class="flex items-center gap-1"><i data-lucide="map-pin" size="12"></i> ${safeZona}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="flex items-center gap-1"><i data-lucide="map-pin" size="12"></i> ${safeZona}</span>
+                        ${shareBtn}
+                    </div>
                 </div>
             `;
             return card;
@@ -830,7 +835,26 @@
                 } else {
                     localStorage.setItem(storageKey, emojiType);
                 }
-                
+                const card = btn.closest('.feedback-card');
+                if (card) {
+                    const counts = Array.from(card.querySelectorAll('.count-span')).map((s) => parseInt(s.textContent || '0') || 0);
+                    const total = counts.reduce((a, b) => a + b, 0);
+                    const ts = parseInt(card.dataset.timestamp || '0') || 0;
+                    card.dataset.orderKey = ts + total * REACTION_WEIGHT_MS;
+                    const bar = card.querySelector('.bg-blue-500');
+                    if (bar) bar.style.width = `${Math.min(100, total * 12)}%`;
+                    const badgeArea = card.querySelector('.flex.items-center.justify-between.mb-4 > div:first-child');
+                    const hasBadge = badgeArea && badgeArea.querySelector('.bg-emerald-500\\/10');
+                    if (badgeArea && !hasBadge && total >= HYPE_THRESHOLD) {
+                        const span = document.createElement('span');
+                        span.className = 'inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md';
+                        span.innerHTML = '<i data-lucide="trending-up" size="12"></i> Em alta';
+                        badgeArea.appendChild(span);
+                        lucide.createIcons();
+                    }
+                    container.removeChild(card);
+                    insertSorted(container, card);
+                }
             } catch (e) {
                 console.error("Erro na reação:", e);
                 // Rollback visual simples: recarregar a página ou reverter classes (opcional, mas recomendado em apps complexos)
@@ -838,6 +862,21 @@
                 // Mas para feedback de erro imediato:
                 window.showToast ? window.showToast("Erro ao salvar reação") : alert("Erro ao salvar reação");
             }
+        };
+
+        window.shareRelato = async (id) => {
+            const base = `${location.origin}${location.pathname.replace(/[^/]+$/, '')}feed.html`;
+            const url = `${base}?focus=${encodeURIComponent(id)}`;
+            const title = 'Denúncia no Sentinela STP';
+            const text = 'Veja esta denúncia no Sentinela STP e participe com sua reação.';
+            try {
+                if (navigator.share) {
+                    await navigator.share({ title, text, url });
+                } else {
+                    await navigator.clipboard.writeText(url);
+                    window.showToast ? window.showToast('Link copiado') : alert('Link copiado');
+                }
+            } catch {}
         };
 
         const buildQuery = (baseCollection, isHistory = false) => {
@@ -1206,6 +1245,21 @@
             .then(() => {
                 loadEditorialCarousel();
                 startLiveFeed();
+                const params = new URLSearchParams(location.search);
+                const focusId = params.get('focus');
+                if (focusId) {
+                    const tryFocus = () => {
+                        const el = document.getElementById(`relato-${focusId}`);
+                        if (!el) {
+                            setTimeout(tryFocus, 500);
+                            return;
+                        }
+                        el.classList.add('ring-2','ring-emerald-500','ring-offset-4');
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => el.classList.remove('ring-emerald-500'), 2500);
+                    };
+                    tryFocus();
+                }
             })
             .catch(err => console.error("Erro Auth:", err));
 
