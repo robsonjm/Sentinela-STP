@@ -236,9 +236,15 @@
         const filterLine = document.getElementById('filter-line');
         const applyFiltersBtn = document.getElementById('apply-filters');
 
+        const HISTORY_PREFETCH_PX = 1400;
+        const HISTORY_PAGE_EVIDENCIAS = 10;
+        const HISTORY_PAGE_ARTIGOS = 6;
+
         let lastVisible = null;
+        let lastVisibleNews = null;
         let isLoadingMore = false;
         let hasMore = true;
+        let hasMoreNews = true;
         let unsubscribeLiveFeed = null;
         let unsubscribeNewsFeed = null; // Listener para notícias na timeline
         let currentFilters = {};
@@ -847,7 +853,7 @@
             // Paginação ou Limite Inicial
             if (isHistory) {
                 constraints.push(startAfter(lastVisible));
-                constraints.push(limit(5));
+                constraints.push(limit(HISTORY_PAGE_EVIDENCIAS));
             } else {
                 constraints.push(limit(10));
             }
@@ -877,6 +883,9 @@
                         hasChanges = true;
                     }
                 });
+                if (!lastVisibleNews && !snapshot.empty) {
+                    lastVisibleNews = snapshot.docs[snapshot.docs.length - 1];
+                }
                 if (hasChanges) {
                     lucide.createIcons();
                 }
@@ -1019,6 +1028,8 @@
             lucide.createIcons();
             lastVisible = null;
             hasMore = true;
+            lastVisibleNews = null;
+            hasMoreNews = true;
 
             try {
                 const qLive = buildQuery(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'));
@@ -1093,38 +1104,85 @@
             }
         };
 
+        const updateScrollAnchorStatus = () => {
+            if (!scrollAnchor) return;
+            const canLoadEvid = !!lastVisible && hasMore;
+            const canLoadNews = !!lastVisibleNews && hasMoreNews;
+            if (!canLoadEvid && !canLoadNews) {
+                scrollAnchor.innerHTML = `<p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Fim do histórico</p>`;
+            } else {
+                if (loadMoreLoader && !scrollAnchor.contains(loadMoreLoader)) {
+                    scrollAnchor.innerHTML = '';
+                    scrollAnchor.appendChild(loadMoreLoader);
+                }
+            }
+        };
+
+        const loadMoreArtigosHistory = async () => {
+            if (!lastVisibleNews || !hasMoreNews) return 0;
+            const qNextNews = query(
+                collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'artigos'),
+                orderBy('timestamp', 'desc'),
+                startAfter(lastVisibleNews),
+                limit(HISTORY_PAGE_ARTIGOS)
+            );
+            const snapshot = await getDocs(qNextNews);
+            if (snapshot.empty) {
+                hasMoreNews = false;
+                return 0;
+            }
+            lastVisibleNews = snapshot.docs[snapshot.docs.length - 1];
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const newsCard = createNewsFeedCard({ ...data, id: docSnap.id });
+                insertSorted(container, newsCard);
+            });
+            return snapshot.size;
+        };
+
         const loadHistory = async () => {
-            if (isLoadingMore || !lastVisible || !hasMore) return;
+            if (isLoadingMore) return;
+            const canLoadEvid = !!lastVisible && hasMore;
+            const canLoadNews = !!lastVisibleNews && hasMoreNews;
+            if (!canLoadEvid && !canLoadNews) {
+                updateScrollAnchorStatus();
+                return;
+            }
             
             isLoadingMore = true;
             if (loadMoreLoader) loadMoreLoader.classList.remove('hidden');
 
             try {
-                const qNext = buildQuery(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'), true);
-                const snapshot = await getDocs(qNext);
-                
-                if (snapshot.empty) {
-                    hasMore = false;
-                    if (scrollAnchor) {
-                        scrollAnchor.innerHTML = `<p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Fim dos relatos históricos</p>`;
-                    }
-                    return;
+                const tasks = [];
+                if (canLoadEvid) {
+                    tasks.push((async () => {
+                        const qNext = buildQuery(collection(db, 'artifacts', 'sentinela-stp', 'public', 'data', 'evidencias'), true);
+                        const snapshot = await getDocs(qNext);
+                        if (snapshot.empty) {
+                            hasMore = false;
+                            return 0;
+                        }
+                        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                        snapshot.forEach((docSnap) => {
+                            const card = createCard({ id: docSnap.id, ...docSnap.data() });
+                            if (card) insertSorted(container, card);
+                        });
+                        return snapshot.size;
+                    })());
                 }
-
-                lastVisible = snapshot.docs[snapshot.docs.length - 1];
-                
-                snapshot.forEach(doc => {
-                    const card = createCard({ id: doc.id, ...doc.data() });
-                    if (card) insertSorted(container, card);
-                });
-                
-                lucide.createIcons();
+                if (canLoadNews) {
+                    tasks.push(loadMoreArtigosHistory());
+                }
+                const counts = await Promise.all(tasks);
+                if (counts.some((c) => c > 0)) lucide.createIcons();
             } catch (e) {
                 console.error("Erro Paginação:", e);
-                hasMore = false; // Parar de tentar se der erro (ex: falta de indice)
+                hasMore = false;
+                hasMoreNews = false;
             } finally {
                 isLoadingMore = false;
                 if (loadMoreLoader) loadMoreLoader.classList.add('hidden');
+                updateScrollAnchorStatus();
             }
         };
 
@@ -1140,7 +1198,7 @@
         // Trigger inicial
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) loadHistory();
-        }, { threshold: 0.1 });
+        }, { threshold: 0, rootMargin: `${HISTORY_PREFETCH_PX}px 0px` });
 
         if (scrollAnchor) observer.observe(scrollAnchor);
 
