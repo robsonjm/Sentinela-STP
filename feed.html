@@ -631,7 +631,9 @@
         }
 
         const createCard = (item, isNew = false) => {
-            if (!item.relato_pessoal || item.relato_pessoal.trim() === "") return null;
+            const eventType = item && item.tipo_evento ? String(item.tipo_evento) : 'Relato';
+            const relatoRaw = item && item.relato_pessoal ? String(item.relato_pessoal) : '';
+            if (eventType === 'Relato' && !relatoRaw.trim()) return null;
 
             const card = document.createElement('div');
             card.className = `feedback-card bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative ${isNew ? 'ring-2 ring-blue-500 ring-offset-4' : ''}`;
@@ -664,10 +666,32 @@
             const safePrefixo = escapeHtml(item.prefixo || 'S/N');
             const safeLinha = escapeHtml(item.linha || 'Linha Não Informada');
             const safeTemp = escapeHtml(item.temp_interna);
-            const safeRelato = escapeHtml(item.relato_pessoal);
+            const safeRelato = escapeHtml(relatoRaw);
             const safeData = escapeHtml(item.data);
             const safeHora = escapeHtml(item.hora);
             const safeZona = escapeHtml(item.zona || 'Interno');
+            const safeSintomas = escapeHtml(item.sintomas || '');
+            const safeFoto = sanitizeHref(item.foto_evidencia || '');
+
+            let typeLabel = eventType;
+            let typeIcon = 'message-square';
+            let typePillClass = 'bg-blue-50 text-blue-700 border border-blue-100';
+            if (eventType === 'Quebra de Veículo') {
+                typeLabel = 'Quebra';
+                typeIcon = 'wrench';
+                typePillClass = 'bg-orange-50 text-orange-700 border border-orange-200';
+            } else if (eventType === 'Atraso Crítico') {
+                typeLabel = 'Atraso';
+                typeIcon = 'timer';
+                typePillClass = 'bg-purple-50 text-purple-700 border border-purple-200';
+            } else if (eventType === 'Lotação Excessiva') {
+                typeLabel = 'Superlotação';
+                typeIcon = 'users';
+                typePillClass = 'bg-yellow-50 text-yellow-800 border border-yellow-200';
+            } else if (eventType !== 'Relato') {
+                typeIcon = 'alert-triangle';
+                typePillClass = 'bg-slate-100 text-slate-700 border border-slate-200';
+            }
 
             let reactionsHtml = '';
             for (const [key, config] of Object.entries(REACTION_TYPES)) {
@@ -704,6 +728,42 @@
                 </button>
             `;
 
+            const eventPill = `
+                <span class="${typePillClass} text-[10px] font-black px-3 py-1 rounded-full shadow-sm inline-flex items-center gap-2">
+                    <i data-lucide="${sanitizeLucideName(typeIcon, 'alert-triangle')}" size="12"></i>
+                    <span class="uppercase tracking-widest">${escapeHtml(typeLabel)}</span>
+                </span>
+            `;
+
+            const metricsChips = `
+                <div class="flex items-center gap-2">
+                    <span class="${noiseColor} text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm">${dbVal}dB</span>
+                    <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">${safeTemp}°C</span>
+                </div>
+            `;
+
+            const contentHtml = eventType === 'Relato' ? `
+                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative mb-6 text-left">
+                    <i data-lucide="quote" class="absolute -top-3 -left-3 text-blue-500 opacity-20" size="40"></i>
+                    <p class="text-base font-semibold text-slate-700 italic leading-relaxed text-left">"${safeRelato}"</p>
+                </div>
+            ` : `
+                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative mb-6 text-left">
+                    <i data-lucide="${sanitizeLucideName(typeIcon, 'alert-triangle')}" class="absolute -top-3 -left-3 text-slate-400 opacity-25" size="40"></i>
+                    <p class="text-base font-black text-slate-800 leading-relaxed">Denúncia registrada: ${escapeHtml(typeLabel)}.</p>
+                    ${safeSintomas ? `<p class="text-xs font-bold text-slate-500 mt-2">Sinais: <span class="font-medium">${safeSintomas}</span></p>` : ''}
+                </div>
+            `;
+
+            const photoHtml = safeFoto !== '#' ? `
+                <div class="mb-6">
+                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest pl-2 mb-2">Registro da Ocorrência</p>
+                    <a href="${safeFoto}" target="_blank" rel="noopener noreferrer" class="block rounded-[2rem] overflow-hidden border border-slate-200 bg-white shadow-sm">
+                        <img src="${safeFoto}" loading="lazy" referrerpolicy="no-referrer" class="w-full h-64 object-cover" alt="Foto da ocorrência">
+                    </a>
+                </div>
+            ` : '';
+
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-6 text-left">
                     <div>
@@ -711,8 +771,8 @@
                         <h4 class="text-sm font-bold text-slate-800 uppercase leading-none text-left">${safeLinha}</h4>
                     </div>
                     <div class="flex flex-col items-end gap-2">
-                        <span class="${noiseColor} text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm">${dbVal}dB</span>
-                        <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">${safeTemp}°C</span>
+                        ${eventPill}
+                        ${metricsChips}
                     </div>
                 </div>
                 <div class="flex items-center justify-between mb-4">
@@ -724,10 +784,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative mb-6 text-left">
-                    <i data-lucide="quote" class="absolute -top-3 -left-3 text-blue-500 opacity-20" size="40"></i>
-                    <p class="text-base font-semibold text-slate-700 italic leading-relaxed text-left">"${safeRelato}"</p>
-                </div>
+                ${contentHtml}
+                ${photoHtml}
                 
                 <!-- Barra de Reações -->
                 <div class="flex flex-col gap-2 mb-4">
